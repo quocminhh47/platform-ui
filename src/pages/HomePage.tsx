@@ -1,13 +1,27 @@
-import { API_BASE_URL } from '../api/client';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../features/auth/hooks/useAuth';
+import { API_BASE_URL } from '../services/api/client';
 
 export function HomePage() {
+  const { user, isAuthenticated } = useAuth();
+
   return (
-    <main style={{ fontFamily: 'system-ui, sans-serif', padding: '2rem', maxWidth: 40 * 16 }}>
+    <section className="home-page">
       <h1>LMS</h1>
-      <p>Frontend scaffold is running. Auth UI and course catalog come next.</p>
       <p>
-        API base URL: <code>{API_BASE_URL}</code>
+        Frontend architecture is in place. Authentication works against{' '}
+        <code>{API_BASE_URL}</code>.
       </p>
-    </main>
+      {isAuthenticated && user ? (
+        <p>
+          Signed in as <strong>{user.fullName}</strong> ({user.email}).
+        </p>
+      ) : (
+        <p>
+          <Link to="/login">Sign in</Link> or <Link to="/register">create an account</Link> to
+          continue.
+        </p>
+      )}
+    </section>
   );
 }

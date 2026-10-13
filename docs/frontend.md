@@ -41,17 +41,17 @@ Dev server default: `http://localhost:5173` (must be listed in the backend `CORS
 VITE_API_BASE_URL=http://localhost:8080
 ```
 
-Read in code via `import.meta.env.VITE_API_BASE_URL` (`src/api/client.ts`).
+Read in code via `import.meta.env.VITE_API_BASE_URL` (`src/services/api/client.ts`).
 Do not put JWT secrets or database passwords in frontend env files.
 
-## Authentication (once login is implemented)
+## Authentication
 
 1. `POST /api/auth/register` or `POST /api/auth/login` returns `{ accessToken, tokenType, expiresInMs }`.
-2. Store **only** the access token (see `src/auth/tokenStorage.ts` — sessionStorage, never passwords).
+2. Store **only** the access token (`src/services/api/token-storage.ts` — sessionStorage, never passwords).
 3. Send `Authorization: Bearer <accessToken>` on protected requests (`apiRequest` supports `accessToken`).
-4. Load the current user with `GET /api/auth/me` (`src/api/auth.ts` → `fetchCurrentUser`).
-5. On 401, clear the token and send the user to login.
-6. UI role checks are for navigation only; the backend enforces authorization.
+4. `AuthProvider` loads the current user once via `GET /api/auth/me` (`src/features/auth/api/auth.api.ts`).
+5. UI routes: `/login`, `/register`; `ProtectedRoute` / `GuestRoute` are navigation helpers only.
+6. On 401 while restoring a session, the token is cleared. Backend authorization remains authoritative.
 
 ## Production build
 
