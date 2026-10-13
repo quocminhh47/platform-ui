@@ -1,7 +1,7 @@
 /**
  * Access-token storage for the SPA session.
  * Stores only the JWT access token — never passwords or the JWT signing secret.
- * sessionStorage is cleared when the tab closes; swap to memory-only later if preferred.
+ * sessionStorage is cleared when the tab closes.
  */
 const ACCESS_TOKEN_KEY = 'lms.accessToken';
 

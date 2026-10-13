@@ -1,4 +1,5 @@
-import type { ApiErrorBody } from '../types/api';
+import type { ApiErrorBody } from '../../types/api';
+import { ApiError } from './api-error';
 
 const rawBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -9,18 +10,6 @@ if (typeof rawBaseUrl !== 'string' || rawBaseUrl.trim() === '') {
 }
 
 export const API_BASE_URL = rawBaseUrl.replace(/\/$/, '');
-
-export class ApiError extends Error {
-  readonly status: number;
-  readonly body: ApiErrorBody | null;
-
-  constructor(status: number, message: string, body: ApiErrorBody | null = null) {
-    super(message);
-    this.name = 'ApiError';
-    this.status = status;
-    this.body = body;
-  }
-}
 
 export type RequestOptions = {
   method?: string;
@@ -82,3 +71,5 @@ function safeJson(text: string): unknown {
     return null;
   }
 }
+
+export { ApiError };
