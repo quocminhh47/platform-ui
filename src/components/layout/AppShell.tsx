@@ -1,4 +1,4 @@
-import { Link, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../../features/auth/hooks/useAuth';
 
 export function AppShell() {
@@ -10,11 +10,18 @@ export function AppShell() {
         <Link to="/" className="brand">
           LMS
         </Link>
-        <nav className="app-nav">
+        <nav className="site-nav" aria-label="Main">
+          <NavLink to="/" end>
+            Home
+          </NavLink>
+          <NavLink to="/courses">Explore courses</NavLink>
+        </nav>
+        <nav className="app-nav" aria-label="Account">
           {isInitializing ? (
             <span className="muted">…</span>
           ) : isAuthenticated && user ? (
             <>
+              <Link to="/dashboard">Dashboard</Link>
               <span className="muted">
                 {user.fullName} ({user.role})
               </span>

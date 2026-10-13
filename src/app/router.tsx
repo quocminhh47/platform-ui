@@ -4,6 +4,8 @@ import { GuestRoute } from '../features/auth/components/GuestRoute';
 import { ProtectedRoute } from '../features/auth/components/ProtectedRoute';
 import { LoginPage } from '../features/auth/pages/LoginPage';
 import { RegisterPage } from '../features/auth/pages/RegisterPage';
+import { CatalogPage } from '../features/catalog/pages/CatalogPage';
+import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { HomePage } from '../pages/HomePage';
 
 export const router = createBrowserRouter([
@@ -12,6 +14,7 @@ export const router = createBrowserRouter([
     element: <AppShell />,
     children: [
       { index: true, element: <HomePage /> },
+      { path: 'courses', element: <CatalogPage /> },
       {
         element: <GuestRoute />,
         children: [
@@ -21,11 +24,12 @@ export const router = createBrowserRouter([
       },
       {
         element: <ProtectedRoute />,
-        children: [
-          // Placeholder for authenticated-only routes (catalog personalization, etc.)
-          { path: 'account', element: <HomePage /> },
-        ],
+        children: [{ path: 'account', element: <HomePage /> }],
       },
     ],
+  },
+  {
+    element: <ProtectedRoute />,
+    children: [{ path: '/dashboard', element: <DashboardPage /> }],
   },
 ]);
