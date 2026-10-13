@@ -1,0 +1,177 @@
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { RouterProvider, createMemoryRouter } from 'react-router-dom';
+import { AuthProvider } from '../../app/providers/AuthProvider';
+import { AppShell } from '../../components/layout/AppShell';
+import { ApiError } from '../../services/api/api-error';
+import * as coursesApi from './api/courses.api';
+import { CatalogPage } from './pages/CatalogPage';
+import { CourseDetailPage } from './pages/CourseDetailPage';
+import type { Course } from './types/course.types';
+import type { Lesson } from './types/lesson.types';
+import type { Section } from './types/section.types';
+
+vi.mock('./api/courses.api', () => ({
+  listPublishedCourses: vi.fn(),
+  getCourseById: vi.fn(),
+  listCourseSections: vi.fn(),
+  listSectionLessons: vi.fn(),
+}));
+
+const api = vi.mocked(coursesApi);
+
+const courseId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const sectionId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+
+const course: Course = {
+  id: courseId,
+  title: 'Intro to Algebra',
+  description: 'Equations and graphs.',
+  instructorId: 'instructor-1',
+  price: 0,
+  published: true,
+  finalQuizId: null,
+  createdAt: '2026-01-01T00:00:00Z',
+  updatedAt: '2026-01-01T00:00:00Z',
+};
+
+const section: Section = {
+  id: sectionId,
+  courseId,
+  title: 'Getting started',
+  sortOrder: 0,
+};
+
+const lesson: Lesson = {
+  id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+  sectionId,
+  courseId,
+  title: 'What is algebra?',
+  lessonType: 'VIDEO',
+  contentUrl: 'https://example.com/video',
+  durationSeconds: 300,
+  sortOrder: 0,
+};
+
+function renderRoutes(initialEntry: string) {
+  const router = createMemoryRouter(
+    [
+      {
+        path: '/',
+        element: <AppShell />,
+        children: [
+          { path: 'courses', element: <CatalogPage /> },
+          { path: 'courses/:courseId', element: <CourseDetailPage /> },
+        ],
+      },
+    ],
+    { initialEntries: [initialEntry] },
+  );
+  render(
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>,
+  );
+  return router;
+}
+
+beforeEach(() => {
+  api.listPublishedCourses.mockReset();
+  api.getCourseById.mockReset();
+  api.listCourseSections.mockReset();
+  api.listSectionLessons.mockReset();
+});
+
+describe('course detail navigation', () => {
+  it('navigates from a catalog card to the detail URL', async () => {
+    api.listPublishedCourses.mockResolvedValue([course]);
+
+    const router = renderRoutes('/courses');
+    const link = await screen.findByRole('link', { name: /Intro to Algebra/ });
+    expect(link.getAttribute('href')).toBe(`/courses/${courseId}`);
+
+    api.getCourseById.mockResolvedValue(course);
+    api.listCourseSections.mockResolvedValue([]);
+    fireEvent.click(link);
+
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/courses/${courseId}`));
+  });
+});
+
+describe('course detail page', () => {
+  it('renders course information and curriculum from the API', async () => {
+    api.getCourseById.mockResolvedValue(course);
+    api.listCourseSections.mockResolvedValue([section]);
+    api.listSectionLessons.mockResolvedValue([lesson]);
+
+    renderRoutes(`/courses/${courseId}`);
+
+    expect(await screen.findByRole('heading', { name: 'Intro to Algebra' })).toBeTruthy();
+    expect(screen.getByText('Equations and graphs.')).toBeTruthy();
+    expect(screen.getByText('Free')).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Getting started' })).toBeTruthy();
+    expect(await screen.findByText('What is algebra?')).toBeTruthy();
+    expect(await screen.findByText(/Video · 5 min/)).toBeTruthy();
+    expect(screen.getByRole('link', { name: /Back to courses/i }).getAttribute('href')).toBe(
+      '/courses',
+    );
+    expect(api.getCourseById).toHaveBeenCalledWith(courseId, null);
+  });
+
+  it('shows a not-found state for unpublished or missing courses', async () => {
+    api.getCourseById.mockRejectedValue(new ApiError(404, 'Course not found'));
+
+    renderRoutes(`/courses/${courseId}`);
+
+    expect(await screen.findByRole('heading', { name: 'Course not available' })).toBeTruthy();
+    expect(screen.getByText(/unpublished/i)).toBeTruthy();
+    expect(api.listCourseSections).not.toHaveBeenCalled();
+  });
+
+  it('retries a failed course load without exposing server text', async () => {
+    api.getCourseById
+      .mockRejectedValueOnce(new ApiError(500, 'org.postgresql secret'))
+      .mockResolvedValueOnce(course);
+    api.listCourseSections.mockResolvedValue([]);
+    api.listSectionLessons.mockResolvedValue([]);
+
+    renderRoutes(`/courses/${courseId}`);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert.textContent).not.toMatch(/postgresql|secret/i);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(await screen.findByRole('heading', { name: 'Intro to Algebra' })).toBeTruthy();
+  });
+
+  it('keeps the overview when curriculum loading fails', async () => {
+    api.getCourseById.mockResolvedValue(course);
+    api.listCourseSections.mockRejectedValue(new ApiError(500, 'sections down'));
+
+    renderRoutes(`/courses/${courseId}`);
+
+    expect(await screen.findByRole('heading', { name: 'Intro to Algebra' })).toBeTruthy();
+    const alert = await screen.findByRole('alert');
+    expect(alert.textContent).not.toMatch(/sections down/);
+    expect(screen.getByRole('heading', { name: 'Curriculum' })).toBeTruthy();
+  });
+
+  it('shows an empty curriculum state', async () => {
+    api.getCourseById.mockResolvedValue(course);
+    api.listCourseSections.mockResolvedValue([]);
+
+    renderRoutes(`/courses/${courseId}`);
+
+    expect(await screen.findByText('This course does not have any sections yet.')).toBeTruthy();
+  });
+
+  it('shows when a section has no lessons', async () => {
+    api.getCourseById.mockResolvedValue(course);
+    api.listCourseSections.mockResolvedValue([section]);
+    api.listSectionLessons.mockResolvedValue([]);
+
+    renderRoutes(`/courses/${courseId}`);
+
+    expect(await screen.findByText('No lessons in this section yet.')).toBeTruthy();
+  });
+});

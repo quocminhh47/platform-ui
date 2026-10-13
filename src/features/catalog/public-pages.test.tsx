@@ -35,9 +35,11 @@ const student: User = {
   updatedAt: '2026-01-01T00:00:00Z',
 };
 
-function course(title: string, price = 0): Course {
+const COURSE_ID = '11111111-1111-4111-8111-111111111111';
+
+function course(title: string, price = 0, id = COURSE_ID): Course {
   return {
-    id: title,
+    id,
     title,
     description: 'A published course',
     instructorId: 'instructor-1',
@@ -105,10 +107,10 @@ describe('public home', () => {
 
   it('shows published courses and keeps a contained error from replacing the page', async () => {
     courses.listPublishedCourses.mockResolvedValueOnce([
-      course('Intro to Algebra'),
-      course('Academic Writing', 49),
-      course('Biology Basics'),
-      course('Hidden Fourth'),
+      course('Intro to Algebra', 0, '11111111-1111-4111-8111-111111111101'),
+      course('Academic Writing', 49, '11111111-1111-4111-8111-111111111102'),
+      course('Biology Basics', 0, '11111111-1111-4111-8111-111111111103'),
+      course('Hidden Fourth', 0, '11111111-1111-4111-8111-111111111104'),
     ]);
 
     renderAt('/');
@@ -118,7 +120,9 @@ describe('public home', () => {
     expect(screen.getAllByText('Free').length).toBeGreaterThan(0);
     expect(screen.queryByRole('heading', { name: 'Hidden Fourth' })).toBeNull();
     expect(screen.getByRole('link', { name: 'See all 4 courses' })).toBeTruthy();
-    expect(screen.queryByRole('link', { name: 'Intro to Algebra' })).toBeNull();
+    expect(screen.getByRole('link', { name: /Intro to Algebra/ }).getAttribute('href')).toBe(
+      '/courses/11111111-1111-4111-8111-111111111101',
+    );
     expect(courses.listPublishedCourses).toHaveBeenCalledWith(null);
     expect(screen.getByRole('heading', { name: 'Why this LMS' })).toBeTruthy();
   });
@@ -148,18 +152,23 @@ describe('public home', () => {
 });
 
 describe('public catalog', () => {
-  it('lists every published course and does not link the cards', async () => {
+  it('links each course card to its detail page', async () => {
+    const algebraId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const writingId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
     courses.listPublishedCourses.mockResolvedValue([
-      course('Intro to Algebra'),
-      course('Academic Writing', 49),
+      course('Intro to Algebra', 0, algebraId),
+      course('Academic Writing', 49, writingId),
     ]);
 
     renderAt('/courses');
 
     expect(await screen.findByRole('heading', { name: 'Explore courses' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Intro to Algebra' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Academic Writing' })).toBeTruthy();
-    expect(screen.queryByRole('link', { name: 'Intro to Algebra' })).toBeNull();
+    expect(screen.getByRole('link', { name: /Intro to Algebra/ }).getAttribute('href')).toBe(
+      `/courses/${algebraId}`,
+    );
+    expect(screen.getByRole('link', { name: /Academic Writing/ }).getAttribute('href')).toBe(
+      `/courses/${writingId}`,
+    );
     expect(screen.queryByRole('button', { name: /enroll|view/i })).toBeNull();
   });
 
