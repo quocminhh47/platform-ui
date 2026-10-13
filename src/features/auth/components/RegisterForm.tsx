@@ -1,13 +1,9 @@
 import { useState, type FormEvent } from 'react';
-import { ApiError } from '../../../services/api/api-error';
 import { useAuth } from '../hooks/useAuth';
+import { mapAuthError } from '../validation/server-errors';
 import { validateRegister } from '../validation/auth.validation';
 
-type RegisterFormProps = {
-  onSuccess?: () => void;
-};
-
-export function RegisterForm({ onSuccess }: RegisterFormProps) {
+export function RegisterForm() {
   const { register } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -18,6 +14,9 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting) {
+      return;
+    }
     setFormError(null);
 
     const payload = {
@@ -34,13 +33,10 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     setSubmitting(true);
     try {
       await register(payload);
-      onSuccess?.();
     } catch (error) {
-      if (error instanceof ApiError) {
-        setFormError(error.message);
-      } else {
-        setFormError('Unable to create account. Please try again.');
-      }
+      const mapped = mapAuthError(error, 'register');
+      setFieldErrors(mapped.fields);
+      setFormError(mapped.form);
     } finally {
       setSubmitting(false);
     }
@@ -88,7 +84,11 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         ) : null}
       </label>
 
-      {formError ? <p className="form-error">{formError}</p> : null}
+      {formError ? (
+        <p className="form-error" role="alert">
+          {formError}
+        </p>
+      ) : null}
 
       <button type="submit" disabled={submitting}>
         {submitting ? 'Creating account…' : 'Create account'}
