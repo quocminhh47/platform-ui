@@ -1,6 +1,8 @@
 import { Link, useParams } from 'react-router-dom';
 import { SiteFooter } from '../../../components/layout/SiteFooter';
 import { CourseCurriculum } from '../components/CourseCurriculum';
+import { CourseImage } from '../components/CourseImage';
+import { RelatedCourses } from '../components/RelatedCourses';
 import { useCourseCurriculum } from '../hooks/useCourseCurriculum';
 import { useCourseDetail } from '../hooks/useCourseDetail';
 import { formatPrice } from '../utils/formatPrice';
@@ -64,15 +66,26 @@ export function CourseDetailPage() {
         </p>
 
         <header className="course-detail-header">
-          <p className="eyebrow">Course</p>
-          <h1>{course.title}</h1>
-          <p className="course-detail-description">
-            {course.description?.trim() ? course.description : 'No description provided.'}
-          </p>
-          <p className="course-detail-price">{formatPrice(course.price)}</p>
+          <div className="course-detail-copy">
+            <p className="eyebrow">Course</p>
+            <h1>{course.title}</h1>
+            <p className="course-detail-description">
+              {course.description?.trim() ? course.description : 'No description provided.'}
+            </p>
+            <p className="course-detail-price">{formatPrice(course.price)}</p>
+          </div>
+          <div className="course-detail-banner">
+            <CourseImage
+              courseId={course.id}
+              title={course.title}
+              thumbnailUrl={course.thumbnailUrl}
+              priority
+            />
+          </div>
         </header>
 
         <CourseCurriculum state={curriculum} />
+        <RelatedCourses courseId={course.id} />
       </div>
       <SiteFooter />
     </div>

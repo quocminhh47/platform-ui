@@ -83,16 +83,18 @@ describe('public home', () => {
   it('offers home, catalog, and guest account actions', async () => {
     renderAt('/');
 
-    expect(await screen.findByRole('heading', { name: /course catalog/i })).toBeTruthy();
-    const homeLinks = screen.getAllByRole('link', { name: 'Home' });
-    expect(homeLinks.length).toBeGreaterThan(0);
-    for (const link of homeLinks) {
-      expect(link.getAttribute('href')).toBe('/');
-    }
-    expect(screen.getAllByRole('link', { name: 'Explore courses' }).length).toBeGreaterThan(0);
-    expect(screen.getByRole('link', { name: 'Sign in' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Register' })).toBeTruthy();
-    expect(screen.queryByRole('link', { name: 'Dashboard' })).toBeNull();
+    expect(await screen.findByRole('heading', { name: /Kho học liệu/ })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Trang chủ' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Khóa học' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Đăng nhập' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Đăng ký' })).toBeTruthy();
+    expect((screen.getByRole('button', { name: 'Cá nhân' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByRole('searchbox', { name: 'Tìm kiếm học liệu' })).toBeTruthy();
+    expect(screen.getByText(/không tìm trên toàn bộ cơ sở dữ liệu/i)).toBeTruthy();
+    expect(screen.queryByRole('tablist')).toBeNull();
+    expect(screen.queryByRole('button', { name: /Thông báo/ })).toBeNull();
+    expect(screen.getByRole('link', { name: 'Xem khóa học' }).getAttribute('href')).toBe('/courses');
+    expect((screen.getByRole('button', { name: 'Tạo học liệu AI' }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('shows the dashboard action for a signed-in user', async () => {
@@ -101,8 +103,8 @@ describe('public home', () => {
 
     renderAt('/');
 
-    expect(await screen.findByRole('link', { name: 'Dashboard' })).toBeTruthy();
-    expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
+    expect(await screen.findByRole('link', { name: 'Cá nhân' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Đăng nhập' })).toBeNull();
   });
 
   it('shows published courses and keeps a contained error from replacing the page', async () => {
@@ -117,21 +119,20 @@ describe('public home', () => {
 
     expect(await screen.findByRole('heading', { name: 'Intro to Algebra' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Academic Writing' })).toBeTruthy();
-    expect(screen.getAllByText('Free').length).toBeGreaterThan(0);
-    expect(screen.queryByRole('heading', { name: 'Hidden Fourth' })).toBeNull();
-    expect(screen.getByRole('link', { name: 'See all 4 courses' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Hidden Fourth' })).toBeTruthy();
+    expect(screen.getAllByText('Miễn phí').length).toBeGreaterThan(0);
     expect(screen.getByRole('link', { name: /Intro to Algebra/ }).getAttribute('href')).toBe(
       '/courses/11111111-1111-4111-8111-111111111101',
     );
     expect(courses.listPublishedCourses).toHaveBeenCalledWith(null);
-    expect(screen.getByRole('heading', { name: 'Why this LMS' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Kho học liệu/ })).toBeTruthy();
   });
 
   it('shows an empty featured section without invented courses', async () => {
     renderAt('/');
 
-    expect(await screen.findByText('No published courses yet')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /Ready to look through the catalog/ })).toBeTruthy();
+    expect(await screen.findByText('Chưa có khóa học đã xuất bản')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Kho học liệu/ })).toBeTruthy();
   });
 
   it('retries a failed featured-course request without hiding the hero', async () => {
@@ -141,11 +142,11 @@ describe('public home', () => {
 
     renderAt('/');
 
-    expect(await screen.findByRole('heading', { name: /course catalog/i })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: /Kho học liệu/ })).toBeTruthy();
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).not.toMatch(/database/);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Thử lại' }));
 
     expect(await screen.findByRole('heading', { name: 'Intro to Algebra' })).toBeTruthy();
   });
@@ -162,7 +163,7 @@ describe('public catalog', () => {
 
     renderAt('/courses');
 
-    expect(await screen.findByRole('heading', { name: 'Explore courses' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: /Kho học liệu/ })).toBeTruthy();
     expect(screen.getByRole('link', { name: /Intro to Algebra/ }).getAttribute('href')).toBe(
       `/courses/${algebraId}`,
     );
@@ -175,6 +176,6 @@ describe('public catalog', () => {
   it('shows an empty catalog', async () => {
     renderAt('/courses');
 
-    expect(await screen.findByText('No published courses')).toBeTruthy();
+    expect(await screen.findByText('Chưa có khóa học đã xuất bản')).toBeTruthy();
   });
 });

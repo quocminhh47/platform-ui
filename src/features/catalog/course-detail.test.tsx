@@ -76,6 +76,7 @@ function renderRoutes(initialEntry: string) {
 
 beforeEach(() => {
   api.listPublishedCourses.mockReset();
+  api.listPublishedCourses.mockResolvedValue([]);
   api.getCourseById.mockReset();
   api.listCourseSections.mockReset();
   api.listSectionLessons.mockReset();

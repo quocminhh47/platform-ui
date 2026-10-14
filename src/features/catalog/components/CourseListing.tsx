@@ -8,6 +8,8 @@ type CourseListingProps = {
   emptyDescription: string;
   /** Show only the first N courses returned by the API, in that order. */
   limit?: number;
+  /** Catalog page uses the reference card layout. Other pages keep the default card. */
+  cardVariant?: 'default' | 'catalog';
 };
 
 export function CourseListing({
@@ -15,6 +17,7 @@ export function CourseListing({
   emptyTitle,
   emptyDescription,
   limit,
+  cardVariant = 'default',
 }: CourseListingProps) {
   const { courses, loading, error, reload } = state;
   const visible = courses && limit !== undefined ? courses.slice(0, limit) : courses;
@@ -45,7 +48,7 @@ export function CourseListing({
           <ul className="course-grid">
             {visible.map((course) => (
               <li key={course.id}>
-                <CourseCard course={course} />
+                <CourseCard course={course} variant={cardVariant} />
               </li>
             ))}
           </ul>
