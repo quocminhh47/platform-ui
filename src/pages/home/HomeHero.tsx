@@ -22,7 +22,7 @@ export function HomeHero() {
 
 function HeroMark() {
   return (
-    <svg viewBox="0 0 220 160" className="home-hero-svg">
+    <svg viewBox="0 0 236 176" className="home-hero-svg">
       <rect x="18" y="28" width="120" height="104" rx="16" fill="#0b3b67" />
       <rect x="78" y="16" width="124" height="96" rx="16" fill="#f59e0b" />
       <rect x="96" y="36" width="88" height="10" rx="5" fill="#fff" />
