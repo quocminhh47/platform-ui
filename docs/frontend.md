@@ -50,7 +50,7 @@ Do not put JWT secrets or database passwords in frontend env files.
 2. Store **only** the access token (`src/services/api/token-storage.ts` — sessionStorage, never passwords).
 3. Send `Authorization: Bearer <accessToken>` on protected requests (`apiRequest` supports `accessToken`).
 4. `AuthProvider` loads the current user once via `GET /api/auth/me` (`src/features/auth/api/auth.api.ts`).
-5. UI routes: `/login`, `/register`; `ProtectedRoute` / `GuestRoute` are navigation helpers only.
+5. UI routes: public `/`, `/courses`, and `/courses/:courseId`, guest `/login` and `/register`, and authenticated `/dashboard`. `ProtectedRoute` / `GuestRoute` are navigation helpers only. Home, catalog, and dashboard read published courses from `GET /api/courses?published=true`. Enrollment, progress, and activity are not shown as numbers because those APIs do not exist yet.
 6. On 401 while restoring a session, the token is cleared. Backend authorization remains authoritative.
 
 ## Production build

@@ -1,13 +1,9 @@
 import { useState, type FormEvent } from 'react';
-import { ApiError } from '../../../services/api/api-error';
 import { useAuth } from '../hooks/useAuth';
+import { mapAuthError } from '../validation/server-errors';
 import { validateLogin } from '../validation/auth.validation';
 
-type LoginFormProps = {
-  onSuccess?: () => void;
-};
-
-export function LoginForm({ onSuccess }: LoginFormProps) {
+export function LoginForm() {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,6 +13,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting) {
+      return;
+    }
     setFormError(null);
 
     const credentials = { email: email.trim(), password };
@@ -29,13 +28,10 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     setSubmitting(true);
     try {
       await login(credentials);
-      onSuccess?.();
     } catch (error) {
-      if (error instanceof ApiError) {
-        setFormError(error.message);
-      } else {
-        setFormError('Unable to sign in. Please try again.');
-      }
+      const mapped = mapAuthError(error, 'login');
+      setFieldErrors(mapped.fields);
+      setFormError(mapped.form);
     } finally {
       setSubmitting(false);
     }
@@ -69,7 +65,11 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         ) : null}
       </label>
 
-      {formError ? <p className="form-error">{formError}</p> : null}
+      {formError ? (
+        <p className="form-error" role="alert">
+          {formError}
+        </p>
+      ) : null}
 
       <button type="submit" disabled={submitting}>
         {submitting ? 'Signing in…' : 'Sign in'}
