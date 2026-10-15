@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '../../app/providers/AuthProvider';
+import { ToastProvider } from '../../components/feedback/ToastProvider';
 import { AppShell } from '../../components/layout/AppShell';
 import { ApiError } from '../../services/api/api-error';
 import { setAccessToken } from '../../services/api/token-storage';
@@ -13,6 +14,7 @@ import { CourseDetailPage } from '../catalog/pages/CourseDetailPage';
 import type { Course } from '../catalog/types/course.types';
 import * as enrollmentsApi from './api/enrollments.api';
 import type { Enrollment } from './api/enrollments.api';
+import { ENROLL_SUCCESS_TOAST } from './enrollment-messages';
 import { MyCoursesPage } from './pages/MyCoursesPage';
 
 vi.mock('../auth/api/auth.api', () => ({
@@ -89,7 +91,9 @@ function renderDetail() {
   );
   render(
     <AuthProvider>
-      <RouterProvider router={router} />
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
     </AuthProvider>,
   );
   return router;
@@ -108,7 +112,9 @@ function renderMyCourses(path = '/my-courses') {
   );
   render(
     <AuthProvider>
-      <RouterProvider router={router} />
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
     </AuthProvider>,
   );
   return router;
@@ -159,6 +165,7 @@ describe('course enrollment on the detail page', () => {
     expect(start.getAttribute('href')).toBe(`/courses/${courseId}/learn`);
     expect(enrollments.enrollInCourse).toHaveBeenCalledWith(courseId, 'token');
     expect(enrollments.enrollInCourse).toHaveBeenCalledTimes(1);
+    expect((await screen.findByRole('status')).textContent).toBe(ENROLL_SUCCESS_TOAST);
   });
 
   it('reconciles a duplicate enrollment from the current user list', async () => {

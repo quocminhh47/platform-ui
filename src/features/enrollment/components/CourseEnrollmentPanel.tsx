@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useToast } from '../../../components/feedback/useToast';
 import { ApiError } from '../../../services/api/api-error';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { enrollInCourse } from '../api/enrollments.api';
 import type { Enrollment } from '../api/enrollments.api';
+import { ENROLL_SUCCESS_TOAST } from '../enrollment-messages';
 import { enrollmentLoadMessage, useMyEnrollments } from '../hooks/useMyEnrollments';
 
 type CourseEnrollmentPanelProps = {
@@ -13,8 +15,9 @@ type CourseEnrollmentPanelProps = {
 export function CourseEnrollmentPanel({ courseId }: CourseEnrollmentPanelProps) {
   const { isAuthenticated, isInitializing, accessToken } = useAuth();
   const mine = useMyEnrollments(isAuthenticated);
+  const toast = useToast();
   const [submitting, setSubmitting] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const enrollInFlightRef = useRef(false);
   const [created, setCreated] = useState<Enrollment | null>(null);
 
   const fromList = mine.enrollments?.find((item) => item.courseId === courseId) ?? null;
@@ -45,12 +48,6 @@ export function CourseEnrollmentPanel({ courseId }: CourseEnrollmentPanelProps) 
         </div>
       ) : null}
 
-      {actionError ? (
-        <div className="section-error" role="alert">
-          <p>{actionError}</p>
-        </div>
-      ) : null}
-
       {enrollment ? <EnrollmentStatusActions enrollment={enrollment} /> : null}
 
       {!enrollment && !mine.error ? (
@@ -59,14 +56,17 @@ export function CourseEnrollmentPanel({ courseId }: CourseEnrollmentPanelProps) 
           className="button-primary"
           disabled={submitting || !accessToken}
           onClick={() => {
-            if (!accessToken) {
+            if (!accessToken || submitting || enrollInFlightRef.current) {
               return;
             }
+            enrollInFlightRef.current = true;
             setSubmitting(true);
-            setActionError(null);
             enrollInCourse(courseId, accessToken)
               .then((result) => {
                 setCreated(result);
+                toast.success(ENROLL_SUCCESS_TOAST, {
+                  dedupeKey: `enroll-success-${courseId}`,
+                });
               })
               .catch(async (cause: unknown) => {
                 if (cause instanceof ApiError && cause.status === 409) {
@@ -74,19 +74,25 @@ export function CourseEnrollmentPanel({ courseId }: CourseEnrollmentPanelProps) 
                     const list = await mine.refresh();
                     const match = list.find((item) => item.courseId === courseId);
                     if (!match) {
-                      setActionError(
+                      toast.error(
                         'Enrollment could not be confirmed. Refresh and try again.',
+                        { dedupeKey: `enroll-error-${courseId}` },
                       );
                     }
                   } catch (refreshCause: unknown) {
-                    setActionError(enrollmentLoadMessage(refreshCause));
+                    toast.error(enrollmentLoadMessage(refreshCause), {
+                      dedupeKey: `enroll-error-${courseId}`,
+                    });
                   }
                   return;
                 }
-                setActionError(enrollErrorMessage(cause));
+                toast.error(enrollErrorMessage(cause), {
+                  dedupeKey: `enroll-error-${courseId}`,
+                });
               })
               .finally(() => {
                 setSubmitting(false);
+                enrollInFlightRef.current = false;
               });
           }}
         >

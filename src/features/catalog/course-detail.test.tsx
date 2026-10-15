@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '../../app/providers/AuthProvider';
+import { ToastProvider } from '../../components/feedback/ToastProvider';
 import { AppShell } from '../../components/layout/AppShell';
 import { ApiError } from '../../services/api/api-error';
 import * as coursesApi from './api/courses.api';
@@ -68,7 +69,9 @@ function renderRoutes(initialEntry: string) {
   );
   render(
     <AuthProvider>
-      <RouterProvider router={router} />
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
     </AuthProvider>,
   );
   return router;
