@@ -7,6 +7,8 @@ import { RegisterPage } from '../features/auth/pages/RegisterPage';
 import { CatalogPage } from '../features/catalog/pages/CatalogPage';
 import { CourseDetailPage } from '../features/catalog/pages/CourseDetailPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
+import { MyCoursesPage } from '../features/enrollment/pages/MyCoursesPage';
+import { LearningWorkspacePage } from '../features/learning/pages/LearningWorkspacePage';
 import { HomePage } from '../pages/HomePage';
 
 export const router = createBrowserRouter([
@@ -26,12 +28,18 @@ export const router = createBrowserRouter([
       },
       {
         element: <ProtectedRoute />,
-        children: [{ path: 'account', element: <HomePage /> }],
+        children: [
+          { path: 'account', element: <HomePage /> },
+          { path: 'courses/:courseId/learn/:lessonId?', element: <LearningWorkspacePage /> },
+        ],
       },
     ],
   },
   {
     element: <ProtectedRoute />,
-    children: [{ path: '/dashboard', element: <DashboardPage /> }],
+    children: [
+      { path: '/dashboard', element: <DashboardPage /> },
+      { path: '/my-courses', element: <MyCoursesPage /> },
+    ],
   },
 ]);

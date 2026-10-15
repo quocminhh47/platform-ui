@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
 import { SiteFooter } from '../../../components/layout/SiteFooter';
+import { CourseEnrollmentPanel } from '../../enrollment/components/CourseEnrollmentPanel';
 import { CourseCurriculum } from '../components/CourseCurriculum';
 import { CourseImage } from '../components/CourseImage';
 import { RelatedCourses } from '../components/RelatedCourses';
@@ -65,27 +66,41 @@ export function CourseDetailPage() {
           <Link to="/courses">← Back to courses</Link>
         </p>
 
-        <header className="course-detail-header">
-          <div className="course-detail-copy">
+        <div className="course-detail-layout">
+          <header className="course-detail-intro">
             <p className="eyebrow">Course</p>
             <h1>{course.title}</h1>
-            <p className="course-detail-description">
-              {course.description?.trim() ? course.description : 'No description provided.'}
-            </p>
-            <p className="course-detail-price">{formatPrice(course.price)}</p>
-          </div>
-          <div className="course-detail-banner">
-            <CourseImage
-              courseId={course.id}
-              title={course.title}
-              thumbnailUrl={course.thumbnailUrl}
-              priority
-            />
-          </div>
-        </header>
+            <section className="course-overview" aria-labelledby="overview-heading">
+              <h2 id="overview-heading">Overview</h2>
+              <p className="course-detail-description">
+                {course.description?.trim() ? course.description : 'No description provided.'}
+              </p>
+            </section>
+          </header>
 
-        <CourseCurriculum state={curriculum} />
-        <RelatedCourses courseId={course.id} />
+          <aside className="course-summary" aria-label="Course summary">
+            <div className="course-detail-banner">
+              <CourseImage
+                courseId={course.id}
+                title={course.title}
+                thumbnailUrl={course.thumbnailUrl}
+                priority
+              />
+            </div>
+            <p className="course-detail-price">{formatPrice(course.price)}</p>
+            {typeof course.lessonCount === 'number' ? (
+              <p className="course-summary-meta">
+                {course.lessonCount === 1 ? '1 lesson' : `${course.lessonCount} lessons`}
+              </p>
+            ) : null}
+            <CourseEnrollmentPanel courseId={course.id} />
+          </aside>
+
+          <div className="course-detail-body">
+            <CourseCurriculum state={curriculum} />
+            <RelatedCourses courseId={course.id} />
+          </div>
+        </div>
       </div>
       <SiteFooter />
     </div>

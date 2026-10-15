@@ -11,6 +11,7 @@ export function DashboardSidebar() {
         <NavLink to="/dashboard" end>
           Dashboard
         </NavLink>
+        <NavLink to="/my-courses">My courses</NavLink>
         <NavLink to="/courses">Explore courses</NavLink>
       </nav>
       <button type="button" className="sidebar-sign-out" onClick={logout}>
