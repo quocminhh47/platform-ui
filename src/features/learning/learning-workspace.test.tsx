@@ -88,6 +88,15 @@ const summaryB = lesson(lessonB, sectionB, 'Practice problems', 'https://summary
 const protectedA = lesson(lessonA, sectionA, 'What is algebra?', 'https://cdn.example/algebra.mp4');
 const protectedB = lesson(lessonB, sectionB, 'Practice problems', 'https://cdn.example/practice.mp4');
 
+function articleLesson(
+  id: string,
+  sectionId: string,
+  title: string,
+  contentUrl: string | null,
+): Lesson {
+  return { ...lesson(id, sectionId, title, contentUrl), lessonType: 'ARTICLE' };
+}
+
 function renderWorkspace(path = `/courses/${courseId}/learn`) {
   const router = createMemoryRouter(
     [
@@ -256,6 +265,47 @@ describe('learning workspace curriculum', () => {
     expect(screen.getByRole('link', { name: 'What is algebra?' }).getAttribute('aria-current')).toBe(
       'page',
     );
+  });
+
+  it('embeds supported YouTube URLs in a privacy-enhanced iframe', async () => {
+    setAccessToken('token');
+    auth.fetchCurrentUser.mockResolvedValue(student);
+    const youtubeUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+    lessons.getLessonContent.mockResolvedValue(
+      lesson(lessonA, sectionA, 'What is algebra?', youtubeUrl),
+    );
+
+    renderWorkspace();
+
+    expect(await screen.findByRole('heading', { name: 'What is algebra?' })).toBeTruthy();
+    expect(document.querySelector('video')).toBeNull();
+    const iframe = document.querySelector('iframe');
+    expect(iframe?.getAttribute('src')).toBe('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
+    expect(screen.queryByRole('link', { name: /youtube/i })).toBeNull();
+  });
+
+  it('shows Google Docs preview with an external link fallback', async () => {
+    setAccessToken('token');
+    auth.fetchCurrentUser.mockResolvedValue(student);
+    const docUrl = 'https://docs.google.com/document/d/docId9AbC/edit';
+    const docLesson = articleLesson(lessonA, sectionA, 'Reading handout', docUrl);
+    lessons.getLessonContent.mockResolvedValue(docLesson);
+    courses.listSectionLessons.mockImplementation(async (_courseId, sectionId) => {
+      if (sectionId === sectionA) {
+        return [{ ...docLesson, contentUrl: null }];
+      }
+      return [];
+    });
+
+    renderWorkspace();
+
+    expect(await screen.findByRole('heading', { name: 'Reading handout' })).toBeTruthy();
+    const iframe = document.querySelector('iframe');
+    expect(iframe?.getAttribute('src')).toBe('https://docs.google.com/document/d/docId9AbC/preview');
+    const link = screen.getByRole('link', { name: 'Open in Google Docs' });
+    expect(link.getAttribute('href')).toBe(docUrl);
+    expect(link.closest('.learning-external-fallback-secondary')).toBeTruthy();
+    expect(screen.getByText(/may not work for every file type/i)).toBeTruthy();
   });
 
   it('does not play a summary URL when content access is denied', async () => {
