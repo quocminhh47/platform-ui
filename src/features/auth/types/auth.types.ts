@@ -5,8 +5,12 @@ export type User = {
   id: string;
   email: string;
   fullName: string;
+  firstName?: string | null;
+  lastName?: string | null;
   role: UserRole;
   avatarUrl: string | null;
+  phone?: string | null;
+  dateOfBirth?: string | null;
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -20,13 +24,19 @@ export type AuthTokens = {
 };
 
 export type LoginCredentials = {
-  email: string;
+  /** Email address or phone number. */
+  identifier: string;
   password: string;
 };
 
+/** Mirrors backend RegisterRequest. confirmPassword is never sent. */
 export type RegisterPayload = {
   email: string;
   password: string;
-  fullName: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  /** ISO date (yyyy-mm-dd). */
+  dateOfBirth: string;
   avatarUrl?: string;
 };

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LMS360 - Đăng nhập hệ thống học tập trực tuyến</title>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN with plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script data-purpose="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              red: '#e52427',
+              navy: '#0b3967',
+              dark: '#1e293b',
+              accent: '#0284c7',
+              bgsoft: '#f1f7fc'
+            }
+          },
+          boxShadow: {
+            'card': '0 20px 45px -10px rgba(11, 57, 103, 0.12), 0 8px 16px -6px rgba(11, 57, 103, 0.06)',
+            'btn': '0 8px 20px -4px rgba(44, 75, 114, 0.35)'
+          }
+        }
+      }
+    }
+  </script>
+<!-- Custom CSS for Pattern Background and Visual Refinement -->
+<style data-purpose="custom-background">
+    /* Subtle glowing rounded square grid texture inspired by the screenshot */
+    body {
+      background-color: #f3f7fb;
+      background-image: 
+        radial-gradient(#dce8f5 1.5px, transparent 1.5px),
+        linear-gradient(135deg, rgba(235, 244, 253, 0.7) 0%, rgba(246, 250, 254, 0.95) 100%);
+      background-size: 36px 36px, 100% 100%;
+      min-height: 100vh;
+    }
+
+    .glass-tile-pattern {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: radial-gradient(circle at 10% 20%, rgba(186, 222, 252, 0.35) 0%, transparent 40%),
+                        radial-gradient(circle at 90% 80%, rgba(199, 230, 255, 0.4) 0%, transparent 45%),
+                        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
+      z-index: 0;
+    }
+  </style>
+</head>
+<body class="font-sans antialiased text-slate-800 flex flex-col justify-between min-h-screen relative overflow-x-hidden">
+<!-- Ambient Glow Background -->
+<div aria-hidden="true" class="glass-tile-pattern"></div>
+<!-- BEGIN: TopHeader -->
+<header class="relative z-10 w-full px-6 py-4 flex items-center justify-between max-w-7xl mx-auto">
+<!-- Brand / Department Tagline (Subtle) -->
+<div class="flex items-center space-x-2">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">Cổng Học Tiếng Trung Trực Tuyến · LMS360</span>
+<span class="text-xs text-slate-500 hidden sm:inline-block">Dành cho Giảng viên &amp; Học viên HSK</span>
+</div>
+<!-- Support & Language / Help Link -->
+<div class="flex items-center space-x-4 text-xs font-medium text-slate-600">
+<a class="hover:text-blue-600 transition flex items-center gap-1.5" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+        Hỗ trợ kỹ thuật: 1900 6868
+      </a>
+</div>
+</header>
+<!-- END: TopHeader -->
+<!-- BEGIN: MainContent -->
+<main class="relative z-10 flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8">
+<div class="w-full max-w-6xl flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-14 my-auto">
+<!-- LEFT SECTION: Authentic LMS Educational Illustration -->
+<section class="w-full lg:w-1/2 flex flex-col items-center justify-center max-w-md lg:max-w-lg" data-purpose="hero-illustration">
+<div class="w-full relative px-4 flex justify-center items-center">
+<!-- Comprehensive SVG artwork replicating the exact components from image.png -->
+<svg class="w-full h-auto max-h-[460px] drop-shadow-sm select-none" fill="none" viewbox="0 0 540 460" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<lineargradient id="mobileGrad" x1="0" x2="0" y1="0" y2="100%">
+<stop offset="0%" stop-color="#0284C7"></stop>
+<stop offset="100%" stop-color="#0369A1"></stop>
+</lineargradient>
+<lineargradient id="bulbGrad" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0%" stop-color="#FDE047"></stop>
+<stop offset="100%" stop-color="#F59E0B"></stop>
+</lineargradient>
+<filter height="140%" id="shadowLight" width="140%" x="-20%" y="-20%">
+<fedropshadow dx="0" dy="6" flood-color="#0369a1" flood-opacity="0.12" stddeviation="8"></fedropshadow>
+</filter>
+</defs>
+<!-- Ground Base Accent -->
+<ellipse cx="270" cy="430" fill="#E2E8F0" rx="230" ry="8"></ellipse>
+<ellipse cx="270" cy="430" fill="#CBD5E1" rx="190" ry="4"></ellipse>
+<!-- Floating Geometric Decorative Dots & Icons -->
+<path d="M 90 280 L 96 286 M 96 280 L 90 286" stroke="#0284C7" stroke-linecap="round" stroke-width="2.5"></path>
+<path d="M 445 180 L 451 186 M 451 180 L 445 186" stroke="#0284C7" stroke-linecap="round" stroke-width="2.5"></path>
+<polygon fill="none" points="175,160 182,172 168,172" stroke="#F97316" stroke-width="2"></polygon>
+<circle cx="455" cy="225" fill="#F43F5E" r="3.5"></circle>
+<circle cx="160" cy="205" fill="#38BDF8" r="3"></circle>
+<!-- Central Mobile/Tablet Screen Device -->
+<g filter="url(#shadowLight)">
+<rect fill="#0284C7" height="340" rx="26" width="180" x="180" y="70"></rect>
+<rect fill="#FFFFFF" height="328" rx="22" width="168" x="186" y="76"></rect>
+<!-- Top Speaker & Camera -->
+<circle cx="240" cy="90" fill="#94A3B8" r="3"></circle>
+<rect fill="#CBD5E1" height="3" rx="1.5" width="22" x="252" y="88.5"></rect>
+<!-- Header Bar on Screen -->
+<circle cx="212" cy="120" fill="#E2E8F0" r="14"></circle>
+<circle cx="212" cy="116" fill="#94A3B8" r="5"></circle>
+<path d="M 204 128 C 204 122 220 122 220 128" fill="#94A3B8"></path>
+<!-- Checklist tasks on Mobile screen -->
+<circle cx="212" cy="155" fill="none" r="7" stroke="#38BDF8" stroke-width="2"></circle>
+<path d="M209 155 L211 157 L215 153" stroke="#38BDF8" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+<rect fill="#E2E8F0" height="5" rx="2.5" width="90" x="226" y="152.5"></rect>
+<circle cx="212" cy="180" fill="none" r="7" stroke="#38BDF8" stroke-width="2"></circle>
+<path d="M209 180 L211 182 L215 178" stroke="#38BDF8" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+<rect fill="#E2E8F0" height="5" rx="2.5" width="70" x="226" y="177.5"></rect>
+<circle cx="212" cy="205" fill="none" r="7" stroke="#CBD5E1" stroke-width="2"></circle>
+<line stroke="#CBD5E1" stroke-linecap="round" stroke-width="2" x1="208" x2="216" y1="205" y2="205"></line>
+<rect fill="#E2E8F0" height="5" rx="2.5" width="85" x="226" y="202.5"></rect>
+<rect fill="#F1F5F9" height="4" rx="2" width="110" x="205" y="228"></rect>
+<rect fill="#F1F5F9" height="4" rx="2" width="80" x="205" y="240"></rect>
+</g>
+<!-- Giant Idea Light Bulb on Left -->
+<g transform="translate(150, 180)">
+<ellipse cx="20" cy="30" fill="url(#bulbGrad)" opacity="0.95" rx="36" ry="40"></ellipse>
+<path d="M -2 55 L 42 55 L 34 72 L 6 72 Z" fill="#E2E8F0"></path>
+<rect fill="#94A3B8" height="5" rx="2.5" width="20" x="10" y="72"></rect>
+<!-- Filament lines -->
+<path d="M 12 38 Q 20 22 28 38" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-width="3"></path>
+<path d="M 6 12 L 0 5" stroke="#FDE047" stroke-linecap="round" stroke-width="2.5"></path>
+<path d="M 34 12 L 40 5" stroke="#FDE047" stroke-linecap="round" stroke-width="2.5"></path>
+<path d="M -20 30 L -28 30" stroke="#FDE047" stroke-linecap="round" stroke-width="2.5"></path>
+</g>
+<!-- Plant Pot at Left Corner -->
+<g transform="translate(120, 310)">
+<polygon fill="#F59E0B" points="20,80 15,120 45,120 40,80"></polygon>
+<!-- Leaves -->
+<path d="M 28 80 C 15 50 -10 55 10 90" fill="#22C55E"></path>
+<path d="M 32 80 C 45 40 70 50 42 90" fill="#16A34A"></path>
+<path d="M 30 75 C 30 35 20 30 25 75" fill="#4ADE80"></path>
+</g>
+<!-- Student Girl with Big Pencil on the Left -->
+<g transform="translate(160, 260)">
+<!-- Hair -->
+<ellipse cx="20" cy="18" fill="#0F172A" rx="14" ry="16"></ellipse>
+<!-- Face -->
+<circle cx="21" cy="20" fill="#FFDFC4" r="9"></circle>
+<!-- Body / Clothes -->
+<path d="M 14 30 L 28 30 L 32 58 L 10 58 Z" fill="#F43F5E"></path>
+<!-- Pants -->
+<path d="M 12 58 L 20 95 L 14 95 L 8 60 Z" fill="#1D4ED8"></path>
+<path d="M 22 58 L 30 95 L 36 95 L 30 60 Z" fill="#1D4ED8"></path>
+<!-- Giant Yellow Pencil she is holding -->
+<g transform="rotate(38 25 35)">
+<rect fill="#FBBF24" height="68" rx="2" width="14" x="25" y="2"></rect>
+<polygon fill="#FED7AA" points="25,2 39,2 32,-12"></polygon>
+<polygon fill="#334155" points="30,-8 34,-8 32,-12"></polygon>
+<rect fill="#F43F5E" height="8" width="14" x="25" y="62"></rect>
+</g>
+</g>
+<!-- Red Twin-Bell Alarm Clock (Front Center) -->
+<g transform="translate(205, 320)">
+<circle cx="35" cy="50" fill="#EF4444" r="30" stroke="#DC2626" stroke-width="2"></circle>
+<circle cx="35" cy="50" fill="#FFFFFF" r="23"></circle>
+<!-- Clock Hands -->
+<line stroke="#1E293B" stroke-linecap="round" stroke-width="2.5" x1="35" x2="35" y1="50" y2="35"></line>
+<line stroke="#EF4444" stroke-linecap="round" stroke-width="2" x1="35" x2="47" y1="50" y2="50"></line>
+<circle cx="35" cy="50" fill="#1E293B" r="2.5"></circle>
+<!-- Alarm Bells & Legs -->
+<path d="M 14 26 C 14 18 24 16 26 24 Z" fill="#EF4444"></path>
+<path d="M 56 26 C 56 18 46 16 44 24 Z" fill="#EF4444"></path>
+<line stroke="#94A3B8" stroke-linecap="round" stroke-width="4" x1="18" x2="10" y1="76" y2="86"></line>
+<line stroke="#94A3B8" stroke-linecap="round" stroke-width="4" x1="52" x2="60" y1="76" y2="86"></line>
+</g>
+<!-- Big Graduation Cap (Topping the Mobile) -->
+<g transform="translate(250, 75)">
+<polygon fill="#1E3A8A" points="40,25 95,5 150,25 95,45"></polygon>
+<path d="M 65 37 L 65 58 C 65 72 125 72 125 58 L 125 37" fill="#172554"></path>
+<!-- Gold Tassel -->
+<path d="M 95 25 C 130 25 140 45 138 65" fill="none" stroke="#F59E0B" stroke-width="2.5"></path>
+<circle cx="138" cy="67" fill="#F59E0B" r="3"></circle>
+</g>
+<!-- Stack of Colorful Books on the Right -->
+<g transform="translate(305, 310)">
+<!-- Green Book -->
+<rect fill="#84CC16" height="18" rx="3" width="105" x="0" y="20"></rect>
+<rect fill="#FFFFFF" height="10" opacity="0.6" width="95" x="5" y="24"></rect>
+<!-- Red/Orange Book -->
+<rect fill="#EF4444" height="20" rx="3" width="118" x="-10" y="40"></rect>
+<rect fill="#FFFFFF" height="10" opacity="0.6" width="108" x="-5" y="45"></rect>
+<!-- Yellow Bottom Book -->
+<rect fill="#FBBF24" height="24" rx="4" width="124" x="-8" y="62"></rect>
+<rect fill="#FFFFFF" height="14" opacity="0.6" width="114" x="-3" y="67"></rect>
+</g>
+<!-- Boy sitting on the books with a Laptop -->
+<g transform="translate(330, 230)">
+<!-- Legs dangling -->
+<path d="M 28 65 L 28 95 L 36 95 L 36 68" fill="#1E40AF"></path>
+<path d="M 16 65 L 16 88 L 8 88 L 8 65" fill="#1D4ED8"></path>
+<!-- Body -->
+<rect fill="#0284C7" height="38" rx="4" width="22" x="14" y="28"></rect>
+<!-- Head -->
+<circle cx="25" cy="18" fill="#FFDFC4" r="11"></circle>
+<!-- Hair -->
+<path d="M 14 18 C 14 8 36 6 36 18 Z" fill="#0F172A"></path>
+<!-- Open Laptop on lap -->
+<polygon fill="#E2E8F0" points="4,58 35,58 38,64 -2,64"></polygon>
+<rect fill="#38BDF8" height="18" rx="2" width="28" x="4" y="42"></rect>
+</g>
+<!-- Magnifying Glass at Far Right -->
+<g transform="translate(390, 245)">
+<circle cx="30" cy="30" fill="#E0F2FE" opacity="0.8" r="18" stroke="#0284C7" stroke-width="6"></circle>
+<line stroke="#0F172A" stroke-linecap="round" stroke-width="7" x1="43" x2="62" y1="43" y2="62"></line>
+</g>
+<!-- Speech Bubble Question Mark -->
+<g transform="translate(325, 205)">
+<circle cx="15" cy="15" fill="#F43F5E" r="13"></circle>
+<text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" x="11" y="20">?</text>
+</g>
+<g id="chinese-elements"><g transform="translate(85, 95)"><rect fill="#DC2626" height="38" opacity="0.9" rx="6" stroke="#B91C1C" stroke-width="1.5" width="38" x="0" y="0"></rect><rect fill="none" height="32" rx="4" stroke="#FEF2F2" stroke-width="1" width="32" x="3" y="3"></rect><text fill="#FEF2F2" font-family="'Noto Serif SC', 'Songti SC', serif" font-size="20" font-weight="bold" text-anchor="middle" x="19" y="26">学</text></g><g transform="translate(130, 95)"><rect fill="#EFF6FF" height="24" rx="12" stroke="#0284C7" stroke-width="1" width="52" x="0" y="0"></rect><text fill="#0369A1" font-family="sans-serif" font-size="11" font-weight="bold" text-anchor="middle" x="26" y="16">HSK 1-6</text></g><g opacity="0.85" transform="translate(420, 110)"><rect fill="#006058" height="32" rx="5" stroke="#007B71" stroke-width="1.2" width="32" x="0" y="0"></rect><text fill="#E6FFFA" font-family="'Noto Serif SC', 'Songti SC', serif" font-size="16" font-weight="bold" text-anchor="middle" x="16" y="22">汉</text></g><g opacity="0.85" transform="translate(458, 110)"><rect fill="#006058" height="32" rx="5" stroke="#007B71" stroke-width="1.2" width="32" x="0" y="0"></rect><text fill="#E6FFFA" font-family="'Noto Serif SC', 'Songti SC', serif" font-size="16" font-weight="bold" text-anchor="middle" x="16" y="22">语</text></g><g transform="translate(390, 80)"><path d="M0,20 Q15,0 30,10 Q20,25 0,20" fill="#16A34A" opacity="0.75"></path><path d="M15,18 Q35,5 45,22 Q25,30 15,18" fill="#22C55E" opacity="0.7"></path></g></g></svg>
+</div>
+<div class="mt-4 text-center hidden md:block"><p class="text-sm font-semibold text-slate-700">Nền tảng Học Tiếng Trung &amp; Luyện thi HSK Toàn diện</p><p class="text-xs text-slate-500 mt-0.5">Lộ trình từ HSK 1 đến HSK 6 · Giao tiếp phản xạ &amp; Phát âm chuẩn Pinyin</p></div>
+</section>
+<!-- RIGHT SECTION: Exact High-Fidelity Login Card -->
+<section class="w-full lg:w-[480px] flex-shrink-0" data-purpose="login-form-container">
+<!-- White Rounded Card Container (Matches border and shadow of screenshot) -->
+<div class="bg-white rounded-3xl border border-sky-100/90 shadow-card px-8 sm:px-10 py-9 transition-all">
+<!-- BEGIN: CardHeader -->
+<div class="flex flex-col items-center text-center">
+<!-- Product of Bach Khoa Tagline & Logo -->
+<div class="flex items-center justify-center space-x-2 text-[13px] text-slate-700 font-medium tracking-tight mb-4">
+<span>Một sản phẩm của</span>
+<span class="inline-flex items-center text-[#0b3967] font-bold text-sm tracking-wide">
+                BÁCH KHOA
+                <svg class="w-3.5 h-3.5 ml-1 text-red-500 inline fill-current" viewbox="0 0 24 24">
+<path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+</svg>
+</span>
+</div>
+<!-- LMS360 Official Red Pill Badge (Matching image) -->
+<div class="inline-flex flex-col items-center mb-5">
+<div class="bg-[#e52427] hover:bg-[#d61e21] transition text-white px-7 py-2.5 rounded-full shadow-sm flex items-center justify-center">
+<span class="text-2xl sm:text-[26px] font-extrabold tracking-tight select-none">LMS360</span>
+</div>
+<div class="flex items-center space-x-1.5 mt-1.5 text-[10px] font-bold tracking-wider text-slate-700 uppercase"><span class="inline-block w-2.5 h-2.5 rounded-full bg-red-600 flex items-center justify-center text-white text-[7px]">►</span><span>HỆ THỐNG HỌC TIẾNG TRUNG &amp; LUYỆN THI HSK TRỰC TUYẾN</span></div>
+</div>
+<!-- Page / Action Title -->
+<h1 class="text-2xl font-bold text-[#142d4c] tracking-tight">Đăng nhập</h1>
+<p class="text-xs font-semibold text-slate-600 mt-1 mb-6">Học viên · Giảng viên tiếng Trung · Thí sinh HSK / HSKK</p>
+</div>
+<!-- END: CardHeader -->
+<!-- BEGIN: LoginForm -->
+<form action="#" class="space-y-4" id="lms-login-form" method="POST">
+<!-- Input 1: ID / Phone / Email -->
+<div data-purpose="identifier-input-group">
+<label class="sr-only" for="identifier">Số điện thoại hoặc Email</label>
+<div class="flex rounded-xl overflow-hidden border border-slate-300 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-100 transition-all bg-white shadow-sm">
+<!-- Left Dark Slate Badge Icon Container (As in image) -->
+<div class="w-12 bg-[#1b3d63] flex items-center justify-center flex-shrink-0 text-white">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<!-- Input Element -->
+<input class="block w-full border-0 py-3 px-3.5 text-sm text-slate-800 placeholder-slate-400 focus:ring-0 bg-slate-50/40" id="identifier" name="identifier" placeholder="Nhập số điện thoại hoặc email" required="" type="text"/>
+</div>
+</div>
+<!-- Input 2: Password with Reveal Action -->
+<div data-purpose="password-input-group">
+<label class="sr-only" for="password">Mật khẩu</label>
+<div class="flex rounded-xl overflow-hidden border border-slate-300 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-100 transition-all bg-white shadow-sm">
+<!-- Left Dark Slate Badge Key Icon Container (As in image) -->
+<div class="w-12 bg-[#1b3d63] flex items-center justify-center flex-shrink-0 text-white">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<!-- Password Field -->
+<input class="block w-full border-0 py-3 px-3.5 text-sm text-slate-800 placeholder-slate-400 focus:ring-0 bg-slate-50/40" id="password" name="password" placeholder="Mật khẩu" required="" type="password"/>
+<!-- Interactive Visibility Toggle Button -->
+<button class="px-3 text-slate-400 hover:text-slate-600 focus:outline-none flex items-center justify-center bg-slate-50/40 border-l border-transparent" id="togglePassword" title="Hiện/Ẩn mật khẩu" type="button">
+<svg class="w-5 h-5" fill="none" id="eyeIconClosed" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<svg class="w-5 h-5 hidden" fill="none" id="eyeIconOpen" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+</div>
+<!-- Auxiliary Controls: Remember Me & Forgot Password -->
+<div class="flex items-center justify-between text-xs pt-1 px-1">
+<label class="inline-flex items-center cursor-pointer select-none text-slate-600 hover:text-slate-900">
+<input class="rounded border-slate-300 text-[#1b3d63] focus:ring-sky-500 w-4 h-4 mr-2" name="remember" type="checkbox"/>
+                Ghi nhớ đăng nhập
+              </label>
+<a class="font-medium text-sky-700 hover:text-sky-800 hover:underline" href="#">
+                Quên mật khẩu?
+              </a>
+</div>
+<!-- Primary Action: Submit Button (Matching the rounded slate button in reference) -->
+<div class="pt-2">
+<button class="w-full bg-[#3c526d] hover:bg-[#2e4157] active:bg-[#203043] text-white font-semibold py-3 px-6 rounded-xl shadow-btn transition duration-150 ease-in-out transform hover:-translate-y-0.5 text-base" type="submit">
+                Đăng nhập
+              </button>
+</div>
+</form>
+<!-- END: LoginForm -->
+<!-- BEGIN: AlternativeLoginSection -->
+<div class="mt-6 text-center space-y-4">
+<!-- SSO Link (Matches the reference: "Chọn cách đăng nhập khác") -->
+<div>
+<a class="inline-flex items-center justify-center text-xs font-semibold text-[#1b3d63] hover:text-sky-700 hover:underline group" href="#">
+<svg class="w-3.5 h-3.5 mr-1 text-slate-500 group-hover:text-sky-700 transition transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+</svg>
+                Chọn cách đăng nhập khác
+              </a>
+</div>
+<!-- Divider -->
+<div class="relative my-4">
+<div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+<div class="relative flex justify-center text-xs text-slate-400 bg-white px-3 font-normal">
+                Hoặc đăng nhập bằng
+              </div>
+</div>
+<!-- Social / Identity Providers Grid -->
+<div class="grid grid-cols-2 gap-3">
+<!-- Google Login -->
+<button class="flex items-center justify-center gap-2 py-2.5 px-3 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition shadow-sm" type="button">
+<svg class="w-4 h-4" viewbox="0 0 24 24">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"></path>
+</svg>
+                Google
+              </button>
+<!-- Microsoft Office 365 -->
+<button class="flex items-center justify-center gap-2 py-2.5 px-3 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition shadow-sm" type="button">
+<svg class="w-4 h-4" viewbox="0 0 21 21">
+<path d="M1 1h9v9H1z" fill="#f25022"></path>
+<path d="M1 11h9v9H1z" fill="#00a4ef"></path>
+<path d="M11 1h9v9h-9z" fill="#7fba00"></path>
+<path d="M11 11h9v9h-9z" fill="#ffb900"></path>
+</svg>
+                Microsoft 365
+              </button>
+</div>
+<!-- Registration CTA -->
+<div class="pt-2 text-xs text-slate-600">Chưa có tài khoản học tiếng Trung? <a class="font-bold text-sky-700 hover:underline ml-1" href="#">Đăng ký ngay</a></div>
+</div>
+<!-- END: AlternativeLoginSection -->
+<!-- BEGIN: BottomHelpNote -->
+<div class="mt-7 pt-4 border-t border-slate-100 flex items-start space-x-2 text-[11px] text-slate-500 italic text-left" data-purpose="notice-disclaimer">
+<svg class="w-4 h-4 text-sky-600 flex-shrink-0 mt-0.5 not-italic" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<p>Đăng nhập bằng tài khoản Trung tâm Tiếng Trung hoặc tài khoản học viên HSK. <a class="text-sky-700 font-semibold underline not-italic hover:text-sky-900 ml-0.5" href="#">Xem hướng dẫn kích hoạt khóa học</a></p>
+</div>
+<!-- END: BottomHelpNote -->
+</div>
+</section>
+</div>
+</main>
+<!-- END: MainContent -->
+<!-- BEGIN: Footer -->
+<footer class="relative z-10 w-full py-4 text-center text-xs text-slate-500 border-t border-slate-200/60 bg-white/40 backdrop-blur-sm">
+<div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+<p>© 2024 LMS360. Hệ thống Quản trị Học tập Trực tuyến Chuẩn Quốc Gia.</p>
+<div class="flex items-center space-x-4 text-xs font-medium">
+<a class="hover:text-slate-800 transition" href="#">Điều khoản sử dụng</a>
+<a class="hover:text-slate-800 transition" href="#">Chính sách bảo mật</a>
+<a class="hover:text-slate-800 transition" href="#">Liên hệ</a>
+</div>
+</div>
+</footer>
+<!-- END: Footer -->
+<!-- Script for Interactive Password Toggle -->
+<script data-purpose="password-toggle">
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggleBtn = document.getElementById('togglePassword');
+      const passwordInput = document.getElementById('password');
+      const eyeOpen = document.getElementById('eyeIconOpen');
+      const eyeClosed = document.getElementById('eyeIconClosed');
+
+      if (toggleBtn && passwordInput) {
+        toggleBtn.addEventListener('click', () => {
+          const isPassword = passwordInput.getAttribute('type') === 'password';
+          passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+          
+          if (isPassword) {
+            eyeOpen.classList.remove('hidden');
+            eyeClosed.classList.add('hidden');
+          } else {
+            eyeOpen.classList.add('hidden');
+            eyeClosed.classList.remove('hidden');
+          }
+        });
+      }
+    });
+  </script>
+</body></html>

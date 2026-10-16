@@ -5,7 +5,7 @@ export function RegisterPage() {
   const location = useLocation();
 
   return (
-    <section className="auth-page">
+    <section className="auth-page auth-page-card">
       <h1>Create account</h1>
       <p className="auth-lead">Public registration creates a student account.</p>
       {/* Redirect after success is handled by GuestRoute. */}

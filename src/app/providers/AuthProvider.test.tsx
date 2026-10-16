@@ -54,7 +54,7 @@ function Probe() {
         type="button"
         onClick={() => {
           auth
-            .login({ email: 'new@example.com', password: 'password123' })
+            .login({ identifier: 'new@example.com', password: 'password123' })
             .catch((error: unknown) => {
               lastLoginError = error;
             });

@@ -13,9 +13,10 @@ type LearningEmbedFrameProps = {
   title: string;
   src: string;
   variant: 'video' | 'document';
+  onLoad?: () => void;
 };
 
-export function LearningEmbedFrame({ title, src, variant }: LearningEmbedFrameProps) {
+export function LearningEmbedFrame({ title, src, variant, onLoad }: LearningEmbedFrameProps) {
   if (!isAllowedEmbedIframeSrc(src)) {
     return null;
   }
@@ -24,7 +25,13 @@ export function LearningEmbedFrame({ title, src, variant }: LearningEmbedFramePr
 
   return (
     <div className={variant === 'video' ? 'learning-embed learning-embed-video' : 'learning-embed learning-embed-document'}>
-      <iframe title={title} src={src} sandbox={sandbox} allowFullScreen={variant === 'video'} />
+      <iframe
+        title={title}
+        src={src}
+        sandbox={sandbox}
+        allowFullScreen={variant === 'video'}
+        onLoad={onLoad}
+      />
     </div>
   );
 }

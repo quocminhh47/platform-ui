@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { SiteFooter } from '../../../components/layout/SiteFooter';
 import type { Lesson } from '../../catalog/types/lesson.types';
@@ -8,6 +8,7 @@ import { useCourseDetail } from '../../catalog/hooks/useCourseDetail';
 import { CurriculumSidebar } from '../components/CurriculumSidebar';
 import { LessonNav } from '../components/LessonNav';
 import { LessonStage } from '../components/LessonStage';
+import { useCourseProgress } from '../hooks/useCourseProgress';
 import { useLessonContent } from '../hooks/useLessonContent';
 
 export function LearningWorkspacePage() {
@@ -15,6 +16,21 @@ export function LearningWorkspacePage() {
   const detail = useCourseDetail(courseId);
   const curriculum = useCourseCurriculum({
     courseId,
+    enabled: Boolean(detail.course),
+  });
+  const {
+    progressByLessonId,
+    courseSummary,
+    sectionSummaries,
+    loading: progressLoading,
+    error: progressError,
+    reload: reloadProgress,
+    markLessonComplete,
+    completeError,
+    clearCompleteError,
+  } = useCourseProgress({
+    courseId,
+    sections: curriculum.sections,
     enabled: Boolean(detail.course),
   });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -26,6 +42,28 @@ export function LearningWorkspacePage() {
     sectionId: selected?.sectionId,
     lessonId: selected?.id,
   });
+
+  const selectedCompleted = selected
+    ? (progressByLessonId.get(selected.id)?.isCompleted ?? false)
+    : false;
+  const autoCompleteEnabled =
+    selected !== undefined &&
+    !selectedCompleted &&
+    (selected.lessonType === 'VIDEO' || selected.lessonType === 'ARTICLE') &&
+    !content.loading &&
+    !content.error &&
+    content.lesson !== null;
+
+  const handleAutoComplete = useCallback(() => {
+    if (!selected || selectedCompleted) {
+      return;
+    }
+    void markLessonComplete(selected.id);
+  }, [markLessonComplete, selected, selectedCompleted]);
+
+  useEffect(() => {
+    clearCompleteError();
+  }, [selected?.id, clearCompleteError]);
 
   let workspace: ReactNode;
 
@@ -66,6 +104,12 @@ export function LearningWorkspacePage() {
             selectedLessonId={selected?.id}
             collapsed={sidebarCollapsed}
             onToggleCollapsed={() => setSidebarCollapsed((current) => !current)}
+            progressLoading={progressLoading}
+            progressError={progressError}
+            onRetryProgress={reloadProgress}
+            courseSummary={courseSummary}
+            sectionSummaries={sectionSummaries}
+            isLessonCompleted={(id) => progressByLessonId.get(id)?.isCompleted ?? false}
           />
           <div className="learning-stage-column">
             <LessonStage
@@ -74,6 +118,10 @@ export function LearningWorkspacePage() {
               error={content.error}
               onRetry={content.reload}
               missingSelection={Boolean(lessonId) && !curriculum.loading && !selected}
+              isCompleted={selectedCompleted}
+              autoCompleteEnabled={autoCompleteEnabled}
+              onAutoComplete={handleAutoComplete}
+              completeError={completeError}
             />
             <LessonNav
               courseId={courseId}

@@ -9,9 +9,10 @@ import { LearningExternalLink } from './LearningExternalLink';
 type VideoLessonProps = {
   title: string;
   contentUrl: string | null;
+  onContentReady?: () => void;
 };
 
-export function VideoLesson({ title, contentUrl }: VideoLessonProps) {
+export function VideoLesson({ title, contentUrl, onContentReady }: VideoLessonProps) {
   if (!contentUrl) {
     return <p className="muted">This video has no playback URL yet.</p>;
   }
@@ -20,14 +21,25 @@ export function VideoLesson({ title, contentUrl }: VideoLessonProps) {
   if (youtubeEmbed) {
     return (
       <div className="learning-video-shell">
-        <LearningEmbedFrame title={title} src={youtubeEmbed} variant="video" />
+        <LearningEmbedFrame
+          title={title}
+          src={youtubeEmbed}
+          variant="video"
+          onLoad={onContentReady}
+        />
       </div>
     );
   }
 
   if (isDirectVideoMediaUrl(contentUrl)) {
     return (
-      <video className="learning-video" controls src={contentUrl} aria-label={title}>
+      <video
+        className="learning-video"
+        controls
+        src={contentUrl}
+        aria-label={title}
+        onLoadedData={onContentReady}
+      >
         {title}
       </video>
     );

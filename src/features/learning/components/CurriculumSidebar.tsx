@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { SectionWithLessons } from '../../catalog/hooks/useCourseCurriculum';
+import type { CourseProgressSummary } from '../types/progress.types';
 
 type CurriculumSidebarProps = {
   courseId: string;
@@ -11,6 +12,12 @@ type CurriculumSidebarProps = {
   selectedLessonId: string | undefined;
   collapsed: boolean;
   onToggleCollapsed: () => void;
+  progressLoading: boolean;
+  progressError: string | null;
+  onRetryProgress: () => void;
+  courseSummary: CourseProgressSummary;
+  sectionSummaries: Map<string, { completedCount: number; totalCount: number }>;
+  isLessonCompleted: (lessonId: string) => boolean;
 };
 
 export function CurriculumSidebar({
@@ -22,6 +29,12 @@ export function CurriculumSidebar({
   selectedLessonId,
   collapsed,
   onToggleCollapsed,
+  progressLoading,
+  progressError,
+  onRetryProgress,
+  courseSummary,
+  sectionSummaries,
+  isLessonCompleted,
 }: CurriculumSidebarProps) {
   const [collapsedSectionIds, setCollapsedSectionIds] = useState<string[]>([]);
   const selectedSectionId = sections?.find((section) =>
@@ -57,6 +70,42 @@ export function CurriculumSidebar({
         className="learning-sidebar-scroll"
         hidden={collapsed}
       >
+        {!collapsed && courseSummary.totalCount > 0 ? (
+          <div className="learning-course-progress">
+            <div className="learning-course-progress-label">
+              <span>Course progress</span>
+              <span>{courseSummary.percent}%</span>
+            </div>
+            <div
+              className="learning-course-progress-track"
+              role="progressbar"
+              aria-valuenow={courseSummary.percent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`${courseSummary.completedCount} of ${courseSummary.totalCount} lessons completed`}
+            >
+              <div
+                className="learning-course-progress-fill"
+                style={{ width: `${courseSummary.percent}%` }}
+              />
+            </div>
+            <p className="learning-course-progress-meta muted">
+              {courseSummary.completedCount} of {courseSummary.totalCount} lessons completed
+            </p>
+          </div>
+        ) : null}
+
+        {progressLoading ? <p className="page-status">Loading progress…</p> : null}
+
+        {!progressLoading && progressError ? (
+          <div className="section-error learning-progress-error" role="alert">
+            <p>{progressError}</p>
+            <button type="button" onClick={onRetryProgress}>
+              Try again
+            </button>
+          </div>
+        ) : null}
+
         {loading ? <p className="page-status">Loading curriculum…</p> : null}
 
         {!loading && error ? (
@@ -76,6 +125,7 @@ export function CurriculumSidebar({
           <ol className="learning-sections">
             {sections.map((section) => {
               const expanded = !collapsedSectionIds.includes(section.id);
+              const sectionProgress = sectionSummaries.get(section.id);
               return (
                 <li key={section.id}>
                   <button
@@ -92,20 +142,36 @@ export function CurriculumSidebar({
                     }}
                   >
                     <ChevronIcon direction={expanded ? 'down' : 'right'} />
-                    <span>{section.title}</span>
+                    <span className="learning-section-toggle-text">
+                      <span>{section.title}</span>
+                      {sectionProgress && sectionProgress.totalCount > 0 ? (
+                        <span className="learning-section-count">
+                          {sectionProgress.completedCount}/{sectionProgress.totalCount}
+                        </span>
+                      ) : null}
+                    </span>
                   </button>
                   {expanded ? (
                     <ul id={`learning-section-${section.id}`} className="learning-lessons">
-                      {section.lessons.map((lesson) => (
-                        <li key={lesson.id}>
-                          <Link
-                            to={`/courses/${courseId}/learn/${lesson.id}`}
-                            aria-current={lesson.id === selectedLessonId ? 'page' : undefined}
-                          >
-                            {lesson.title}
-                          </Link>
-                        </li>
-                      ))}
+                      {section.lessons.map((lesson) => {
+                        const completed = isLessonCompleted(lesson.id);
+                        return (
+                          <li key={lesson.id}>
+                            <Link
+                              to={`/courses/${courseId}/learn/${lesson.id}`}
+                              aria-current={lesson.id === selectedLessonId ? 'page' : undefined}
+                              className={completed ? 'is-completed' : undefined}
+                            >
+                              {completed ? (
+                                <CompletedIcon />
+                              ) : (
+                                <span className="learning-lesson-icon-placeholder" aria-hidden="true" />
+                              )}
+                              <span>{lesson.title}</span>
+                            </Link>
+                          </li>
+                        );
+                      })}
                     </ul>
                   ) : null}
                 </li>
@@ -115,6 +181,27 @@ export function CurriculumSidebar({
         ) : null}
       </div>
     </aside>
+  );
+}
+
+function CompletedIcon() {
+  return (
+    <svg
+      className="learning-lesson-complete-icon"
+      aria-hidden="true"
+      viewBox="0 0 16 16"
+      width="16"
+      height="16"
+    >
+      <path
+        d="M3.5 8.5 6.5 11.5 12.5 4.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 

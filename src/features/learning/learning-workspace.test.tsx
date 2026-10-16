@@ -13,6 +13,7 @@ import type { Course } from '../catalog/types/course.types';
 import type { Lesson } from '../catalog/types/lesson.types';
 import type { Section } from '../catalog/types/section.types';
 import * as lessonsApi from './api/lessons.api';
+import * as progressApi from './api/progress.api';
 import { LearningWorkspacePage } from './pages/LearningWorkspacePage';
 
 vi.mock('../auth/api/auth.api', () => ({
@@ -32,9 +33,16 @@ vi.mock('./api/lessons.api', () => ({
   getLessonContent: vi.fn(),
 }));
 
+vi.mock('./api/progress.api', () => ({
+  listCourseProgress: vi.fn(),
+  getLessonProgress: vi.fn(),
+  completeLessonProgress: vi.fn(),
+}));
+
 const auth = vi.mocked(authApi);
 const courses = vi.mocked(coursesApi);
 const lessons = vi.mocked(lessonsApi);
+const progress = vi.mocked(progressApi);
 
 const courseId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const sectionA = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
@@ -134,6 +142,9 @@ beforeEach(() => {
   courses.listSectionLessons.mockReset();
   courses.listPublishedCourses.mockReset();
   lessons.getLessonContent.mockReset();
+  progress.listCourseProgress.mockReset();
+  progress.completeLessonProgress.mockReset();
+  progress.listCourseProgress.mockResolvedValue([]);
   courses.getCourseById.mockResolvedValue(course);
   courses.listPublishedCourses.mockResolvedValue([]);
   courses.listCourseSections.mockResolvedValue(sections);
@@ -224,20 +235,20 @@ describe('learning workspace curriculum', () => {
 
     expect(await screen.findByRole('link', { name: 'Practice problems' })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Practice' }));
-    expect(screen.getByRole('button', { name: 'Practice' }).getAttribute('aria-expanded')).toBe(
+    fireEvent.click(screen.getByRole('button', { name: /Practice/ }));
+    expect(screen.getByRole('button', { name: /Practice/ }).getAttribute('aria-expanded')).toBe(
       'false',
     );
     expect(screen.queryByRole('link', { name: 'Practice problems' })).toBeNull();
     expect(screen.getByRole('link', { name: 'What is algebra?' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Basics' }).getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('button', { name: /Basics/ }).getAttribute('aria-expanded')).toBe('true');
 
     fireEvent.click(screen.getByRole('link', { name: 'Next lesson' }));
 
     await waitFor(() =>
       expect(router.state.location.pathname).toBe(`/courses/${courseId}/learn/${lessonB}`),
     );
-    expect(screen.getByRole('button', { name: 'Practice' }).getAttribute('aria-expanded')).toBe(
+    expect(screen.getByRole('button', { name: /Practice/ }).getAttribute('aria-expanded')).toBe(
       'true',
     );
     expect(await screen.findByRole('heading', { name: 'Practice problems' })).toBeTruthy();
@@ -257,11 +268,11 @@ describe('learning workspace curriculum', () => {
     renderWorkspace();
 
     expect(await screen.findByRole('heading', { name: 'What is algebra?' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Basics' }));
+    fireEvent.click(screen.getByRole('button', { name: /Basics/ }));
     expect(screen.queryByRole('link', { name: 'What is algebra?' })).toBeNull();
     expect(screen.getByRole('heading', { name: 'What is algebra?' })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Basics' }));
+    fireEvent.click(screen.getByRole('button', { name: /Basics/ }));
     expect(screen.getByRole('link', { name: 'What is algebra?' }).getAttribute('aria-current')).toBe(
       'page',
     );
@@ -306,6 +317,48 @@ describe('learning workspace curriculum', () => {
     expect(link.getAttribute('href')).toBe(docUrl);
     expect(link.closest('.learning-external-fallback-secondary')).toBeTruthy();
     expect(screen.getByText(/may not work for every file type/i)).toBeTruthy();
+  });
+
+  it('auto-completes a video lesson after protected content loads and updates sidebar progress', async () => {
+    setAccessToken('token');
+    auth.fetchCurrentUser.mockResolvedValue(student);
+    progress.completeLessonProgress.mockResolvedValue({
+      lessonId: lessonA,
+      isCompleted: true,
+      watchedDurationSeconds: 0,
+      lastAccessedAt: '2026-02-01T00:00:00Z',
+    });
+
+    renderWorkspace();
+
+    expect(await screen.findByRole('heading', { name: 'What is algebra?' })).toBeTruthy();
+    expect(screen.getByText('Not completed')).toBeTruthy();
+    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('0');
+    expect(progress.completeLessonProgress).not.toHaveBeenCalled();
+
+    const video = document.querySelector('video');
+    expect(video).toBeTruthy();
+    fireEvent.loadedData(video!);
+
+    await waitFor(() => expect(screen.getByText('Completed')).toBeTruthy());
+    expect(progress.completeLessonProgress).toHaveBeenCalledTimes(1);
+    expect(progress.completeLessonProgress).toHaveBeenCalledWith(courseId, lessonA, 'token');
+    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('50');
+    expect(screen.getByText('1 of 2 lessons completed')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Mark as complete' })).toBeNull();
+
+    fireEvent.loadedData(video!);
+    expect(progress.completeLessonProgress).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not auto-complete before protected lesson content is loaded', async () => {
+    setAccessToken('token');
+    auth.fetchCurrentUser.mockResolvedValue(student);
+
+    renderWorkspace();
+
+    expect(await screen.findByRole('heading', { name: 'What is algebra?' })).toBeTruthy();
+    expect(progress.completeLessonProgress).not.toHaveBeenCalled();
   });
 
   it('does not play a summary URL when content access is denied', async () => {

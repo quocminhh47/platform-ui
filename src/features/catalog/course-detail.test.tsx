@@ -111,7 +111,7 @@ describe('course detail page', () => {
 
     expect(await screen.findByRole('heading', { name: 'Intro to Algebra' })).toBeTruthy();
     expect(screen.getByText('Equations and graphs.')).toBeTruthy();
-    expect(screen.getByText('Free')).toBeTruthy();
+    expect(screen.getByText('Miễn phí')).toBeTruthy();
     const sectionToggle = await screen.findByRole('button', { name: /Getting started/ });
     expect(sectionToggle.getAttribute('aria-expanded')).toBe('true');
     expect(sectionToggle.textContent).toMatch(/1 lesson/);

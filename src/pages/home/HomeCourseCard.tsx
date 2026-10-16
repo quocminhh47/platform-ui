@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { CourseImage } from '../../features/catalog/components/CourseImage';
 import type { Course } from '../../features/catalog/types/course.types';
+import { formatPrice } from '../../features/catalog/utils/formatPrice';
 
 type HomeCourseCardProps = {
   course: Course;
@@ -18,7 +19,7 @@ export function HomeCourseCard({ course }: HomeCourseCardProps) {
         <div className="home-course-body">
           <h3 title={course.title}>{course.title}</h3>
           {description ? <p className="home-course-description">{description}</p> : null}
-          <p className="home-course-price">{formatListedPrice(course.price)}</p>
+          <p className="home-course-price">{formatPrice(course.price)}</p>
           {instructor || lessonCount !== null ? (
             <p className="home-course-facts">
               {instructor ? <span>{instructor}</span> : null}
@@ -29,14 +30,4 @@ export function HomeCourseCard({ course }: HomeCourseCardProps) {
       </article>
     </Link>
   );
-}
-
-function formatListedPrice(price: number): string {
-  if (!Number.isFinite(price) || price <= 0) {
-    return 'Miễn phí';
-  }
-  return new Intl.NumberFormat(undefined, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(price);
 }

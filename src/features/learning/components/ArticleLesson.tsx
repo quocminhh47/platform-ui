@@ -9,9 +9,10 @@ import { LearningExternalLink } from './LearningExternalLink';
 type ArticleLessonProps = {
   title: string;
   contentUrl: string | null;
+  onContentReady?: () => void;
 };
 
-export function ArticleLesson({ title, contentUrl }: ArticleLessonProps) {
+export function ArticleLesson({ title, contentUrl, onContentReady }: ArticleLessonProps) {
   if (!contentUrl || !isSafeExternalLink(contentUrl)) {
     return <p className="muted">This article has no content yet.</p>;
   }
@@ -28,7 +29,12 @@ export function ArticleLesson({ title, contentUrl }: ArticleLessonProps) {
   if (previewSrc) {
     return (
       <div className="learning-article">
-        <LearningEmbedFrame title={title} src={previewSrc} variant="document" />
+        <LearningEmbedFrame
+          title={title}
+          src={previewSrc}
+          variant="document"
+          onLoad={onContentReady}
+        />
         <p className="muted learning-preview-note">
           Preview may not work for every file type (for example some DOC or DOCX uploads). If the
           preview is blank, use the link below.
