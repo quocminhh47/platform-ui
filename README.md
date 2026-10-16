@@ -12,4 +12,8 @@ npm install
 npm run dev
 ```
 
-Routes: `/`, `/login`, `/register`. Production build: `npm run build`.
+Routes include `/`, `/courses`, `/courses/:courseId`, `/login`, `/register`, `/my-courses`, `/dashboard`, and `/courses/:courseId/learn/...`. See [docs/frontend.md](docs/frontend.md) and [docs/development-status.md](docs/development-status.md).
+
+```bash
+npm run lint && npm test && npm run build
+```
