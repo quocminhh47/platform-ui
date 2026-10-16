@@ -9,7 +9,16 @@ export type FormErrors = {
 
 type AuthFormKind = 'login' | 'register';
 
-const KNOWN_FIELDS = new Set(['email', 'password', 'fullName', 'avatarUrl']);
+const KNOWN_FIELDS = new Set([
+  'email',
+  'password',
+  'firstName',
+  'lastName',
+  'phoneNumber',
+  'dateOfBirth',
+  'identifier',
+  'avatarUrl',
+]);
 
 /**
  * Backend 400 responses use `details: ["field: message", ...]`
@@ -54,11 +63,26 @@ export function mapAuthError(error: unknown, kind: AuthFormKind): FormErrors {
   }
 
   if (error.status === 401 && kind === 'login') {
-    return { form: 'Invalid email or password.', fields: {} };
+    return { form: 'Invalid email/phone number or password.', fields: {} };
   }
 
   if (error.status === 409 && kind === 'register') {
-    return { form: null, fields: { email: 'An account with this email already exists.' } };
+    const fields = parseValidationDetails(error.body?.details);
+    if (fields.email) {
+      fields.email = 'An account with this email already exists.';
+    }
+    if (fields.phoneNumber) {
+      fields.phoneNumber = 'An account with this phone number already exists.';
+    }
+    if (Object.keys(fields).length === 0) {
+      // Older/opaque 409: fall back to the message text.
+      if (/phone/i.test(error.message)) {
+        fields.phoneNumber = 'An account with this phone number already exists.';
+      } else {
+        fields.email = 'An account with this email already exists.';
+      }
+    }
+    return { form: null, fields };
   }
 
   return { form: 'Something went wrong. Please try again later.', fields: {} };

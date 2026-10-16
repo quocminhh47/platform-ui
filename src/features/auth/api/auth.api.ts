@@ -1,5 +1,6 @@
 import { apiRequest } from '../../../services/api/client';
 import type { AuthTokens, LoginCredentials, RegisterPayload, User } from '../types/auth.types';
+import { buildLoginRequestBody } from './login-request';
 
 /** GET /api/auth/me — requires a valid Bearer token. */
 export function fetchCurrentUser(accessToken: string): Promise<User> {
@@ -10,7 +11,7 @@ export function fetchCurrentUser(accessToken: string): Promise<User> {
 export function login(credentials: LoginCredentials): Promise<AuthTokens> {
   return apiRequest<AuthTokens>('/api/auth/login', {
     method: 'POST',
-    body: credentials,
+    body: buildLoginRequestBody(credentials),
   });
 }
 

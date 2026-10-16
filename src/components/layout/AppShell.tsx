@@ -197,6 +197,7 @@ function DefaultShell() {
           ) : isAuthenticated && user ? (
             <>
               <Link to="/dashboard">Dashboard</Link>
+              <Link to="/my-courses">My courses</Link>
               <span className="muted">
                 {user.fullName} ({user.role})
               </span>

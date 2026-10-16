@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '../../app/providers/AuthProvider';
+import { ToastProvider } from '../../components/feedback/ToastProvider';
 import { AppShell } from '../../components/layout/AppShell';
 import { ApiError } from '../../services/api/api-error';
 import * as coursesApi from './api/courses.api';
@@ -68,7 +69,9 @@ function renderRoutes(initialEntry: string) {
   );
   render(
     <AuthProvider>
-      <RouterProvider router={router} />
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
     </AuthProvider>,
   );
   return router;
@@ -108,10 +111,15 @@ describe('course detail page', () => {
 
     expect(await screen.findByRole('heading', { name: 'Intro to Algebra' })).toBeTruthy();
     expect(screen.getByText('Equations and graphs.')).toBeTruthy();
-    expect(screen.getByText('Free')).toBeTruthy();
-    expect(await screen.findByRole('heading', { name: 'Getting started' })).toBeTruthy();
+    expect(screen.getByText('Miễn phí')).toBeTruthy();
+    const sectionToggle = await screen.findByRole('button', { name: /Getting started/ });
+    expect(sectionToggle.getAttribute('aria-expanded')).toBe('true');
+    expect(sectionToggle.textContent).toMatch(/1 lesson/);
     expect(await screen.findByText('What is algebra?')).toBeTruthy();
+    expect(screen.queryByText(lesson.contentUrl ?? '')).toBeNull();
     expect(await screen.findByText(/Video · 5 min/)).toBeTruthy();
+    expect(document.querySelector('.curriculum-scroll')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Curriculum' })).toBeTruthy();
     expect(screen.getByRole('link', { name: /Back to courses/i }).getAttribute('href')).toBe(
       '/courses',
     );
@@ -164,6 +172,38 @@ describe('course detail page', () => {
     renderRoutes(`/courses/${courseId}`);
 
     expect(await screen.findByText('This course does not have any sections yet.')).toBeTruthy();
+  });
+
+  it('expands and collapses curriculum sections independently', async () => {
+    const secondSection: Section = {
+      id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+      courseId,
+      title: 'Practice',
+      sortOrder: 1,
+    };
+    api.getCourseById.mockResolvedValue(course);
+    api.listCourseSections.mockResolvedValue([section, secondSection]);
+    api.listSectionLessons.mockImplementation(async (_courseId, id) =>
+      id === section.id ? [lesson] : [],
+    );
+
+    renderRoutes(`/courses/${courseId}`);
+
+    const basics = await screen.findByRole('button', { name: /Getting started/ });
+    const practice = await screen.findByRole('button', { name: /Practice/ });
+    expect(await screen.findByText('What is algebra?')).toBeTruthy();
+    expect(practice.textContent).toMatch(/0 lessons/);
+
+    fireEvent.click(basics);
+
+    expect(basics.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByText('What is algebra?')).toBeNull();
+    expect(practice.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByText('No lessons in this section yet.')).toBeTruthy();
+
+    fireEvent.click(basics);
+    expect(basics.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByText('What is algebra?')).toBeTruthy();
   });
 
   it('shows when a section has no lessons', async () => {

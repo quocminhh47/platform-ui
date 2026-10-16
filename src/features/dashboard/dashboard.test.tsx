@@ -95,7 +95,7 @@ describe('student dashboard', () => {
 
     expect(await screen.findByRole('heading', { name: 'Welcome back, Minh Student' })).toBeTruthy();
     expect(await screen.findByRole('heading', { name: 'Intro to Algebra' })).toBeTruthy();
-    expect(screen.getByText('Free')).toBeTruthy();
+    expect(screen.getByText('Miễn phí')).toBeTruthy();
     expect(courses.listPublishedCourses).toHaveBeenCalledWith('token');
     const exploreLinks = screen.getAllByRole('link', { name: 'Explore courses' });
     expect(exploreLinks.length).toBeGreaterThan(0);
