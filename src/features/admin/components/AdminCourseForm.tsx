@@ -5,12 +5,17 @@ import { fieldDescribedBy } from '../../auth/components/fieldDescribedBy';
 import type { User } from '../../auth/types/auth.types';
 import type { Course } from '../../catalog/types/course.types';
 import {
+  buildAdminCoursePreview,
+  instructorPreviewLabel,
+} from '../utils/admin-course-preview';
+import {
   adminCourseFormValuesFromCourse,
   emptyAdminCourseFormValues,
   validateAdminCourseForm,
   type AdminCourseFormField,
   type AdminCourseFormValues,
 } from '../validation/admin-course-form.validation';
+import { AdminCoursePreviewCard } from './AdminCoursePreviewCard';
 
 type AdminCourseFormProps = {
   mode: 'create' | 'edit';
@@ -53,6 +58,20 @@ export function AdminCourseForm({
 
   const clientErrors = useMemo(() => validateAdminCourseForm(values, mode), [values, mode]);
 
+  const instructorLabel =
+    mode === 'edit' && course
+      ? course.instructorName?.trim()
+        ? `${course.instructorName} (${course.instructorId})`
+        : course.instructorId
+      : null;
+
+  const previewCourse = useMemo(
+    () => buildAdminCoursePreview(values, mode, course, instructors),
+    [values, mode, course, instructors],
+  );
+  const previewInstructor =
+    mode === 'create' ? instructorPreviewLabel(values, instructors) : instructorLabel;
+
   function errorFor(field: AdminCourseFormField): string | undefined {
     return submitAttempted || touched[field] ? clientErrors[field] : undefined;
   }
@@ -77,21 +96,16 @@ export function AdminCourseForm({
     await onSubmit(values);
   }
 
-  const instructorLabel =
-    mode === 'edit' && course
-      ? course.instructorName?.trim()
-        ? `${course.instructorName} (${course.instructorId})`
-        : course.instructorId
-      : null;
-
   return (
-    <form className="auth-form admin-form" onSubmit={handleSubmit} noValidate>
+    <form className="auth-form admin-course-form" onSubmit={handleSubmit} noValidate>
       {formError ? (
-        <div className="section-error" role="alert">
+        <div className="section-error admin-course-form-error" role="alert">
           <p>{formError}</p>
         </div>
       ) : null}
 
+      <div className="admin-course-form-layout">
+        <div className="admin-course-form-main admin-form">
       <FormField id="admin-course-title" label="Tiêu đề" required error={errorFor('title')}>
         <input
           id="admin-course-title"
@@ -196,37 +210,85 @@ export function AdminCourseForm({
         />
       </FormField>
 
-      <div className="field">
-        <span className="admin-field-label">Giá</span>
-        <p className="admin-readonly-value">Miễn phí</p>
-        <p className="field-hint" id="admin-course-price-hint">
-          MVP chỉ hỗ trợ khóa học miễn phí (giá = 0).
-        </p>
-      </div>
-
-      <div className="field admin-checkbox-field">
-        <label htmlFor="admin-course-published">
+      <FormField
+        id="admin-course-price"
+        label="Giá khóa học"
+        error={errorFor('price')}
+        hint="Nhập giá VND hoặc chọn Miễn phí (giá = 0)."
+      >
+        <div className="admin-course-price-row">
           <input
-            id="admin-course-published"
-            type="checkbox"
-            checked={values.published}
-            disabled={submitting}
-            onChange={(event) => setField('published', event.target.checked)}
+            id="admin-course-price"
+            type="number"
+            min={0}
+            step={1}
+            inputMode="numeric"
+            className="admin-course-price-input"
+            value={values.isFree ? '0' : values.price}
+            disabled={submitting || values.isFree}
+            aria-invalid={Boolean(errorFor('price'))}
+            aria-describedby={fieldDescribedBy(
+              'admin-course-price',
+              errorFor('price'),
+              'Nhập giá VND hoặc chọn Miễn phí (giá = 0).',
+            )}
+            onChange={(event) => setField('price', event.target.value)}
+            onBlur={() => markTouched('price')}
           />
-          <span>Xuất bản khóa học</span>
+          <label htmlFor="admin-course-price-free" className="admin-course-price-free">
+            <input
+              id="admin-course-price-free"
+              type="checkbox"
+              checked={values.isFree}
+              disabled={submitting}
+              onChange={(event) => {
+                const checked = event.target.checked;
+                setValues((current) => ({
+                  ...current,
+                  isFree: checked,
+                  price: checked ? '0' : current.price === '0' ? '' : current.price,
+                }));
+                markTouched('price');
+              }}
+            />
+            <span>Miễn phí</span>
+          </label>
+        </div>
+      </FormField>
+
+      <div className="admin-course-published-box">
+        <input
+          id="admin-course-published"
+          type="checkbox"
+          className="admin-course-published-input"
+          checked={values.published}
+          disabled={submitting}
+          onChange={(event) => setField('published', event.target.checked)}
+        />
+        <label htmlFor="admin-course-published" className="admin-course-published-label">
+          <span className="admin-course-published-title">Xuất bản khóa học</span>
+          <span className="admin-course-published-help">
+            Khóa chưa xuất bản chỉ admin mới xem được. Bạn cũng có thể xuất bản từ danh sách khóa
+            học.
+          </span>
         </label>
-        <p className="field-hint" id="admin-course-published-hint">
-          Khóa chưa xuất bản chỉ admin mới xem được. Bạn cũng có thể xuất bản từ danh sách khóa học.
-        </p>
       </div>
 
-      <div className="admin-form-actions">
+      <div className="admin-form-actions admin-course-form-actions">
         <button type="submit" className="button-primary" disabled={submitting}>
           {submitting ? 'Đang lưu…' : mode === 'create' ? 'Tạo khóa học' : 'Lưu thay đổi'}
         </button>
-        <Link className="admin-form-cancel" to="/admin/courses">
+        <Link className="button-secondary" to="/admin/courses">
           Hủy
         </Link>
+      </div>
+        </div>
+
+        <aside className="admin-course-form-preview" aria-labelledby="admin-course-preview-heading">
+          <h2 id="admin-course-preview-heading" className="admin-preview-heading">Xem trước</h2>
+          <p className="muted admin-preview-hint">Thẻ khóa học như học viên sẽ thấy trên danh mục.</p>
+          <AdminCoursePreviewCard course={previewCourse} instructorLabel={previewInstructor} />
+        </aside>
       </div>
     </form>
   );

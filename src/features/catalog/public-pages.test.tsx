@@ -84,17 +84,14 @@ describe('public home', () => {
     renderAt('/');
 
     expect(await screen.findByRole('heading', { name: /Kho học liệu/ })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Trang chủ' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Khóa học' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Đăng nhập' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Đăng ký' })).toBeTruthy();
-    expect((screen.getByRole('button', { name: 'Cá nhân' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getAllByRole('link', { name: 'Trang chủ' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'Khóa học' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'Đăng nhập' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'Đăng ký' }).length).toBeGreaterThan(0);
     expect(screen.getByRole('searchbox', { name: 'Tìm kiếm học liệu' })).toBeTruthy();
     expect(screen.getByText(/không tìm trên toàn bộ cơ sở dữ liệu/i)).toBeTruthy();
-    expect(screen.queryByRole('tablist')).toBeNull();
-    expect(screen.queryByRole('button', { name: /Thông báo/ })).toBeNull();
-    expect(screen.getByRole('link', { name: 'Xem khóa học' }).getAttribute('href')).toBe('/courses');
-    expect((screen.getByRole('button', { name: 'Tạo học liệu AI' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByRole('link', { name: 'Khám phá khóa học' }).getAttribute('href')).toBe('/courses');
+    expect(screen.getByRole('heading', { name: /Học tiếng Trung có lộ trình/i })).toBeTruthy();
   });
 
   it('shows the dashboard action for a signed-in user', async () => {
@@ -103,7 +100,7 @@ describe('public home', () => {
 
     renderAt('/');
 
-    expect(await screen.findByRole('link', { name: 'Cá nhân' })).toBeTruthy();
+    expect((await screen.findByRole('link', { name: 'Cá nhân' })).getAttribute('href')).toBe('/dashboard');
     expect(screen.queryByRole('link', { name: 'Đăng nhập' })).toBeNull();
   });
 

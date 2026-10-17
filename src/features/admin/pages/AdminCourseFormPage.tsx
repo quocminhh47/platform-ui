@@ -1,10 +1,16 @@
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Breadcrumb } from '../../../components/common/Breadcrumb';
+import {
+  breadcrumbAdminCourse,
+  breadcrumbAdminCourses,
+  breadcrumbHome,
+} from '../../../navigation/breadcrumb-trail';
 import { useToast } from '../../../components/feedback/useToast';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { createCourse, updateCourse } from '../api/admin-courses.api';
 import { AdminCourseForm } from '../components/AdminCourseForm';
-import { AdminDashboardHeader } from '../components/AdminDashboardHeader';
+import { AdminWorkspaceMeta } from '../components/AdminWorkspaceMeta';
 import { DashboardLayout } from '../../dashboard/components/DashboardLayout';
 import { DashboardSidebar } from '../../dashboard/components/DashboardSidebar';
 import { useAdminCourseDetail } from '../hooks/useAdminCourseDetail';
@@ -14,7 +20,10 @@ import {
   ADMIN_COURSE_UPDATE_SUCCESS,
   adminCourseSaveMessage,
 } from '../utils/admin-form-messages';
-import type { AdminCourseFormValues } from '../validation/admin-course-form.validation';
+import {
+  adminCourseSubmitPrice,
+  type AdminCourseFormValues,
+} from '../validation/admin-course-form.validation';
 
 export function AdminCourseFormPage() {
   const { courseId } = useParams();
@@ -49,13 +58,15 @@ export function AdminCourseFormPage() {
     const description = values.description.trim();
     const thumbnailUrl = values.thumbnailUrl.trim();
 
+    const price = adminCourseSubmitPrice(values);
+
     try {
       if (isCreate) {
         await createCourse(accessToken, {
           title: values.title.trim(),
           description: description ? description : null,
           instructorId: values.instructorId,
-          price: 0,
+          price,
           thumbnailUrl: thumbnailUrl ? thumbnailUrl : null,
           published: values.published,
         });
@@ -64,7 +75,7 @@ export function AdminCourseFormPage() {
         await updateCourse(accessToken, courseId, {
           title: values.title.trim(),
           description: description ? description : null,
-          price: 0,
+          price,
           thumbnailUrl: thumbnailUrl ? thumbnailUrl : null,
           published: values.published,
         });
@@ -80,17 +91,33 @@ export function AdminCourseFormPage() {
   }
 
   return (
-    <DashboardLayout
-      sidebar={<DashboardSidebar />}
-      header={<AdminDashboardHeader user={user} />}
-    >
-      <section className="admin-course-form-page" aria-labelledby="admin-course-form-heading">
-        <p className="admin-form-back">
-          <Link to="/admin/courses">← Danh sách khóa học</Link>
-        </p>
+    <DashboardLayout sidebar={<DashboardSidebar />}>
+      <section className="admin-course-form-page admin-workspace-page" aria-labelledby="admin-course-form-heading">
+        <div className="admin-course-form-page-shell">
+        <div className="admin-workspace-top">
+        <Breadcrumb
+          items={[
+            breadcrumbHome(),
+            breadcrumbAdminCourses(),
+            ...(isCreate
+              ? [{ label: 'Tạo khóa học' }]
+              : [
+                  breadcrumbAdminCourse(
+                    courseId ?? '',
+                    detail.course?.title,
+                    detail.loading,
+                  ),
+                  { label: 'Sửa khóa học' },
+                ]),
+          ]}
+        />
+        <AdminWorkspaceMeta user={user} />
+        </div>
+        <header className="admin-page-header">
         <h1 id="admin-course-form-heading">
           {isCreate ? 'Tạo khóa học' : 'Sửa khóa học'}
         </h1>
+        </header>
 
         {pageLoading ? <p className="page-status">Đang tải dữ liệu…</p> : null}
 
@@ -132,6 +159,7 @@ export function AdminCourseFormPage() {
             onSubmit={handleSubmit}
           />
         ) : null}
+        </div>
       </section>
     </DashboardLayout>
   );

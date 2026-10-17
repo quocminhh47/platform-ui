@@ -1,12 +1,18 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { Breadcrumb } from '../../../components/common/Breadcrumb';
+import {
+  breadcrumbAdminCourse,
+  breadcrumbAdminCourses,
+  breadcrumbHome,
+} from '../../../navigation/breadcrumb-trail';
 import { useToast } from '../../../components/feedback/useToast';
 import { useAuth } from '../../auth/hooks/useAuth';
 import {
   AdminCurriculumSection,
   AdminNewSectionPanel,
 } from '../components/AdminCurriculumSection';
-import { AdminDashboardHeader } from '../components/AdminDashboardHeader';
+import { AdminWorkspaceMeta } from '../components/AdminWorkspaceMeta';
 import { DashboardLayout } from '../../dashboard/components/DashboardLayout';
 import { DashboardSidebar } from '../../dashboard/components/DashboardSidebar';
 import { useAdminCourseDetail } from '../hooks/useAdminCourseDetail';
@@ -42,14 +48,19 @@ export function AdminCurriculumPage() {
   const pageLoading = detail.loading || (detail.course && curriculum.loading);
 
   return (
-    <DashboardLayout
-      sidebar={<DashboardSidebar />}
-      header={<AdminDashboardHeader user={user} />}
-    >
-      <section className="admin-curriculum-page" aria-labelledby="admin-curriculum-heading">
-        <p className="admin-form-back">
-          <Link to="/admin/courses">← Danh sách khóa học</Link>
-        </p>
+    <DashboardLayout sidebar={<DashboardSidebar />}>
+      <section className="admin-curriculum-page admin-workspace-page" aria-labelledby="admin-curriculum-heading">
+        <div className="admin-workspace-top">
+        <Breadcrumb
+          items={[
+            breadcrumbHome(),
+            breadcrumbAdminCourses(),
+            breadcrumbAdminCourse(courseId ?? '', detail.course?.title, detail.loading),
+            { label: 'Giáo trình' },
+          ]}
+        />
+        <AdminWorkspaceMeta user={user} />
+        </div>
 
         {pageLoading ? <p className="page-status">Đang tải chương trình học…</p> : null}
 
@@ -72,9 +83,9 @@ export function AdminCurriculumPage() {
 
         {detail.course && !detail.notFound ? (
           <>
-            <header className="admin-curriculum-header">
+            <header className="admin-curriculum-header admin-page-header">
               <h1 id="admin-curriculum-heading">Chương trình: {detail.course.title}</h1>
-              <Link className="link-button" to={`/admin/courses/${detail.course.id}`}>
+              <Link className="admin-btn admin-btn-secondary" to={`/admin/courses/${detail.course.id}`}>
                 Sửa thông tin khóa học
               </Link>
             </header>

@@ -7,6 +7,8 @@ describe('validateAdminCourseForm', () => {
     description: '',
     instructorId: 'inst-1',
     thumbnailUrl: '',
+    price: '0',
+    isFree: true,
     published: false,
   };
 
@@ -26,6 +28,15 @@ describe('validateAdminCourseForm', () => {
   it('does not require instructor on edit', () => {
     const errors = validateAdminCourseForm({ ...base, instructorId: '' }, 'edit');
     expect(errors.instructorId).toBeUndefined();
+  });
+
+  it('requires a positive price when the course is not free', () => {
+    const errors = validateAdminCourseForm(
+      { ...base, isFree: false, price: '' },
+      'create',
+    );
+    expect(errors.price).toBeDefined();
+    expect(validateAdminCourseForm({ ...base, isFree: false, price: '99000' }, 'create').price).toBeUndefined();
   });
 
   it('enforces max lengths', () => {

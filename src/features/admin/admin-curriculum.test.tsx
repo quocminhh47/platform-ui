@@ -210,6 +210,9 @@ describe('AdminCurriculumPage', () => {
     fireEvent.change(screen.getByLabelText(/^Tiêu đề bài học/), {
       target: { value: 'Quiz intro' },
     });
+    fireEvent.change(screen.getByLabelText(/^URL video/), {
+      target: { value: 'https://example.com/video.mp4' },
+    });
     fireEvent.change(screen.getByLabelText(/^Thời lượng/), { target: { value: '-5' } });
     fireEvent.click(screen.getByRole('button', { name: 'Thêm bài học' }));
 
@@ -259,6 +262,9 @@ describe('AdminCurriculumPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '+ Thêm bài học' }));
     fireEvent.change(screen.getByLabelText(/^Tiêu đề bài học/), {
       target: { value: 'Bài mới' },
+    });
+    fireEvent.change(screen.getByLabelText(/^URL video/), {
+      target: { value: 'https://example.com/lesson.mp4' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Thêm bài học' }));
 

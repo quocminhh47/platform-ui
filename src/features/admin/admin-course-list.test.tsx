@@ -113,7 +113,7 @@ describe('AdminCourseListPage', () => {
     renderList();
 
     expect(await screen.findByText('Chưa có khóa học nào')).toBeTruthy();
-    expect(screen.getAllByRole('link', { name: 'Tạo khóa học' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: /Tạo khóa học/ }).length).toBeGreaterThan(0);
   });
 
   it('shows error state and retries loading', async () => {

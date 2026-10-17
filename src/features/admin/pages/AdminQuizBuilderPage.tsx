@@ -1,11 +1,17 @@
 import { useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { Breadcrumb } from '../../../components/common/Breadcrumb';
+import {
+  breadcrumbAdminCourse,
+  breadcrumbAdminCourses,
+  breadcrumbHome,
+} from '../../../navigation/breadcrumb-trail';
 import { useToast } from '../../../components/feedback/useToast';
 import { ApiError } from '../../../services/api/api-error';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { upsertQuiz } from '../api/admin-quiz.api';
 import { AdminQuizBuilderForm } from '../components/AdminQuizBuilderForm';
-import { AdminDashboardHeader } from '../components/AdminDashboardHeader';
+import { AdminWorkspaceMeta } from '../components/AdminWorkspaceMeta';
 import { DashboardLayout } from '../../dashboard/components/DashboardLayout';
 import { DashboardSidebar } from '../../dashboard/components/DashboardSidebar';
 import { useAdminCourseDetail } from '../hooks/useAdminCourseDetail';
@@ -76,18 +82,22 @@ export function AdminQuizBuilderPage() {
   const pageLoading = detail.loading || curriculum.loading || load.loading;
 
   return (
-    <DashboardLayout
-      sidebar={<DashboardSidebar />}
-      header={<AdminDashboardHeader user={user} />}
-    >
-      <section className="admin-quiz-builder-page" aria-labelledby="admin-quiz-heading">
-        <p className="admin-form-back">
-          {courseId ? (
-            <Link to={`/admin/courses/${courseId}/curriculum`}>← Chương trình khóa học</Link>
-          ) : (
-            <Link to="/admin/courses">← Danh sách khóa học</Link>
-          )}
-        </p>
+    <DashboardLayout sidebar={<DashboardSidebar />}>
+      <section className="admin-quiz-builder-page admin-workspace-page" aria-labelledby="admin-quiz-heading">
+        <div className="admin-workspace-top">
+        <Breadcrumb
+          items={[
+            breadcrumbHome(),
+            breadcrumbAdminCourses(),
+            breadcrumbAdminCourse(courseId ?? '', detail.course?.title, detail.loading),
+            ...(courseId
+              ? [{ label: 'Giáo trình', href: `/admin/courses/${courseId}/curriculum` }]
+              : []),
+            { label: lessonTitle ? `Quiz: ${lessonTitle}` : 'Cấu hình quiz' },
+          ]}
+        />
+        <AdminWorkspaceMeta user={user} />
+        </div>
 
         <h1 id="admin-quiz-heading">Cấu hình quiz: {lessonTitle}</h1>
         {load.notProvisioned && !load.loading ? (

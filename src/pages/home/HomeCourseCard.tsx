@@ -5,16 +5,20 @@ import { formatPrice } from '../../features/catalog/utils/formatPrice';
 
 type HomeCourseCardProps = {
   course: Course;
+  variant?: 'default' | 'landing';
 };
 
-export function HomeCourseCard({ course }: HomeCourseCardProps) {
+export function HomeCourseCard({ course, variant = 'default' }: HomeCourseCardProps) {
   const instructor = course.instructorName?.trim() || null;
   const lessonCount = typeof course.lessonCount === 'number' ? course.lessonCount : null;
   const description = course.description?.trim() || null;
 
+  const linkClass = variant === 'landing' ? 'landing-course-link' : 'home-course-link';
+  const cardClass = variant === 'landing' ? 'landing-course-card' : 'home-course-card';
+
   return (
-    <Link className="home-course-link" to={`/courses/${course.id}`}>
-      <article className="home-course-card">
+    <Link className={linkClass} to={`/courses/${course.id}`}>
+      <article className={cardClass}>
         <CourseImage courseId={course.id} title={course.title} thumbnailUrl={course.thumbnailUrl} />
         <div className="home-course-body">
           <h3 title={course.title}>{course.title}</h3>

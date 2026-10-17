@@ -1,28 +1,36 @@
 import { useSearchParams } from 'react-router-dom';
-import { searchLoadedCourses } from '../utils/courseSearch';
-import { usePublishedCourses } from '../hooks/usePublishedCourses';
 import { HomeCourseCard } from '../../../pages/home/HomeCourseCard';
+import { usePublishedCourses } from '../hooks/usePublishedCourses';
+import { searchLoadedCourses } from '../utils/courseSearch';
 
 type CourseBrowserProps = {
   heading: string;
+  variant?: 'default' | 'landing';
 };
 
-export function CourseBrowser({ heading }: CourseBrowserProps) {
+export function CourseBrowser({ heading, variant = 'default' }: CourseBrowserProps) {
   const { courses, loading, error, reload } = usePublishedCourses();
   const [params] = useSearchParams();
   const query = params.get('q') ?? '';
   const visible = courses ? searchLoadedCourses(courses, query) : null;
   const loadedCount = courses?.length ?? 0;
+  const isLanding = variant === 'landing';
 
-  return (
-    <div className="home-workspace">
-      <div className="home-kicker" aria-hidden="true">
-        <span className="home-kicker-bar home-kicker-bar-teal" />
-        <span className="home-kicker-bar home-kicker-bar-cyan" />
-        <span className="home-kicker-bar home-kicker-bar-blue" />
-      </div>
-      <h2 className="home-kicker-label">{heading}</h2>
-      <p className="home-search-scope">
+  const content = (
+    <>
+      {isLanding ? (
+        <h2 className="landing-section-title">{heading}</h2>
+      ) : (
+        <>
+          <div className="home-kicker" aria-hidden="true">
+            <span className="home-kicker-bar home-kicker-bar-teal" />
+            <span className="home-kicker-bar home-kicker-bar-cyan" />
+            <span className="home-kicker-bar home-kicker-bar-blue" />
+          </div>
+          <h2 className="home-kicker-label">{heading}</h2>
+        </>
+      )}
+      <p className={isLanding ? 'landing-search-note' : 'home-search-scope'}>
         {query.trim()
           ? `Đang lọc “${query.trim()}” trong ${loadedCount} khóa học đã tải. Không tìm trên toàn bộ cơ sở dữ liệu.`
           : 'Ô tìm kiếm chỉ lọc các khóa học đã tải trên trang này, không tìm trên toàn bộ cơ sở dữ liệu.'}
@@ -54,14 +62,24 @@ export function CourseBrowser({ heading }: CourseBrowserProps) {
       ) : null}
 
       {!loading && !error && visible && visible.length > 0 ? (
-        <ul className="home-course-grid">
+        <ul className={isLanding ? 'landing-course-grid' : 'home-course-grid'}>
           {visible.map((course) => (
             <li key={course.id}>
-              <HomeCourseCard course={course} />
+              <HomeCourseCard course={course} variant={isLanding ? 'landing' : 'default'} />
             </li>
           ))}
         </ul>
       ) : null}
-    </div>
+    </>
   );
+
+  if (isLanding) {
+    return (
+      <section className="landing-section landing-catalog-browser">
+        <div className="landing-container">{content}</div>
+      </section>
+    );
+  }
+
+  return <div className="home-workspace">{content}</div>;
 }

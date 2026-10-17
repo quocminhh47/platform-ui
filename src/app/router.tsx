@@ -1,5 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
+import { AccountPage } from '../features/account/pages/AccountPage';
 import { AppShell } from '../components/layout/AppShell';
+import { MemberChromeLayout } from '../components/layout/MemberChromeLayout';
 import { GuestRoute } from '../features/auth/components/GuestRoute';
 import { ProtectedRoute } from '../features/auth/components/ProtectedRoute';
 import { LoginPage } from '../features/auth/pages/LoginPage';
@@ -34,7 +36,7 @@ export const router = createBrowserRouter([
       {
         element: <ProtectedRoute />,
         children: [
-          { path: 'account', element: <HomePage /> },
+          { path: 'account', element: <AccountPage /> },
           { path: 'courses/:courseId/learn/:lessonId?', element: <LearningWorkspacePage /> },
         ],
       },
@@ -43,19 +45,24 @@ export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
-      { path: '/dashboard', element: <DashboardPage /> },
-      { path: '/my-courses', element: <MyCoursesPage /> },
       {
-        element: <AdminRoute />,
+        element: <MemberChromeLayout />,
         children: [
-          { path: '/admin/courses', element: <AdminCourseListPage /> },
-          { path: '/admin/courses/new', element: <AdminCourseFormPage /> },
-          { path: '/admin/courses/:courseId/curriculum', element: <AdminCurriculumPage /> },
+          { path: '/dashboard', element: <DashboardPage /> },
+          { path: '/my-courses', element: <MyCoursesPage /> },
           {
-            path: '/admin/courses/:courseId/lessons/:lessonId/quiz',
-            element: <AdminQuizBuilderPage />,
+            element: <AdminRoute />,
+            children: [
+              { path: '/admin/courses', element: <AdminCourseListPage /> },
+              { path: '/admin/courses/new', element: <AdminCourseFormPage /> },
+              { path: '/admin/courses/:courseId/curriculum', element: <AdminCurriculumPage /> },
+              {
+                path: '/admin/courses/:courseId/lessons/:lessonId/quiz',
+                element: <AdminQuizBuilderPage />,
+              },
+              { path: '/admin/courses/:courseId', element: <AdminCourseFormPage /> },
+            ],
           },
-          { path: '/admin/courses/:courseId', element: <AdminCourseFormPage /> },
         ],
       },
     ],

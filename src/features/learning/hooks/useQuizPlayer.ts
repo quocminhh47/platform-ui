@@ -56,12 +56,14 @@ type UseQuizPlayerOptions = {
   courseId: string;
   lessonId: string;
   enabled: boolean;
+  onQuizPassed?: () => void;
 };
 
 export function useQuizPlayer({
   courseId,
   lessonId,
   enabled,
+  onQuizPassed,
 }: UseQuizPlayerOptions): UseQuizPlayerState {
   const { accessToken } = useAuth();
   const [phase, setPhase] = useState<QuizPlayerPhase>('loading');
@@ -254,6 +256,9 @@ export function useQuizPlayer({
       setResult(mergedResult);
       setTake(takeSnapshotFromResult(mergedResult) ?? take);
       setPhase('result');
+      if (mergedResult.passed) {
+        onQuizPassed?.();
+      }
     } catch (cause: unknown) {
       setSubmitError(quizAttemptSubmitMessage(cause));
       setPhase('take');
@@ -266,7 +271,7 @@ export function useQuizPlayer({
         }
       }
     }
-  }, [take, accessToken, expiredLocally, answers, courseId, lessonId]);
+  }, [take, accessToken, expiredLocally, answers, courseId, lessonId, onQuizPassed]);
 
   return {
     phase,

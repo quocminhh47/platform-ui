@@ -2,6 +2,7 @@ import type {
   QuizAttemptResultResponse,
   QuizAttemptTakeResponse,
 } from '../types/quiz.types';
+import { ScoreRing } from './quiz/ScoreRing';
 
 type QuizResultPanelProps = {
   result: QuizAttemptResultResponse;
@@ -14,19 +15,32 @@ export function QuizResultPanel({ result, take }: QuizResultPanelProps) {
   );
 
   return (
-    <section className="quiz-result" aria-live="polite">
+    <section className="quiz-result-panel" aria-live="polite">
       <h2 className="quiz-result-heading">Kết quả bài trắc nghiệm</h2>
-      <p className={result.passed ? 'quiz-result-badge pass' : 'quiz-result-badge fail'}>
-        {result.passed ? 'Đạt' : 'Chưa đạt'} — {result.score}% (Yêu cầu: {result.passingScore}%)
-      </p>
-      {result.bestScore != null ? (
-        <p className="quiz-result-meta">
-          Điểm cao nhất: {result.bestScore}% {result.bestPassed ? '(đã đạt)' : ''}
-        </p>
-      ) : null}
-      {result.finalAssessment ? (
-        <p className="quiz-result-meta">Bài đánh giá cuối khóa</p>
-      ) : null}
+      <div className="quiz-result-summary">
+        <ScoreRing score={result.score} passed={result.passed} />
+        <div className="quiz-result-summary-text">
+          <p
+            className={
+              result.passed ? 'quiz-result-status quiz-result-status-pass' : 'quiz-result-status quiz-result-status-fail'
+            }
+          >
+            {result.passed ? 'Đạt' : 'Chưa đạt'}
+          </p>
+          <p className="quiz-result-requirement">
+            Yêu cầu: <span className="quiz-tabular">{result.passingScore}%</span>
+          </p>
+          {result.bestScore != null ? (
+            <p className="quiz-result-meta">
+              Điểm cao nhất: <span className="quiz-tabular">{result.bestScore}%</span>
+              {result.bestPassed ? ' (đã đạt)' : ''}
+            </p>
+          ) : null}
+          {result.finalAssessment ? (
+            <p className="quiz-result-meta">Bài đánh giá cuối khóa</p>
+          ) : null}
+        </div>
+      </div>
 
       <ol className="quiz-result-answers">
         {result.answers.map((answer, index) => {
@@ -35,7 +49,7 @@ export function QuizResultPanel({ result, take }: QuizResultPanelProps) {
             .map((optionId) => question?.options.find((option) => option.id === optionId)?.optionText)
             .filter(Boolean);
           return (
-            <li key={answer.questionId}>
+            <li key={answer.questionId} className="quiz-result-answer-item">
               <strong>Câu {index + 1}.</strong>{' '}
               {question?.questionText ?? 'Câu hỏi'}
               <div className="quiz-result-selection">

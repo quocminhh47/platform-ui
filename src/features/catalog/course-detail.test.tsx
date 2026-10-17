@@ -110,19 +110,19 @@ describe('course detail page', () => {
     renderRoutes(`/courses/${courseId}`);
 
     expect(await screen.findByRole('heading', { name: 'Intro to Algebra' })).toBeTruthy();
-    expect(screen.getByText('Equations and graphs.')).toBeTruthy();
-    expect(screen.getByText('Miễn phí')).toBeTruthy();
+    expect(screen.getAllByText('Equations and graphs.').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Miễn phí').length).toBeGreaterThanOrEqual(1);
     const sectionToggle = await screen.findByRole('button', { name: /Getting started/ });
     expect(sectionToggle.getAttribute('aria-expanded')).toBe('true');
-    expect(sectionToggle.textContent).toMatch(/1 lesson/);
+    expect(sectionToggle.textContent).toMatch(/1 bài học/);
     expect(await screen.findByText('What is algebra?')).toBeTruthy();
     expect(screen.queryByText(lesson.contentUrl ?? '')).toBeNull();
-    expect(await screen.findByText(/Video · 5 min/)).toBeTruthy();
-    expect(document.querySelector('.curriculum-scroll')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Curriculum' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /Back to courses/i }).getAttribute('href')).toBe(
-      '/courses',
-    );
+    expect(await screen.findByText(/Video • 5 min/)).toBeTruthy();
+    expect(document.querySelector('.course-detail-curriculum-sections')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Nội dung khóa học' })).toBeTruthy();
+    expect(
+      screen.getByRole('navigation', { name: 'Breadcrumb' }).querySelector('a[href="/courses"]'),
+    ).toBeTruthy();
     expect(api.getCourseById).toHaveBeenCalledWith(courseId, null);
   });
 
@@ -162,7 +162,7 @@ describe('course detail page', () => {
     expect(await screen.findByRole('heading', { name: 'Intro to Algebra' })).toBeTruthy();
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).not.toMatch(/sections down/);
-    expect(screen.getByRole('heading', { name: 'Curriculum' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Nội dung khóa học' })).toBeTruthy();
   });
 
   it('shows an empty curriculum state', async () => {
@@ -171,7 +171,7 @@ describe('course detail page', () => {
 
     renderRoutes(`/courses/${courseId}`);
 
-    expect(await screen.findByText('This course does not have any sections yet.')).toBeTruthy();
+    expect(await screen.findByText('Khóa học chưa có chương nào.')).toBeTruthy();
   });
 
   it('expands and collapses curriculum sections independently', async () => {
@@ -192,14 +192,14 @@ describe('course detail page', () => {
     const basics = await screen.findByRole('button', { name: /Getting started/ });
     const practice = await screen.findByRole('button', { name: /Practice/ });
     expect(await screen.findByText('What is algebra?')).toBeTruthy();
-    expect(practice.textContent).toMatch(/0 lessons/);
+    expect(practice.textContent).toMatch(/0 bài học/);
 
     fireEvent.click(basics);
 
     expect(basics.getAttribute('aria-expanded')).toBe('false');
     expect(screen.queryByText('What is algebra?')).toBeNull();
     expect(practice.getAttribute('aria-expanded')).toBe('true');
-    expect(screen.getByText('No lessons in this section yet.')).toBeTruthy();
+    expect(screen.getByText('Chưa có bài học trong phần này.')).toBeTruthy();
 
     fireEvent.click(basics);
     expect(basics.getAttribute('aria-expanded')).toBe('true');
@@ -213,6 +213,6 @@ describe('course detail page', () => {
 
     renderRoutes(`/courses/${courseId}`);
 
-    expect(await screen.findByText('No lessons in this section yet.')).toBeTruthy();
+    expect(await screen.findByText('Chưa có bài học trong phần này.')).toBeTruthy();
   });
 });

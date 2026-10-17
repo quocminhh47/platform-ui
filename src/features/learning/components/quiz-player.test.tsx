@@ -102,8 +102,13 @@ describe('QuizPlayer', () => {
     auth.fetchCurrentUser.mockResolvedValue(student);
     quiz.getQuizSession.mockResolvedValue(take);
     quiz.submitQuizAttempt.mockResolvedValue(result);
+    const onQuizPassed = vi.fn();
 
-    renderPlayer();
+    render(
+      <AuthProvider>
+        <QuizPlayer courseId="course-1" lessonId="lesson-1" onQuizPassed={onQuizPassed} />
+      </AuthProvider>,
+    );
 
     expect(await screen.findByText(/Câu 1\. Chọn một/)).toBeTruthy();
     expect(screen.getByText('Đáp án A')).toBeTruthy();
@@ -122,11 +127,31 @@ describe('QuizPlayer', () => {
         'token',
       );
     });
+    await waitFor(() => expect(onQuizPassed).toHaveBeenCalledTimes(1));
 
     expect(await screen.findByText(/Kết quả bài trắc nghiệm/)).toBeTruthy();
-    expect(screen.getByText(/Đạt/)).toBeTruthy();
+    expect(screen.getAllByText(/Đạt/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/Lựa chọn của bạn: Đáp án A/)).toBeTruthy();
     expect(screen.queryByText(/isCorrect/i)).toBeNull();
+  });
+
+  it('does not call onQuizPassed when the student fails', async () => {
+    setAccessToken('token');
+    auth.fetchCurrentUser.mockResolvedValue(student);
+    quiz.getQuizSession.mockResolvedValue(take);
+    quiz.submitQuizAttempt.mockResolvedValue({ ...result, passed: false, score: 40 });
+    const onQuizPassed = vi.fn();
+
+    render(
+      <AuthProvider>
+        <QuizPlayer courseId="course-1" lessonId="lesson-1" onQuizPassed={onQuizPassed} />
+      </AuthProvider>,
+    );
+
+    fireEvent.click(await screen.findByLabelText('Đáp án A'));
+    fireEvent.click(screen.getByRole('button', { name: 'Nộp bài' }));
+    await waitFor(() => expect(quiz.submitQuizAttempt).toHaveBeenCalled());
+    expect(onQuizPassed).not.toHaveBeenCalled();
   });
 
   it('shows countdown from expiresAt and serverNow without starting a new attempt', async () => {
@@ -248,6 +273,113 @@ describe('QuizPlayer', () => {
     expect(await screen.findByRole('alert')).toBeTruthy();
     expect(screen.getByText(/đã dùng hết số lần làm bài/i)).toBeTruthy();
     expect(screen.getByText(/Kết quả bài trắc nghiệm/)).toBeTruthy();
+  });
+
+  it('allows multiple selections for MULTIPLE_CHOICE questions', async () => {
+    setAccessToken('token');
+    auth.fetchCurrentUser.mockResolvedValue(student);
+    quiz.getQuizSession.mockResolvedValue({
+      ...take,
+      questions: [
+        {
+          id: 'q-multi',
+          questionText: 'Chọn nhiều',
+          questionType: 'MULTIPLE_CHOICE',
+          options: [
+            { id: 'm1', optionText: 'Một' },
+            { id: 'm2', optionText: 'Hai' },
+            { id: 'm3', optionText: 'Ba' },
+          ],
+        },
+      ],
+    });
+    quiz.submitQuizAttempt.mockResolvedValue({
+      ...result,
+      answers: [{ questionId: 'q-multi', selectedOptionIds: ['m1', 'm2'] }],
+    });
+
+    renderPlayer();
+
+    expect(await screen.findByText(/Có thể chọn nhiều đáp án đúng/)).toBeTruthy();
+    fireEvent.click(screen.getByLabelText('Một'));
+    fireEvent.click(screen.getByLabelText('Hai'));
+    const m1 = screen.getByLabelText('Một') as HTMLInputElement;
+    const m2 = screen.getByLabelText('Hai') as HTMLInputElement;
+    expect(m1.checked).toBe(true);
+    expect(m2.checked).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Nộp bài' }));
+    await waitFor(() => {
+      expect(quiz.submitQuizAttempt).toHaveBeenCalledWith(
+        'course-1',
+        'lesson-1',
+        'attempt-1',
+        { answers: [{ questionId: 'q-multi', selectedOptionIds: ['m1', 'm2'] }] },
+        'token',
+      );
+    });
+  });
+
+  it('renders TRUE_FALSE options from the API', async () => {
+    setAccessToken('token');
+    auth.fetchCurrentUser.mockResolvedValue(student);
+    quiz.getQuizSession.mockResolvedValue({
+      ...take,
+      questions: [
+        {
+          id: 'q-tf',
+          questionText: '你好',
+          questionType: 'TRUE_FALSE',
+          options: [
+            { id: 'tf-true', optionText: 'Đúng' },
+            { id: 'tf-false', optionText: 'Sai' },
+          ],
+        },
+      ],
+    });
+
+    renderPlayer();
+
+    expect(await screen.findByText(/你好/)).toBeTruthy();
+    expect(screen.getByLabelText('Đúng')).toBeTruthy();
+    expect(screen.getByLabelText('Sai')).toBeTruthy();
+    expect(screen.getAllByText('A').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('B').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('preserves earlier answers when answering another question', async () => {
+    setAccessToken('token');
+    auth.fetchCurrentUser.mockResolvedValue(student);
+    quiz.getQuizSession.mockResolvedValue({
+      ...take,
+      questions: [
+        take.questions[0],
+        {
+          id: 'q2',
+          questionText: 'Câu hai',
+          questionType: 'SINGLE_CHOICE',
+          options: [
+            { id: 'x1', optionText: 'X' },
+            { id: 'x2', optionText: 'Y' },
+          ],
+        },
+      ],
+    });
+    quiz.submitQuizAttempt.mockResolvedValue({
+      ...result,
+      answers: [
+        { questionId: 'q1', selectedOptionIds: ['o1'] },
+        { questionId: 'q2', selectedOptionIds: ['x2'] },
+      ],
+    });
+
+    renderPlayer();
+
+    fireEvent.click(await screen.findByLabelText('Đáp án A'));
+    fireEvent.click(screen.getByLabelText('Y'));
+    expect((screen.getByLabelText('Đáp án A') as HTMLInputElement).checked).toBe(true);
+    expect((screen.getByLabelText('Y') as HTMLInputElement).checked).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Nộp bài' }));
+    await waitFor(() => expect(quiz.submitQuizAttempt).toHaveBeenCalled());
   });
 
   it('shows load error on quota conflict when starting', async () => {

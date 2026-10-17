@@ -133,9 +133,9 @@ describe('AdminCourseFormPage create', () => {
     const router = renderForm('/admin/courses/new');
 
     expect(await screen.findByRole('heading', { name: 'Tạo khóa học' })).toBeTruthy();
-    await screen.findByText('Miễn phí');
+    expect(await screen.findByRole('article', { name: 'Xem trước thẻ khóa học' })).toBeTruthy();
 
-    fireEvent.change(await screen.findByLabelText(/^Tiêu đề/), { target: { value: 'Khóa mới' } });
+    fireEvent.change(await screen.findByRole('textbox', { name: /Tiêu đề/ }), { target: { value: 'Khóa mới' } });
     fireEvent.change(await screen.findByLabelText(/^Giảng viên/), { target: { value: 'inst-1' } });
     fireEvent.click(screen.getByRole('button', { name: 'Tạo khóa học' }));
 
@@ -153,11 +153,66 @@ describe('AdminCourseFormPage create', () => {
     expect(await screen.findByRole('status')).toBeTruthy();
   });
 
+  it('updates the live preview when form values change', async () => {
+    adminUsers.listUsers.mockResolvedValue([instructor]);
+
+    renderForm('/admin/courses/new');
+    const preview = await screen.findByRole('article', { name: 'Xem trước thẻ khóa học' });
+
+    expect(preview.querySelector('h3')?.textContent).toBe('Tiêu đề khóa học');
+    expect(preview.textContent).toContain('Chưa có mô tả.');
+    expect(preview.textContent).toContain('Miễn phí');
+    expect(preview.textContent).toContain('Chưa xuất bản');
+
+    fireEvent.change(screen.getByRole('textbox', { name: /Tiêu đề/ }), {
+      target: { value: 'Khóa preview' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: /Mô tả/ }), {
+      target: { value: 'Mô tả ngắn' },
+    });
+    fireEvent.change(screen.getByRole('combobox', { name: /Giảng viên/ }), {
+      target: { value: 'inst-1' },
+    });
+    const publishCheckbox = screen.getByRole('checkbox', { name: /Xuất bản khóa học/ });
+    expect(publishCheckbox.className).toContain('admin-course-published-input');
+    fireEvent.click(publishCheckbox);
+
+    expect(preview.querySelector('h3')?.textContent).toBe('Khóa preview');
+    expect(preview.textContent).toContain('Mô tả ngắn');
+    expect(preview.textContent).toContain('Giảng viên A');
+    expect(preview.textContent).toContain('Đã xuất bản');
+  });
+
+  it('keeps price input and Miễn phí checkbox on one row with free disabling the input', async () => {
+    adminUsers.listUsers.mockResolvedValue([instructor]);
+
+    renderForm('/admin/courses/new');
+    const priceInput = (await screen.findByRole('spinbutton', {
+      name: /Giá khóa học/,
+    })) as HTMLInputElement;
+    const freeCheckbox = screen.getByRole('checkbox', { name: 'Miễn phí' });
+
+    expect(priceInput.closest('.admin-course-price-row')).toBeTruthy();
+    expect(freeCheckbox.closest('.admin-course-price-free')).toBeTruthy();
+    expect(priceInput.disabled).toBe(true);
+    expect(priceInput.value).toBe('0');
+
+    fireEvent.click(freeCheckbox);
+    expect(priceInput.disabled).toBe(false);
+
+    fireEvent.change(priceInput, { target: { value: '150000' } });
+    expect(priceInput.value).toBe('150000');
+
+    fireEvent.click(freeCheckbox);
+    expect(priceInput.disabled).toBe(true);
+    expect(priceInput.value).toBe('0');
+  });
+
   it('shows validation errors without calling the API', async () => {
     adminUsers.listUsers.mockResolvedValue([instructor]);
 
     renderForm('/admin/courses/new');
-    await screen.findByLabelText(/^Tiêu đề/);
+    await screen.findByRole('textbox', { name: /Tiêu đề/ });
 
     fireEvent.click(screen.getByRole('button', { name: 'Tạo khóa học' }));
 
@@ -171,14 +226,14 @@ describe('AdminCourseFormPage create', () => {
     adminCourses.createCourse.mockRejectedValue(new ApiError(400, 'Only free courses'));
 
     renderForm('/admin/courses/new');
-    await screen.findByLabelText(/^Tiêu đề/);
+    await screen.findByRole('textbox', { name: /Tiêu đề/ });
 
-    fireEvent.change(screen.getByLabelText(/^Tiêu đề/), { target: { value: 'Khóa mới' } });
+    fireEvent.change(screen.getByRole('textbox', { name: /Tiêu đề/ }), { target: { value: 'Khóa mới' } });
     fireEvent.change(screen.getByLabelText(/^Giảng viên/), { target: { value: 'inst-1' } });
     fireEvent.click(screen.getByRole('button', { name: 'Tạo khóa học' }));
 
     expect((await screen.findByRole('alert')).textContent).toContain('Only free courses');
-    expect((screen.getByLabelText(/^Tiêu đề/) as HTMLInputElement).value).toBe('Khóa mới');
+    expect((screen.getByRole('textbox', { name: /Tiêu đề/ }) as HTMLInputElement).value).toBe('Khóa mới');
   });
 });
 
@@ -189,10 +244,15 @@ describe('AdminCourseFormPage edit', () => {
     renderForm('/admin/courses/course-1');
 
     expect(await screen.findByRole('heading', { name: 'Sửa khóa học' })).toBeTruthy();
-    expect(((await screen.findByLabelText(/^Tiêu đề/)) as HTMLInputElement).value).toBe(
+    expect(((await screen.findByRole('textbox', { name: /Tiêu đề/ })) as HTMLInputElement).value).toBe(
       'HSK 1',
     );
-    expect(screen.getByText(/Giảng viên A/)).toBeTruthy();
+    expect(document.getElementById('admin-course-instructor-readonly')?.textContent).toMatch(
+      /Giảng viên A/,
+    );
+    const preview = screen.getByRole('article', { name: 'Xem trước thẻ khóa học' });
+    expect(preview.querySelector('h3')?.textContent).toBe('HSK 1');
+    expect(preview.textContent).toContain('Mô tả');
     expect(screen.queryByRole('combobox')).toBeNull();
     expect(screen.getByText(/Giảng viên không thể thay đổi/)).toBeTruthy();
     expect(adminUsers.listUsers).not.toHaveBeenCalled();
@@ -203,10 +263,10 @@ describe('AdminCourseFormPage edit', () => {
     adminCourses.updateCourse.mockResolvedValue({ ...sampleCourse, title: 'HSK 1 cập nhật' });
 
     const router = renderForm('/admin/courses/course-1');
-    await screen.findByLabelText(/^Tiêu đề/);
+    await screen.findByRole('textbox', { name: /Tiêu đề/ });
 
-    fireEvent.change(screen.getByLabelText(/^Tiêu đề/), { target: { value: 'HSK 1 cập nhật' } });
-    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.change(screen.getByRole('textbox', { name: /Tiêu đề/ }), { target: { value: 'HSK 1 cập nhật' } });
+    fireEvent.click(screen.getByRole('checkbox', { name: /Xuất bản khóa học/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }));
 
     await waitFor(() =>

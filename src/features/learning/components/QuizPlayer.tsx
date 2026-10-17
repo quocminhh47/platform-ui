@@ -1,30 +1,51 @@
 import { useQuizPlayer } from '../hooks/useQuizPlayer';
 import { formatAttemptsQuotaVi } from '../utils/quizAttemptQuota';
-import { QuizCountdown } from './QuizCountdown';
+import { QuizActionBar } from './quiz/QuizActionBar';
+import { QuizAssessmentMeta } from './quiz/QuizAssessmentMeta';
+import { QuizProgress } from './quiz/QuizProgress';
 import { QuizQuestionCard } from './QuizQuestionCard';
 import { QuizResultPanel } from './QuizResultPanel';
 
 type QuizPlayerProps = {
   courseId: string;
   lessonId: string;
+  lessonTitle?: string;
+  onQuizPassed?: () => void;
 };
 
-export function QuizPlayer({ courseId, lessonId }: QuizPlayerProps) {
+function countAnsweredQuestions(
+  questionIds: string[],
+  answers: Record<string, string[]>,
+): number {
+  return questionIds.filter((id) => (answers[id]?.length ?? 0) > 0).length;
+}
+
+export function QuizPlayer({
+  courseId,
+  lessonId,
+  lessonTitle,
+  onQuizPassed,
+}: QuizPlayerProps) {
   const player = useQuizPlayer({
     courseId,
     lessonId,
     enabled: Boolean(courseId && lessonId),
+    onQuizPassed,
   });
 
   if (player.phase === 'loading') {
-    return <p className="page-status">Đang tải bài trắc nghiệm…</p>;
+    return <p className="page-status quiz-assessment-loading">Đang tải bài trắc nghiệm…</p>;
   }
 
   if (player.phase === 'idle') {
     return (
-      <div className="quiz-player quiz-player-idle">
-        <p className="muted">Bạn chưa bắt đầu hoặc có thể làm lượt mới.</p>
-        <button type="button" className="button-primary" onClick={() => void player.startAttempt()}>
+      <div className="quiz-assessment quiz-assessment-idle">
+        <p className="quiz-assessment-idle-text">Bạn chưa bắt đầu hoặc có thể làm lượt mới.</p>
+        <button
+          type="button"
+          className="quiz-btn quiz-btn-primary"
+          onClick={() => void player.startAttempt()}
+        >
           Bắt đầu làm bài
         </button>
       </div>
@@ -33,9 +54,9 @@ export function QuizPlayer({ courseId, lessonId }: QuizPlayerProps) {
 
   if (player.phase === 'error') {
     return (
-      <div className="section-error" role="alert">
+      <div className="quiz-assessment quiz-assessment-error section-error" role="alert">
         <p>{player.loadError}</p>
-        <button type="button" onClick={player.reload}>
+        <button type="button" className="quiz-btn quiz-btn-secondary" onClick={player.reload}>
           Thử lại
         </button>
       </div>
@@ -48,8 +69,8 @@ export function QuizPlayer({ courseId, lessonId }: QuizPlayerProps) {
       player.result.maxAttempts,
     );
     return (
-      <div className="quiz-player">
-        <p className="muted quiz-player-meta">{quotaLabel}</p>
+      <div className="quiz-assessment quiz-assessment-result">
+        <p className="quiz-result-quota muted">{quotaLabel}</p>
         <QuizResultPanel result={player.result} take={player.take} />
         {player.retakeError ? (
           <p className="form-error" role="alert">
@@ -57,8 +78,12 @@ export function QuizPlayer({ courseId, lessonId }: QuizPlayerProps) {
           </p>
         ) : null}
         {player.canRetake ? (
-          <div className="quiz-actions">
-            <button type="button" className="button-primary" onClick={() => void player.startAttempt()}>
+          <div className="quiz-action-bar">
+            <button
+              type="button"
+              className="quiz-btn quiz-btn-primary"
+              onClick={() => void player.startAttempt()}
+            >
               Làm lại
             </button>
           </div>
@@ -75,20 +100,30 @@ export function QuizPlayer({ courseId, lessonId }: QuizPlayerProps) {
 
   const { take } = player;
   const disabled = player.phase === 'submitting' || player.expiredLocally;
+  const answeredCount = countAnsweredQuestions(
+    take.questions.map((question) => question.id),
+    player.answers,
+  );
 
   return (
-    <div className="quiz-player">
-      <div className="quiz-player-meta">
-        <p className="muted">
-          Ngưỡng đạt: {take.passingScore}% · {formatAttemptsQuotaVi(take.attemptsUsed, take.maxAttempts)}
-        </p>
-        {take.expiresAt && player.remainingSeconds != null ? (
-          <QuizCountdown
-            remainingSeconds={player.remainingSeconds}
-            expired={player.expiredLocally}
-          />
-        ) : null}
-      </div>
+    <div className="quiz-assessment">
+      {lessonTitle ? (
+        <header className="quiz-assessment-intro">
+          <h2 className="quiz-assessment-title">{lessonTitle}</h2>
+          <p className="quiz-assessment-subtitle">Bài kiểm tra trắc nghiệm</p>
+        </header>
+      ) : null}
+
+      <QuizAssessmentMeta
+        passingScore={take.passingScore}
+        attemptsUsed={take.attemptsUsed}
+        maxAttempts={take.maxAttempts}
+        remainingSeconds={player.remainingSeconds}
+        expiredLocally={player.expiredLocally}
+        showTimer={Boolean(take.expiresAt && player.remainingSeconds != null)}
+      />
+
+      <QuizProgress answeredCount={answeredCount} totalQuestions={take.questions.length} />
 
       {player.validationError ? (
         <p className="form-error" role="alert">
@@ -102,7 +137,7 @@ export function QuizPlayer({ courseId, lessonId }: QuizPlayerProps) {
       ) : null}
 
       <form
-        className="quiz-form"
+        className="quiz-assessment-form"
         onSubmit={(event) => {
           event.preventDefault();
           void player.submit();
@@ -121,23 +156,14 @@ export function QuizPlayer({ courseId, lessonId }: QuizPlayerProps) {
           />
         ))}
 
-        <div className="quiz-actions">
-          {player.expiredLocally ? (
-            player.canRetake ? (
-              <button type="button" className="button-primary" onClick={() => void player.startAttempt()}>
-                Bắt đầu lượt mới
-              </button>
-            ) : (
-              <p className="muted">Bạn đã dùng hết số lần làm bài cho phép.</p>
-            )
-          ) : (
-            <button type="submit" className="button-primary" disabled={disabled}>
-              {player.phase === 'submitting' ? 'Đang nộp bài…' : 'Nộp bài'}
-            </button>
-          )}
-        </div>
+        <QuizActionBar
+          expiredLocally={player.expiredLocally}
+          submitting={player.phase === 'submitting'}
+          disabled={disabled}
+          canRetake={player.canRetake}
+          onRetake={() => void player.startAttempt()}
+        />
       </form>
-
     </div>
   );
 }

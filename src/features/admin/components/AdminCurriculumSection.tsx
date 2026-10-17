@@ -22,8 +22,11 @@ import {
 import {
   emptyLessonFormValues,
   lessonFormValuesFromLesson,
+  createLessonPayloadFromForm,
+  lessonFormValuesForTypeChange,
   parseOptionalInt,
   sectionFormValuesFromSection,
+  updateLessonPayloadFromForm,
   validateLessonForm,
   validateSectionForm,
   type LessonFormValues,
@@ -63,7 +66,7 @@ export function AdminCurriculumSection({
           <p className="muted admin-curriculum-meta">Thứ tự: {section.sortOrder}</p>
         </div>
         {!editingSection ? (
-          <button type="button" className="link-button" onClick={() => setEditingSection(true)}>
+          <button type="button" className="button-secondary" onClick={() => setEditingSection(true)}>
             Sửa chương
           </button>
         ) : null}
@@ -100,16 +103,13 @@ export function AdminCurriculumSection({
                 submitLabel="Lưu bài học"
                 onCancel={() => setEditingLessonId(null)}
                 onSubmit={async (values) => {
-                  const durationSeconds = parseOptionalInt(values.durationSeconds);
-                  const sortOrder = parseOptionalInt(values.sortOrder);
-                  const contentUrl = values.contentUrl.trim();
-                  await updateLesson(accessToken, courseId, section.id, lesson.id, {
-                    title: values.title.trim(),
-                    lessonType: values.lessonType,
-                    contentUrl: contentUrl ? contentUrl : null,
-                    durationSeconds: durationSeconds ?? null,
-                    sortOrder,
-                  });
+                  await updateLesson(
+                    accessToken,
+                    courseId,
+                    section.id,
+                    lesson.id,
+                    updateLessonPayloadFromForm(values),
+                  );
                   onToastSuccess(ADMIN_LESSON_UPDATE_SUCCESS);
                   setEditingLessonId(null);
                   await onRefresh();
@@ -141,7 +141,7 @@ export function AdminCurriculumSection({
                   ) : null}
                   <button
                     type="button"
-                    className="link-button"
+                    className="button-secondary"
                     onClick={() => {
                       setAddingLesson(false);
                       setEditingLessonId(lesson.id);
@@ -162,16 +162,12 @@ export function AdminCurriculumSection({
           submitLabel="Thêm bài học"
           onCancel={() => setAddingLesson(false)}
           onSubmit={async (values) => {
-            const durationSeconds = parseOptionalInt(values.durationSeconds);
-            const sortOrder = parseOptionalInt(values.sortOrder);
-            const contentUrl = values.contentUrl.trim();
-            await createLesson(accessToken, courseId, section.id, {
-              title: values.title.trim(),
-              lessonType: values.lessonType,
-              contentUrl: contentUrl ? contentUrl : null,
-              durationSeconds,
-              sortOrder,
-            });
+            await createLesson(
+              accessToken,
+              courseId,
+              section.id,
+              createLessonPayloadFromForm(values),
+            );
             onToastSuccess(ADMIN_LESSON_CREATE_SUCCESS);
             setAddingLesson(false);
             await onRefresh();
@@ -181,7 +177,7 @@ export function AdminCurriculumSection({
       ) : (
         <button
           type="button"
-          className="link-button admin-add-lesson"
+          className="button-secondary admin-add-lesson"
           onClick={() => {
             setEditingLessonId(null);
             setAddingLesson(true);
@@ -287,7 +283,7 @@ export function AdminSectionForm({
         <button type="submit" className="button-primary" disabled={submitting}>
           {submitting ? 'Đang lưu…' : submitLabel}
         </button>
-        <button type="button" className="link-button" disabled={submitting} onClick={onCancel}>
+        <button type="button" className="button-secondary" disabled={submitting} onClick={onCancel}>
           Hủy
         </button>
       </div>
@@ -369,10 +365,12 @@ export function AdminLessonForm({
           value={values.lessonType}
           disabled={submitting}
           onChange={(event) =>
-            setValues((current) => ({
-              ...current,
-              lessonType: event.target.value as LessonFormValues['lessonType'],
-            }))
+            setValues((current) =>
+              lessonFormValuesForTypeChange(
+                current,
+                event.target.value as LessonFormValues['lessonType'],
+              ),
+            )
           }
         >
           {ADMIN_LESSON_TYPE_OPTIONS.map((type) => (
@@ -383,33 +381,43 @@ export function AdminLessonForm({
         </select>
       </FormField>
       {values.lessonType === 'QUIZ' ? <p className="admin-quiz-hint">{QUIZ_LESSON_HINT}</p> : null}
-      <FormField id="lesson-content-url" label="URL nội dung" hint="Tùy chọn.">
-        <input
+      {values.lessonType === 'VIDEO' || values.lessonType === 'ARTICLE' || values.lessonType === 'ASSIGNMENT' ? (
+        <FormField
           id="lesson-content-url"
-          type="url"
-          value={values.contentUrl}
-          disabled={submitting}
-          onChange={(event) =>
-            setValues((current) => ({ ...current, contentUrl: event.target.value }))
-          }
-        />
-      </FormField>
-      <FormField
-        id="lesson-duration"
-        label="Thời lượng (giây)"
-        hint="Tùy chọn. Phải ≥ 0 nếu nhập."
-        error={submitAttempted ? clientErrors.durationSeconds : undefined}
-      >
-        <input
+          label={values.lessonType === 'VIDEO' ? 'URL video' : 'URL nội dung'}
+          required={values.lessonType === 'VIDEO'}
+          hint={values.lessonType === 'ARTICLE' ? 'Tùy chọn. Liên kết bài đọc hoặc tài liệu.' : values.lessonType === 'ASSIGNMENT' ? 'Tùy chọn.' : undefined}
+          error={submitAttempted ? clientErrors.contentUrl : undefined}
+        >
+          <input
+            id="lesson-content-url"
+            type="url"
+            value={values.contentUrl}
+            disabled={submitting}
+            onChange={(event) =>
+              setValues((current) => ({ ...current, contentUrl: event.target.value }))
+            }
+          />
+        </FormField>
+      ) : null}
+      {values.lessonType !== 'QUIZ' ? (
+        <FormField
           id="lesson-duration"
-          inputMode="numeric"
-          value={values.durationSeconds}
-          disabled={submitting}
-          onChange={(event) =>
-            setValues((current) => ({ ...current, durationSeconds: event.target.value }))
-          }
-        />
-      </FormField>
+          label="Thời lượng (giây)"
+          hint="Tùy chọn. Phải ≥ 0 nếu nhập."
+          error={submitAttempted ? clientErrors.durationSeconds : undefined}
+        >
+          <input
+            id="lesson-duration"
+            inputMode="numeric"
+            value={values.durationSeconds}
+            disabled={submitting}
+            onChange={(event) =>
+              setValues((current) => ({ ...current, durationSeconds: event.target.value }))
+            }
+          />
+        </FormField>
+      ) : null}
       <FormField
         id="lesson-sort"
         label="Thứ tự"
@@ -430,7 +438,7 @@ export function AdminLessonForm({
         <button type="submit" className="button-primary" disabled={submitting}>
           {submitting ? 'Đang lưu…' : submitLabel}
         </button>
-        <button type="button" className="link-button" disabled={submitting} onClick={onCancel}>
+        <button type="button" className="button-secondary" disabled={submitting} onClick={onCancel}>
           Hủy
         </button>
       </div>

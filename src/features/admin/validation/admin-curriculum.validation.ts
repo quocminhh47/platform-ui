@@ -1,4 +1,5 @@
 import type { LessonType } from '../../catalog/types/lesson.types';
+import type { CreateLessonPayload, UpdateLessonPayload } from '../types/lesson-request.types';
 
 export type SectionFormValues = {
   title: string;
@@ -48,6 +49,7 @@ export function validateSectionForm(values: SectionFormValues): SectionFormError
 export function validateLessonForm(values: LessonFormValues): LessonFormErrors {
   const errors: LessonFormErrors = {};
   const title = values.title.trim();
+  const type = values.lessonType;
 
   if (!title) {
     errors.title = 'Vui lòng nhập tiêu đề bài học.';
@@ -55,11 +57,19 @@ export function validateLessonForm(values: LessonFormValues): LessonFormErrors {
     errors.title = `Tiêu đề tối đa ${TITLE_MAX} ký tự.`;
   }
 
-  const duration = parseOptionalInt(values.durationSeconds);
-  if (Number.isNaN(duration)) {
-    errors.durationSeconds = 'Thời lượng phải là số nguyên.';
-  } else if (duration !== undefined && duration < 0) {
-    errors.durationSeconds = 'Thời lượng phải ≥ 0.';
+  if (type === 'VIDEO') {
+    if (!values.contentUrl.trim()) {
+      errors.contentUrl = 'Vui lòng nhập URL video.';
+    }
+  }
+
+  if (type !== 'QUIZ') {
+    const duration = parseOptionalInt(values.durationSeconds);
+    if (Number.isNaN(duration)) {
+      errors.durationSeconds = 'Thời lượng phải là số nguyên.';
+    } else if (duration !== undefined && duration < 0) {
+      errors.durationSeconds = 'Thời lượng phải ≥ 0.';
+    }
   }
 
   const sortOrder = parseOptionalInt(values.sortOrder);
@@ -68,6 +78,69 @@ export function validateLessonForm(values: LessonFormValues): LessonFormErrors {
   }
 
   return errors;
+}
+
+export function lessonFormValuesForTypeChange(
+  current: LessonFormValues,
+  nextType: LessonType,
+): LessonFormValues {
+  if (nextType === 'QUIZ') {
+    return {
+      ...current,
+      lessonType: nextType,
+      contentUrl: '',
+      durationSeconds: '',
+    };
+  }
+  if (current.lessonType === 'QUIZ') {
+    return {
+      ...current,
+      lessonType: nextType,
+      contentUrl: '',
+      durationSeconds: '',
+    };
+  }
+  return { ...current, lessonType: nextType };
+}
+
+export function createLessonPayloadFromForm(values: LessonFormValues): CreateLessonPayload {
+  const sortOrder = parseOptionalInt(values.sortOrder);
+  const payload: CreateLessonPayload = {
+    title: values.title.trim(),
+    lessonType: values.lessonType,
+    sortOrder: Number.isNaN(sortOrder as number) ? undefined : sortOrder,
+  };
+  if (values.lessonType === 'QUIZ') {
+    payload.contentUrl = null;
+    payload.durationSeconds = null;
+    return payload;
+  }
+  const contentUrl = values.contentUrl.trim();
+  payload.contentUrl = contentUrl ? contentUrl : null;
+  const durationSeconds = parseOptionalInt(values.durationSeconds);
+  payload.durationSeconds =
+    durationSeconds === undefined || Number.isNaN(durationSeconds) ? null : durationSeconds;
+  return payload;
+}
+
+export function updateLessonPayloadFromForm(values: LessonFormValues): UpdateLessonPayload {
+  const sortOrder = parseOptionalInt(values.sortOrder);
+  const payload: UpdateLessonPayload = {
+    title: values.title.trim(),
+    lessonType: values.lessonType,
+    sortOrder: Number.isNaN(sortOrder as number) ? undefined : sortOrder,
+  };
+  if (values.lessonType === 'QUIZ') {
+    payload.contentUrl = null;
+    payload.durationSeconds = null;
+    return payload;
+  }
+  const contentUrl = values.contentUrl.trim();
+  payload.contentUrl = contentUrl ? contentUrl : null;
+  const durationSeconds = parseOptionalInt(values.durationSeconds);
+  payload.durationSeconds =
+    durationSeconds === undefined || Number.isNaN(durationSeconds) ? null : durationSeconds;
+  return payload;
 }
 
 export function emptySectionFormValues(): SectionFormValues {

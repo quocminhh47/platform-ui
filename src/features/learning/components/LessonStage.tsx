@@ -16,6 +16,7 @@ type LessonStageProps = {
   autoCompleteEnabled: boolean;
   onAutoComplete: () => void;
   completeError: string | null;
+  onQuizPassed?: () => void;
 };
 
 export function LessonStage({
@@ -29,6 +30,7 @@ export function LessonStage({
   autoCompleteEnabled,
   onAutoComplete,
   completeError,
+  onQuizPassed,
 }: LessonStageProps) {
   return (
     <main className="learning-stage" aria-label="Lesson">
@@ -55,6 +57,7 @@ export function LessonStage({
           autoCompleteEnabled={autoCompleteEnabled}
           onAutoComplete={onAutoComplete}
           completeError={completeError}
+          onQuizPassed={onQuizPassed}
         />
       ) : null}
     </main>
@@ -68,6 +71,7 @@ type LessonBodyProps = {
   autoCompleteEnabled: boolean;
   onAutoComplete: () => void;
   completeError: string | null;
+  onQuizPassed?: () => void;
 };
 
 function LessonBody({
@@ -77,6 +81,7 @@ function LessonBody({
   autoCompleteEnabled,
   onAutoComplete,
   completeError,
+  onQuizPassed,
 }: LessonBodyProps) {
   const autoCompleteAttemptRef = useRef<string | null>(null);
 
@@ -135,7 +140,12 @@ function LessonBody({
         />
       ) : null}
       {lesson.lessonType === 'QUIZ' && courseId ? (
-        <QuizPlayer courseId={courseId} lessonId={lesson.id} />
+        <QuizPlayer
+          courseId={courseId}
+          lessonId={lesson.id}
+          lessonTitle={lesson.title}
+          onQuizPassed={onQuizPassed}
+        />
       ) : null}
       {lesson.lessonType === 'ASSIGNMENT' ? (
         <UnsupportedLesson lessonType={lesson.lessonType} />

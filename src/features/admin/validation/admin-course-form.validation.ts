@@ -3,6 +3,9 @@ export type AdminCourseFormValues = {
   description: string;
   instructorId: string;
   thumbnailUrl: string;
+  /** VND amount as entered in the price input (ignored when `isFree`). */
+  price: string;
+  isFree: boolean;
   published: boolean;
 };
 
@@ -35,7 +38,38 @@ export function validateAdminCourseForm(
     errors.instructorId = 'Vui lòng chọn giảng viên.';
   }
 
+  if (!values.isFree) {
+    const parsed = parseAdminCoursePriceInput(values.price);
+    if (parsed === null) {
+      errors.price = 'Vui lòng nhập giá hợp lệ (số nguyên dương, VND).';
+    }
+  }
+
   return errors;
+}
+
+/** Numeric price sent to the API (0 when the course is marked free). */
+export function adminCourseSubmitPrice(values: AdminCourseFormValues): number {
+  if (values.isFree) {
+    return 0;
+  }
+  const parsed = parseAdminCoursePriceInput(values.price);
+  return parsed ?? 0;
+}
+
+function parseAdminCoursePriceInput(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return null;
+  }
+  if (!/^\d+$/.test(trimmed)) {
+    return null;
+  }
+  const value = Number(trimmed);
+  if (!Number.isSafeInteger(value) || value <= 0) {
+    return null;
+  }
+  return value;
 }
 
 export function emptyAdminCourseFormValues(): AdminCourseFormValues {
@@ -44,6 +78,8 @@ export function emptyAdminCourseFormValues(): AdminCourseFormValues {
     description: '',
     instructorId: '',
     thumbnailUrl: '',
+    price: '0',
+    isFree: true,
     published: false,
   };
 }
@@ -53,13 +89,17 @@ export function adminCourseFormValuesFromCourse(course: {
   description: string | null;
   instructorId: string;
   thumbnailUrl?: string | null;
+  price: number;
   published: boolean;
 }): AdminCourseFormValues {
+  const isFree = !Number.isFinite(course.price) || course.price <= 0;
   return {
     title: course.title,
     description: course.description ?? '',
     instructorId: course.instructorId,
     thumbnailUrl: course.thumbnailUrl ?? '',
+    price: isFree ? '0' : String(Math.trunc(course.price)),
+    isFree,
     published: course.published,
   };
 }

@@ -1,12 +1,19 @@
 import { Link, useParams } from 'react-router-dom';
-import { SiteFooter } from '../../../components/layout/SiteFooter';
-import { CourseEnrollmentPanel } from '../../enrollment/components/CourseEnrollmentPanel';
+import { Breadcrumb } from '../../../components/common/Breadcrumb';
+import {
+  breadcrumbCourseTitle,
+  breadcrumbCourses,
+  breadcrumbHome,
+} from '../../../navigation/breadcrumb-trail';
+import { CourseDetailHero } from '../components/course-detail/CourseDetailHero';
+import { CourseDetailInstructor } from '../components/course-detail/CourseDetailInstructor';
+import { CourseDetailOverview } from '../components/course-detail/CourseDetailOverview';
+import { CourseDetailSidebar } from '../components/course-detail/CourseDetailSidebar';
 import { CourseCurriculum } from '../components/CourseCurriculum';
-import { CourseImage } from '../components/CourseImage';
 import { RelatedCourses } from '../components/RelatedCourses';
 import { useCourseCurriculum } from '../hooks/useCourseCurriculum';
 import { useCourseDetail } from '../hooks/useCourseDetail';
-import { formatPrice } from '../utils/formatPrice';
+import { summarizeCurriculum } from '../utils/curriculumSummary';
 
 export function CourseDetailPage() {
   const { courseId } = useParams();
@@ -16,93 +23,81 @@ export function CourseDetailPage() {
     enabled: Boolean(detail.course),
   });
 
+  const breadcrumbTrail = [
+    breadcrumbHome(),
+    breadcrumbCourses(),
+    breadcrumbCourseTitle(courseId ?? '', detail.course?.title, detail.loading),
+  ];
+
   if (detail.loading) {
     return (
-      <div className="marketing">
-        <p className="page-status course-detail-status">Loading course…</p>
+      <div className="course-detail-page">
+        <div className="landing-container course-detail-state">
+          <Breadcrumb items={breadcrumbTrail} />
+          <p className="page-status course-detail-status">Đang tải khóa học…</p>
+        </div>
       </div>
     );
   }
 
   if (detail.notFound) {
     return (
-      <div className="marketing">
-        <section className="course-detail-empty" aria-labelledby="missing-heading">
-          <h1 id="missing-heading">Course not available</h1>
-          <p className="muted">
-            This course may be unpublished or the link may be incorrect.
-          </p>
-          <Link to="/courses">Back to courses</Link>
-        </section>
-        <SiteFooter />
+      <div className="course-detail-page">
+        <div className="landing-container course-detail-state">
+          <Breadcrumb items={breadcrumbTrail} />
+          <section className="course-detail-empty" aria-labelledby="missing-heading">
+            <h1 id="missing-heading">Course not available</h1>
+            <p className="muted">
+              This course may be unpublished or the link may be incorrect.
+            </p>
+            <Link to="/courses">Back to courses</Link>
+          </section>
+        </div>
       </div>
     );
   }
 
   if (detail.error || !detail.course) {
     return (
-      <div className="marketing">
-        <section className="course-detail-empty" aria-labelledby="error-heading">
-          <h1 id="error-heading">Could not load course</h1>
-          <div className="section-error" role="alert">
-            <p>{detail.error}</p>
-            <button type="button" onClick={detail.reload}>
-              Try again
-            </button>
-          </div>
-          <Link to="/courses">Back to courses</Link>
-        </section>
-        <SiteFooter />
+      <div className="course-detail-page">
+        <div className="landing-container course-detail-state">
+          <Breadcrumb items={breadcrumbTrail} />
+          <section className="course-detail-empty" aria-labelledby="error-heading">
+            <h1 id="error-heading">Could not load course</h1>
+            <div className="section-error" role="alert">
+              <p>{detail.error}</p>
+              <button type="button" onClick={detail.reload}>
+                Try again
+              </button>
+            </div>
+            <Link to="/courses">Back to courses</Link>
+          </section>
+        </div>
       </div>
     );
   }
 
   const course = detail.course;
+  const curriculumSummary = summarizeCurriculum(curriculum.sections);
 
   return (
-    <div className="marketing">
-      <div className="course-detail">
-        <p className="course-detail-back">
-          <Link to="/courses">← Back to courses</Link>
-        </p>
-
-        <div className="course-detail-layout">
-          <header className="course-detail-intro">
-            <p className="eyebrow">Course</p>
-            <h1>{course.title}</h1>
-            <section className="course-overview" aria-labelledby="overview-heading">
-              <h2 id="overview-heading">Overview</h2>
-              <p className="course-detail-description">
-                {course.description?.trim() ? course.description : 'No description provided.'}
-              </p>
-            </section>
-          </header>
-
-          <aside className="course-summary" aria-label="Course summary">
-            <div className="course-detail-banner">
-              <CourseImage
-                courseId={course.id}
-                title={course.title}
-                thumbnailUrl={course.thumbnailUrl}
-                priority
-              />
-            </div>
-            <p className="course-detail-price">{formatPrice(course.price)}</p>
-            {typeof course.lessonCount === 'number' ? (
-              <p className="course-summary-meta">
-                {course.lessonCount === 1 ? '1 lesson' : `${course.lessonCount} lessons`}
-              </p>
-            ) : null}
-            <CourseEnrollmentPanel courseId={course.id} />
-          </aside>
-
-          <div className="course-detail-body">
-            <CourseCurriculum state={curriculum} />
+    <div className="course-detail-page">
+      <CourseDetailHero course={course} breadcrumbItems={breadcrumbTrail} />
+      <div className="course-detail-main landing-container">
+        <div className="course-detail-layout-stitch">
+          <div className="course-detail-content">
+            <CourseCurriculum state={curriculum} variant="detail" />
+            <CourseDetailOverview course={course} />
+            <CourseDetailInstructor course={course} />
             <RelatedCourses courseId={course.id} />
           </div>
+          <CourseDetailSidebar
+            course={course}
+            summary={curriculumSummary}
+            curriculumLoading={curriculum.loading}
+          />
         </div>
       </div>
-      <SiteFooter />
     </div>
   );
 }

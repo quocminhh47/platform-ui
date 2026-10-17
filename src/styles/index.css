@@ -1251,6 +1251,31 @@ button.button-primary:disabled {
   cursor: not-allowed;
 }
 
+.button-secondary,
+a.button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 0.95rem;
+  border-radius: 8px;
+  border: 1px solid #d0d5dd;
+  background: #fff;
+  color: #344054;
+  text-decoration: none;
+  font-weight: 600;
+  font: inherit;
+  cursor: pointer;
+}
+
+button.button-secondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.button-secondary:hover {
+  background: #f9fafb;
+}
+
 .marketing-section,
 .closing-cta {
   padding: 0.5rem 1.75rem 2rem;
@@ -1464,6 +1489,28 @@ button.button-primary:disabled {
 
 .my-courses h1 {
   margin: 0 0 1.25rem;
+}
+
+.dashboard-content:has(> .admin-course-form-page) {
+  max-width: none;
+}
+
+.admin-course-form-page {
+  width: 100%;
+}
+
+.admin-course-form-page-shell {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding: 1.5rem 1rem;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .admin-course-form-page-shell {
+    padding: 2rem 1.5rem;
+  }
 }
 
 .admin-course-form-page h1 {
@@ -1725,6 +1772,279 @@ button.button-primary:disabled {
   background: #fffaeb;
   border: 1px solid #fedf89;
   color: #7a2e0e;
+}
+
+.admin-quiz-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (min-width: 1080px) {
+  .admin-quiz-layout {
+    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  }
+
+  .admin-quiz-settings {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .admin-quiz-questions,
+  .admin-quiz-locked-note-span {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+.admin-quiz-questions-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 900px) {
+  .admin-quiz-questions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.admin-course-form {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.admin-course-form-error {
+  margin-bottom: 1rem;
+}
+
+.admin-course-form-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .admin-course-form-layout {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 2rem;
+  }
+
+  .admin-course-form-main {
+    grid-column: span 8;
+  }
+
+  .admin-course-form-preview {
+    grid-column: span 4;
+    position: sticky;
+    top: 1.5rem;
+    align-self: start;
+  }
+}
+
+.admin-course-form-main.admin-form {
+  min-width: 0;
+  max-width: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-course-form .field input:not([type='checkbox']):not([type='radio']),
+.admin-course-form .field textarea,
+.admin-course-form .field select {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-course-form .field textarea,
+.admin-course-form .field select {
+  min-width: 0;
+}
+
+.admin-course-price-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (min-width: 640px) {
+  .admin-course-price-row {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+}
+
+/* Override .admin-course-form .field input { width: 100% } so the free checkbox stays on-row */
+.admin-course-form .field input.admin-course-price-input {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+@media (min-width: 640px) {
+  .admin-course-form .field input.admin-course-price-input {
+    flex: 0 1 10.5rem;
+    width: 10.5rem;
+    max-width: min(10.5rem, 100%);
+  }
+}
+
+.admin-course-price-free {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin: 0;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #0f172a;
+  cursor: pointer;
+  user-select: none;
+}
+
+.admin-course-price-free input[type='checkbox'] {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  flex-shrink: 0;
+  padding: 0;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  accent-color: #4338ca;
+  cursor: pointer;
+}
+
+.admin-course-price-free input[type='checkbox']:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.admin-course-published-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.85);
+}
+
+.admin-course-published-input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0.2rem 0 0;
+  flex-shrink: 0;
+  padding: 0;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  accent-color: #4338ca;
+  cursor: pointer;
+}
+
+.admin-course-published-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.admin-course-published-label {
+  min-width: 0;
+  flex: 1;
+  display: block;
+  cursor: pointer;
+  font-weight: inherit;
+}
+
+.admin-course-published-title {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.admin-course-published-help {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  font-weight: 400;
+  color: #64748b;
+}
+
+.admin-course-form-actions {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #e4e7ef;
+}
+
+@media (max-width: 639px) {
+  .admin-course-form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-course-form-actions .button-primary,
+  .admin-course-form-actions .button-secondary {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 640px) {
+  .admin-course-form-actions .button-primary,
+  .admin-course-form-actions .button-secondary {
+    white-space: nowrap;
+  }
+}
+
+.admin-course-form-preview {
+  min-width: 0;
+}
+
+.admin-preview-heading {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.admin-preview-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+}
+
+.admin-course-preview-card {
+  pointer-events: none;
+}
+
+.admin-course-preview-card .course-card-link {
+  pointer-events: none;
+}
+
+.admin-course-preview-badge {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #475467;
+}
+
+.admin-course-preview-instructor {
+  margin: 0.35rem 0 0;
+  font-size: 0.875rem;
 }
 
 .admin-quiz-form fieldset {
@@ -2948,123 +3268,6 @@ button.button-primary:disabled {
   margin: 1rem 0 0;
   color: #475569;
   font-size: 0.9rem;
-}
-
-.quiz-player {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  max-width: 42rem;
-}
-
-.quiz-player-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem 1.5rem;
-  align-items: center;
-}
-
-.quiz-countdown {
-  margin: 0;
-  font-weight: 600;
-  color: #0f766e;
-}
-
-.quiz-countdown-urgent {
-  color: #b45309;
-}
-
-.quiz-countdown-expired {
-  color: #b91c1c;
-}
-
-.quiz-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.quiz-question {
-  margin: 0;
-  padding: 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  min-width: 0;
-}
-
-.quiz-question-title {
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  padding: 0;
-}
-
-.quiz-options {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.quiz-option {
-  display: flex;
-  gap: 0.5rem;
-  align-items: flex-start;
-  padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.quiz-option.is-selected {
-  background: #ecfdf5;
-}
-
-.quiz-option input {
-  margin-top: 0.2rem;
-  flex-shrink: 0;
-}
-
-.quiz-actions {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.quiz-result-heading {
-  margin: 0 0 0.75rem;
-}
-
-.quiz-result-badge {
-  font-weight: 700;
-  margin: 0 0 0.5rem;
-}
-
-.quiz-result-badge.pass {
-  color: #047857;
-}
-
-.quiz-result-badge.fail {
-  color: #b91c1c;
-}
-
-.quiz-result-meta {
-  margin: 0 0 0.5rem;
-  color: #64748b;
-}
-
-.quiz-result-answers {
-  margin: 1rem 0 0;
-  padding-left: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.quiz-result-selection {
-  margin-top: 0.25rem;
-  color: #475569;
-  font-size: 0.95rem;
 }
 
 @media (max-width: 900px) {

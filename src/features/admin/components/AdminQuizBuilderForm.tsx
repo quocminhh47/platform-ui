@@ -91,6 +91,7 @@ export function AdminQuizBuilderForm({
         </div>
       ) : null}
 
+      <div className="admin-quiz-layout">
       <fieldset className="admin-quiz-settings">
         <legend>Cài đặt quiz</legend>
         <FormField
@@ -158,7 +159,7 @@ export function AdminQuizBuilderForm({
             <h2>Câu hỏi</h2>
             <button
               type="button"
-              className="link-button"
+              className="button-secondary"
               disabled={submitting}
               onClick={() =>
                 setValues((current) => ({
@@ -173,6 +174,7 @@ export function AdminQuizBuilderForm({
           {submitAttempted && clientErrors.form ? (
             <p className="field-error" role="alert">{clientErrors.form}</p>
           ) : null}
+          <div className="admin-quiz-questions-grid">
           {values.questions.map((question, index) => (
             <QuestionEditor
               key={question.key}
@@ -229,12 +231,14 @@ export function AdminQuizBuilderForm({
               }
             />
           ))}
+          </div>
         </div>
       ) : (
-        <p className="muted admin-quiz-locked-note">
+        <p className="muted admin-quiz-locked-note admin-quiz-locked-note-span">
           Phần câu hỏi đã khóa vì đã có lượt làm bài. Bạn vẫn có thể cập nhật cài đặt phía trên.
         </p>
       )}
+      </div>
 
       <div className="admin-form-actions">
         <button type="submit" className="button-primary" disabled={submitting}>
@@ -327,7 +331,7 @@ function QuestionEditor({
           </button>
           <button
             type="button"
-            className="link-button"
+            className="button-secondary"
             disabled={submitting}
             onClick={onDuplicate}
           >
@@ -464,7 +468,7 @@ function QuestionEditor({
             {!isTrueFalse ? (
               <button
                 type="button"
-                className="link-button"
+                className="button-secondary"
                 disabled={submitting}
                 onClick={() => onChange(addOptionToQuestion(question))}
               >

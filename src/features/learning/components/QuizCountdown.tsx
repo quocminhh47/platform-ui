@@ -5,23 +5,39 @@ type QuizCountdownProps = {
   expired: boolean;
 };
 
+function timerTone(remainingSeconds: number): 'normal' | 'warning' | 'critical' {
+  if (remainingSeconds <= 30) {
+    return 'critical';
+  }
+  if (remainingSeconds <= 120) {
+    return 'warning';
+  }
+  return 'normal';
+}
+
 export function QuizCountdown({ remainingSeconds, expired }: QuizCountdownProps) {
   if (expired) {
     return (
-      <p className="quiz-countdown quiz-countdown-expired" role="status">
+      <p className="quiz-timer quiz-timer-critical quiz-timer-expired" role="status">
         Hết thời gian làm bài
       </p>
     );
   }
 
-  const urgent = remainingSeconds <= 60;
+  const tone = timerTone(remainingSeconds);
   return (
     <p
-      className={urgent ? 'quiz-countdown quiz-countdown-urgent' : 'quiz-countdown'}
+      className={`quiz-timer quiz-timer-${tone}`}
       role="timer"
       aria-live="polite"
     >
-      Thời gian còn lại: {formatCountdownVi(remainingSeconds)}
+      <span className="quiz-timer-icon" aria-hidden="true">⏱</span>
+      <span>
+        Thời gian còn lại:{' '}
+        <span className="quiz-timer-value quiz-tabular">
+          {formatCountdownVi(remainingSeconds)}
+        </span>
+      </span>
     </p>
   );
 }
