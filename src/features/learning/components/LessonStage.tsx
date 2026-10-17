@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef } from 'react';
 import type { Lesson } from '../../catalog/types/lesson.types';
 import { ArticleLesson } from './ArticleLesson';
+import { QuizPlayer } from './QuizPlayer';
 import { UnsupportedLesson } from './UnsupportedLesson';
 import { VideoLesson } from './VideoLesson';
 
 type LessonStageProps = {
+  courseId: string | undefined;
   lesson: Lesson | null;
   loading: boolean;
   error: string | null;
@@ -17,6 +19,7 @@ type LessonStageProps = {
 };
 
 export function LessonStage({
+  courseId,
   lesson,
   loading,
   error,
@@ -46,6 +49,7 @@ export function LessonStage({
 
       {!loading && !error && lesson ? (
         <LessonBody
+          courseId={courseId}
           lesson={lesson}
           isCompleted={isCompleted}
           autoCompleteEnabled={autoCompleteEnabled}
@@ -58,6 +62,7 @@ export function LessonStage({
 }
 
 type LessonBodyProps = {
+  courseId: string | undefined;
   lesson: Lesson;
   isCompleted: boolean;
   autoCompleteEnabled: boolean;
@@ -66,6 +71,7 @@ type LessonBodyProps = {
 };
 
 function LessonBody({
+  courseId,
   lesson,
   isCompleted,
   autoCompleteEnabled,
@@ -128,7 +134,10 @@ function LessonBody({
           onContentReady={handleContentReady}
         />
       ) : null}
-      {lesson.lessonType === 'QUIZ' || lesson.lessonType === 'ASSIGNMENT' ? (
+      {lesson.lessonType === 'QUIZ' && courseId ? (
+        <QuizPlayer courseId={courseId} lessonId={lesson.id} />
+      ) : null}
+      {lesson.lessonType === 'ASSIGNMENT' ? (
         <UnsupportedLesson lessonType={lesson.lessonType} />
       ) : null}
     </article>

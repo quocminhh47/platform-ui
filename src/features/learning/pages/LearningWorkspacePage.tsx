@@ -43,6 +43,7 @@ export function LearningWorkspacePage() {
     lessonId: selected?.id,
   });
 
+  const isQuizLesson = selected?.lessonType === 'QUIZ';
   const selectedCompleted = selected
     ? (progressByLessonId.get(selected.id)?.isCompleted ?? false)
     : false;
@@ -113,10 +114,11 @@ export function LearningWorkspacePage() {
           />
           <div className="learning-stage-column">
             <LessonStage
-              lesson={content.lesson}
-              loading={content.loading || curriculum.loading}
-              error={content.error}
-              onRetry={content.reload}
+              courseId={courseId}
+              lesson={isQuizLesson ? (content.lesson ?? selected ?? null) : content.lesson}
+              loading={curriculum.loading || (!isQuizLesson && content.loading)}
+              error={isQuizLesson ? null : content.error}
+              onRetry={isQuizLesson ? curriculum.reload : content.reload}
               missingSelection={Boolean(lessonId) && !curriculum.loading && !selected}
               isCompleted={selectedCompleted}
               autoCompleteEnabled={autoCompleteEnabled}
