@@ -19,6 +19,7 @@ export type CourseProgressState = {
   error: string | null;
   reload: () => void;
   markLessonComplete: (lessonId: string) => Promise<void>;
+  syncLessonCompleted: (lessonId: string) => void;
   completingLessonId: string | null;
   completeError: string | null;
   clearCompleteError: () => void;
@@ -129,6 +130,17 @@ export function useCourseProgress({
     return map;
   }, [sections, progressByLessonId]);
 
+  const syncLessonCompleted = useCallback((lessonId: string) => {
+    setRows((current) =>
+      upsertProgressRow(current ?? [], {
+        lessonId,
+        isCompleted: true,
+        watchedDurationSeconds: 0,
+        lastAccessedAt: new Date().toISOString(),
+      }),
+    );
+  }, []);
+
   const markLessonComplete = useCallback(
     async (lessonId: string) => {
       if (!courseId || !accessToken || completingLessonId) {
@@ -159,6 +171,7 @@ export function useCourseProgress({
     error,
     reload,
     markLessonComplete,
+    syncLessonCompleted,
     completingLessonId,
     completeError,
     clearCompleteError,

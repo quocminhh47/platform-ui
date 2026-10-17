@@ -172,9 +172,9 @@ describe('learning workspace curriculum', () => {
 
     renderWorkspace();
 
-    expect(await screen.findByRole('navigation', { name: 'Main' })).toBeTruthy();
+    expect(await screen.findByRole('navigation', { name: 'Chính' })).toBeTruthy();
     expect(screen.getByRole('navigation', { name: 'Footer' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'LMS' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /Trung tâm Tiếng Trung/i })).toBeTruthy();
   });
 
   it('loads protected lesson content and ignores summary playback URLs', async () => {

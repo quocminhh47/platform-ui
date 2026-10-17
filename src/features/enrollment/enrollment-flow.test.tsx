@@ -12,6 +12,7 @@ import type { User } from '../auth/types/auth.types';
 import * as coursesApi from '../catalog/api/courses.api';
 import { CourseDetailPage } from '../catalog/pages/CourseDetailPage';
 import type { Course } from '../catalog/types/course.types';
+import * as progressApi from '../learning/api/progress.api';
 import * as enrollmentsApi from './api/enrollments.api';
 import type { Enrollment } from './api/enrollments.api';
 import { ENROLL_SUCCESS_TOAST } from './enrollment-messages';
@@ -35,9 +36,16 @@ vi.mock('./api/enrollments.api', () => ({
   enrollInCourse: vi.fn(),
 }));
 
+vi.mock('../learning/api/progress.api', () => ({
+  listCourseProgress: vi.fn(),
+  completeLessonProgress: vi.fn(),
+  getLessonProgress: vi.fn(),
+}));
+
 const auth = vi.mocked(authApi);
 const courses = vi.mocked(coursesApi);
 const enrollments = vi.mocked(enrollmentsApi);
+const progress = vi.mocked(progressApi);
 
 const courseId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 
@@ -132,6 +140,8 @@ beforeEach(() => {
   courses.listPublishedCourses.mockResolvedValue([]);
   enrollments.listMyEnrollments.mockReset();
   enrollments.enrollInCourse.mockReset();
+  progress.listCourseProgress.mockReset();
+  progress.listCourseProgress.mockResolvedValue([]);
   courses.getCourseById.mockResolvedValue(course);
   courses.listCourseSections.mockResolvedValue([]);
   courses.listSectionLessons.mockResolvedValue([]);
@@ -273,10 +283,61 @@ describe('my courses', () => {
     expect(screen.getByRole('heading', { name: 'In progress' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Completed' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Not currently available' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /Intro to Algebra/ }).getAttribute('href')).toBe(
-      `/courses/${courseId}`,
+    await waitFor(() =>
+      expect(screen.getAllByRole('link', { name: 'Bắt đầu học' }).length).toBe(2),
+    );
+    const learnHrefs = screen
+      .getAllByRole('link', { name: 'Bắt đầu học' })
+      .map((link) => link.getAttribute('href'));
+    expect(learnHrefs).toContain(`/courses/${courseId}/learn`);
+    expect(learnHrefs).toContain(
+      '/courses/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/learn',
     );
     expect(enrollments.listMyEnrollments).toHaveBeenCalledWith('token');
+  });
+
+  it('links to the next incomplete lesson when progress is available', async () => {
+    setAccessToken('token');
+    auth.fetchCurrentUser.mockResolvedValue(student);
+    enrollments.listMyEnrollments.mockResolvedValue([enrollment('ACTIVE')]);
+    courses.listCourseSections.mockResolvedValue([
+      { id: 'sec-1', courseId, title: 'Section', sortOrder: 1 },
+    ]);
+    courses.listSectionLessons.mockResolvedValue([
+      {
+        id: 'lesson-1',
+        sectionId: 'sec-1',
+        courseId,
+        title: 'Lesson 1',
+        lessonType: 'VIDEO',
+        contentUrl: null,
+        durationSeconds: null,
+        sortOrder: 1,
+      },
+      {
+        id: 'lesson-2',
+        sectionId: 'sec-1',
+        courseId,
+        title: 'Lesson 2',
+        lessonType: 'VIDEO',
+        contentUrl: null,
+        durationSeconds: null,
+        sortOrder: 2,
+      },
+    ]);
+    progress.listCourseProgress.mockResolvedValue([
+      {
+        lessonId: 'lesson-1',
+        isCompleted: true,
+        watchedDurationSeconds: 60,
+        lastAccessedAt: '2026-01-01T00:00:00Z',
+      },
+    ]);
+
+    renderMyCourses();
+
+    const link = await screen.findByRole('link', { name: 'Tiếp tục học' });
+    expect(link.getAttribute('href')).toBe(`/courses/${courseId}/learn/lesson-2`);
   });
 
   it('shows an empty state', async () => {

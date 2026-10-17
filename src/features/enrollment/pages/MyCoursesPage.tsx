@@ -1,3 +1,5 @@
+import { Breadcrumb } from '../../../components/common/Breadcrumb';
+import { breadcrumbHome, breadcrumbMyCourses } from '../../../navigation/breadcrumb-trail';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { DashboardHeader } from '../../dashboard/components/DashboardHeader';
 import { DashboardLayout } from '../../dashboard/components/DashboardLayout';
@@ -23,8 +25,9 @@ export function MyCoursesPage() {
 
   return (
     <DashboardLayout sidebar={<DashboardSidebar />} header={<DashboardHeader user={user} />}>
+      <Breadcrumb items={[breadcrumbHome(), breadcrumbMyCourses()]} />
       <section className="my-courses" aria-labelledby="my-courses-heading">
-        <h1 id="my-courses-heading">My courses</h1>
+        <h1 id="my-courses-heading">Khóa học của tôi</h1>
 
         {mine.loading ? <p className="page-status">Loading your courses…</p> : null}
 

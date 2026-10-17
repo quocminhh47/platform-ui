@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HUTECH eLearning - Hệ thống học tập trực tuyến</title>
+<!-- Tailwind CSS CDN with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Custom Configuration -->
+<script data-purpose="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              navy: '#0B1E48',
+              deep: '#06122C',
+              darkFooter: '#081430',
+              blue: '#1D4ED8',
+              gold: '#F59E0B',
+              goldHover: '#D97706',
+              maroon: '#800020'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+<!-- Custom Core Styles -->
+<style data-purpose="custom-decorations">
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-[#F8FAFC] text-slate-800 font-sans antialiased selection:bg-brand-gold selection:text-brand-navy">
+<!-- BEGIN: MainHeader -->
+<header class="sticky top-0 z-50 bg-[#0B1E48] text-white shadow-md border-b border-blue-900/40">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex items-center justify-between h-20">
+<!-- Left: Logo & Brand Name -->
+<div class="flex items-center space-x-3">
+<a class="flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-amber-400 rounded-lg p-1" href="#">
+<div class="w-12 h-12 bg-white rounded-xl shadow-inner flex items-center justify-center p-1.5 transition-transform group-hover:scale-105">
+<!-- Academic Logo Icon -->
+<svg class="w-9 h-9 text-[#0B1E48]" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24">
+<path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+<path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+</svg>
+</div>
+<div>
+<div class="flex items-baseline space-x-1">
+<span class="text-xl font-black tracking-wider text-amber-400">HUTECH</span>
+<span class="text-xl font-bold tracking-tight text-white">eLearning</span>
+</div>
+<p class="text-[10px] tracking-widest uppercase text-blue-200/80 font-medium">Anytime, anywhere to study</p>
+</div>
+</a>
+</div>
+<!-- Center: Navigation Links -->
+<nav aria-label="Main Navigation" class="hidden md:flex items-center space-x-8">
+<a class="text-sm font-semibold text-amber-400 border-b-2 border-amber-400 pb-1 transition-colors" href="#">Trang chủ</a>
+<a class="text-sm font-medium text-slate-200 hover:text-amber-400 transition-colors" href="#courses">Khóa học</a>
+<a class="text-sm font-medium text-slate-200 hover:text-amber-400 transition-colors" href="#news">Tin tức &amp; Sự kiện</a>
+<a class="text-sm font-medium text-slate-200 hover:text-amber-400 transition-colors" href="#faq">FAQ</a>
+</nav>
+<!-- Right: Action Utilities -->
+<div class="flex items-center space-x-4">
+<!-- Search Button -->
+<button aria-label="Tìm kiếm" class="p-2 text-slate-200 hover:text-white hover:bg-blue-900/50 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400" type="button">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<!-- Language Selector -->
+<div class="relative group">
+<button class="flex items-center space-x-1 text-sm font-medium text-slate-200 hover:text-white px-2 py-1 rounded transition-colors focus:outline-none" type="button">
+<span>vi</span>
+<svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+<!-- Divider -->
+<div class="h-5 w-px bg-blue-800"></div>
+<!-- Login Button -->
+<a class="inline-flex items-center justify-center px-5 py-2 text-sm font-semibold rounded-lg text-[#0B1E48] bg-amber-400 hover:bg-amber-300 shadow-sm transition-all duration-200 transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-400 focus:ring-offset-[#0B1E48]" href="#">
+            Đăng nhập
+          </a>
+</div>
+</div>
+</div>
+</header>
+<!-- END: MainHeader -->
+<!-- BEGIN: HeroBannerSection -->
+<section class="relative bg-gradient-to-r from-[#0B1E48] via-[#0D255A] to-[#081738] text-white overflow-hidden">
+<!-- Background Image with Overlay -->
+<div class="absolute inset-0 z-0 opacity-25 mix-blend-luminosity">
+<img alt="Sinh viên HUTECH trong môi trường học tập hiện đại" class="w-full h-full object-cover object-center" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDHTVcYihlJ1r_nCZt9zisLUORdNGgQ7My8Ng4nE-q11RBZ4hIH22aH1feMNd5vBXNH9QaGVaFMNTXiR0F19WiN6jhGk-94o0DNfAASn0sshqbp3b1IbLWuoLPTtTCsyz2lcSLY0H4uwnW34mulG4OyI7VdlH1seyp5bn0caBObsSvhh3Cd9Sa453WrdnklFOAj9zU4OHrX22DuQjYeOXbbD-h67SXWPu3ikYM5t9nDmf4oy6OyAtzK"/>
+</div>
+<!-- Radial Ambient Gradient Layer -->
+<div class="absolute inset-0 bg-gradient-to-t from-[#0B1E48] via-transparent to-transparent z-0"></div>
+<div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
+<div class="max-w-3xl">
+<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-900/60 border border-blue-400/30 text-amber-300 text-xs font-semibold uppercase tracking-wider mb-6">
+<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          Cổng thông tin đào tạo trực tuyến 24/7
+        </div>
+<h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
+          Hệ thống học tập trực tuyến
+          <span class="block text-amber-400 mt-2 drop-shadow-md">HUTECH eLearning</span>
+</h1>
+<p class="mt-6 text-lg sm:text-xl text-slate-200 font-light leading-relaxed">
+          Nền tảng số hóa học liệu tiên tiến, kết nối sinh viên và giảng viên mọi lúc, mọi nơi. Tối ưu hóa trải nghiệm học thuật chuẩn quốc tế với kho khóa học MOOCS và LMS phong phú.
+        </p>
+<!-- CTA Buttons -->
+<div class="mt-8 flex flex-wrap gap-4 items-center">
+<a class="px-7 py-3.5 bg-amber-400 hover:bg-amber-300 text-[#0B1E48] font-bold text-base rounded-xl shadow-lg shadow-amber-500/20 transition-all duration-200 transform hover:-translate-y-0.5 inline-flex items-center gap-2" href="#courses">
+<span>Khám phá khóa học</span>
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</a>
+<a class="px-7 py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-base rounded-xl backdrop-blur-sm transition-all duration-200" href="#news">
+            Xem lịch tập huấn
+          </a>
+</div>
+</div>
+</div>
+<!-- Quick Category Tabs Strip -->
+<div class="relative z-10 w-full border-t border-white/10 bg-slate-900/50 backdrop-blur-md">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="grid grid-cols-3 divide-x divide-white/10 text-center font-bold text-sm sm:text-base">
+<a class="py-4 hover:bg-white/5 transition-colors text-white border-b-2 border-amber-400 flex items-center justify-center gap-2" href="#courses">
+<svg class="w-5 h-5 text-amber-400 hidden sm:block" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M12 14l9-5-9-5-9 5 9 5z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span>Đại học</span>
+</a>
+<a class="py-4 hover:bg-white/5 transition-colors text-slate-300 hover:text-white flex items-center justify-center gap-2" href="#courses">
+<svg class="w-5 h-5 text-blue-400 hidden sm:block" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span>Sau đại học</span>
+</a>
+<a class="py-4 hover:bg-white/5 transition-colors text-slate-300 hover:text-white flex items-center justify-center gap-2" href="#courses">
+<svg class="w-5 h-5 text-emerald-400 hidden sm:block" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span>Đào tạo ngắn hạn</span>
+</a>
+</div>
+</div>
+</div>
+</section>
+<!-- END: HeroBannerSection -->
+<!-- BEGIN: PopularCoursesSection -->
+<section class="py-16 lg:py-20 bg-slate-50 border-b border-slate-200" id="courses">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<!-- Section Header -->
+<div class="flex flex-col sm:flex-row sm:items-end justify-between mb-10 pb-4 border-b border-slate-200 gap-4">
+<div>
+<div class="flex items-center gap-2 text-blue-700 text-xs font-bold uppercase tracking-wider mb-2">
+<span class="w-2.5 h-2.5 bg-blue-700 rounded-sm"></span>
+            Kho tài nguyên học tập
+          </div>
+<h2 class="text-3xl font-extrabold text-[#0B1E48] tracking-tight">Khóa học phổ biến</h2>
+</div>
+<a class="text-sm font-semibold text-blue-700 hover:text-blue-900 inline-flex items-center gap-1 transition-colors" href="#">
+          Xem tất cả các khóa học
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</a>
+</div>
+<!-- 4-Column Responsive Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Course Card 1 -->
+<article class="bg-white rounded-xl shadow-sm hover:shadow-xl border border-slate-200/80 overflow-hidden flex flex-col transition-all duration-300 transform hover:-translate-y-1.5 group">
+<div class="relative h-44 bg-slate-100 overflow-hidden">
+<img alt="Khóa học Women and Leadership" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwQoYsPJeV6KY4GFoi3xPnttPjdZzLEViC-g7N6t9jUXcpxz7TCPTHdq43EKYyEV8cBpIVxwxpZd0i19mlep4YeITvGN14MbqSX3757e8qDxMGPAegNCbWkZ6ye0TJD9T7szY6gbWVrSRN-ThARDWfsOoW4JQEbeLBU8YqA9r8LpeIV8LSk6IaQ2FjHbqk0dPizSfKeHihsVZVZEM9dSU15zWOT-O6k5e9ExzV03wOn6RSbV_w10sg"/>
+<span class="absolute top-3 left-3 bg-[#0B1E48]/90 backdrop-blur-sm text-white text-[11px] font-semibold px-2.5 py-1 rounded-md">
+              MOOCS
+            </span>
+</div>
+<div class="p-5 flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-bold text-slate-900 group-hover:text-blue-700 text-base leading-snug line-clamp-2 transition-colors">
+                Women and Leadership
+              </h3>
+<p class="mt-2 text-xs text-slate-500 font-medium">Trường ĐH Công nghệ TP.HCM &amp; Univ. of Hertfordshire</p>
+</div>
+<div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+<span class="inline-flex items-center text-blue-700 font-semibold bg-blue-50 px-2 py-0.5 rounded">Khóa học MOOCS</span>
+<span class="inline-flex items-center gap-1">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                6 Bài học
+              </span>
+</div>
+</div>
+</article>
+<!-- Course Card 2 -->
+<article class="bg-white rounded-xl shadow-sm hover:shadow-xl border border-slate-200/80 overflow-hidden flex flex-col transition-all duration-300 transform hover:-translate-y-1.5 group">
+<div class="relative h-44 bg-slate-100 overflow-hidden">
+<img alt="Khóa học Outcome-Based Education" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMut3VFbAGFASBEph-7YZwl6DOQcTOO-nUTEl-sY10OxXQyuPfG_LU3BDAXaLX9g9fyOUnqR5RYo6UnrElrFy31JfUiOd9t_yEajhGMetTtOJ3GkRPyVrXlaGqaAcVSiZy0s5mjNSWZNL_Ad1-nLu8UeUi-A_-bA9pX358COgWRd40PJ-dPk-2yUYTN9A0ywcCacKu30mbJCga7eeSgqBGdVJLYyQhJ0eQkBviz41_3VJl9cPsvkDm"/>
+<span class="absolute top-3 left-3 bg-[#0B1E48]/90 backdrop-blur-sm text-white text-[11px] font-semibold px-2.5 py-1 rounded-md">
+              MOOCS
+            </span>
+</div>
+<div class="p-5 flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-bold text-slate-900 group-hover:text-blue-700 text-base leading-snug line-clamp-2 transition-colors">
+                Outcome-Based Education
+              </h3>
+<p class="mt-2 text-xs text-slate-500 font-medium">GS.TS Nguyễn Trung Kiên</p>
+</div>
+<div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+<span class="inline-flex items-center text-blue-700 font-semibold bg-blue-50 px-2 py-0.5 rounded">Khóa học MOOCS</span>
+<span class="inline-flex items-center gap-1">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                4 Bài học
+              </span>
+</div>
+</div>
+</article>
+<!-- Course Card 3 -->
+<article class="bg-white rounded-xl shadow-sm hover:shadow-xl border border-slate-200/80 overflow-hidden flex flex-col transition-all duration-300 transform hover:-translate-y-1.5 group">
+<div class="relative h-44 bg-slate-100 overflow-hidden">
+<img alt="Khóa học Tâm lý học phát triển" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLA3d3sUpEoIXjjs1W-NXhKgMz7RVw5f5_g8G4n5LN-iY5wAWQFibHdugAiR3KVdva5rjGXIj6zwOCAQv7cXeDYRtDp6BwDfAkcfZsKQx0gmUMYekQC1ViZqNCMOOIc5sS7Y-ebtGWsFu595hJ0ACad3QiOPzbCT6w7QoIzS5kgxX-rOKI_ORsqLUAOavQD8tShSETOVtbs-Ju0ahqQ4SQUGT7DKXf_mlrOKsTx0JP-HDSZejdcBgR"/>
+<span class="absolute top-3 left-3 bg-blue-700 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md">
+              LMS
+            </span>
+</div>
+<div class="p-5 flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-bold text-slate-900 group-hover:text-blue-700 text-base leading-snug line-clamp-2 transition-colors">
+                Tâm lý học phát triển
+              </h3>
+<p class="mt-2 text-xs text-slate-500 font-medium">Khoa Khoa học Xã hội &amp; Quan hệ công chúng</p>
+</div>
+<div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+<span class="inline-flex items-center text-slate-700 font-medium bg-slate-100 px-2 py-0.5 rounded">Khóa học LMS</span>
+<span class="inline-flex items-center gap-1">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                8 Bài học
+              </span>
+</div>
+</div>
+</article>
+<!-- Course Card 4 -->
+<article class="bg-white rounded-xl shadow-sm hover:shadow-xl border border-slate-200/80 overflow-hidden flex flex-col transition-all duration-300 transform hover:-translate-y-1.5 group">
+<div class="relative h-44 bg-slate-100 overflow-hidden">
+<img alt="Khóa học Kỹ năng thi tiếng Anh quốc tế" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGDfORq5xGhRq95mJN9WOjyu21GmIvuY1V5vYx1JcXysIBV7j_05N60hRjCCOZwMKGvxNIgQcPlAv3kQ6swqZKpstph_TWgAUAfqubfdw3-2rHtsAcMvT-o7Roqkulufz9TBVx_f8Yqr4tJz0N5CLAIGscaKKBliniiHtiATj6mZ40m1apDK3kp0nx3Kd6uS-aqLca24kblOumsJ7A8BKlFzFPcSLL-JHdp0_3tmw4STO5piEDZpvf"/>
+<span class="absolute top-3 left-3 bg-blue-700 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md">
+              LMS
+            </span>
+</div>
+<div class="p-5 flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-bold text-slate-900 group-hover:text-blue-700 text-base leading-snug line-clamp-2 transition-colors">
+                Kỹ năng thi tiếng Anh quốc tế
+              </h3>
+<p class="mt-2 text-xs text-slate-500 font-medium">Khoa Tiếng Anh</p>
+</div>
+<div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+<span class="inline-flex items-center text-slate-700 font-medium bg-slate-100 px-2 py-0.5 rounded">Khóa học LMS</span>
+<span class="inline-flex items-center gap-1">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                14 Bài học
+              </span>
+</div>
+</div>
+</article>
+<!-- Course Card 5 -->
+<article class="bg-white rounded-xl shadow-sm hover:shadow-xl border border-slate-200/80 overflow-hidden flex flex-col transition-all duration-300 transform hover:-translate-y-1.5 group">
+<div class="relative h-44 bg-slate-100 overflow-hidden">
+<img alt="Khóa học Tiếp thị cơ bản" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKO1u8gW5btLabTYMR5umfu6z7KDUF0mi1ErN_9jiNRsA8mTTdwoPHukwTv9qfdmlZFHvUMiljRrMGBbGPSSLu6X7_Cfer2TES4ufp-XNOShmadCCmKl_-5Lf2fU-d6RWi0dCj6ESPgbbAPigj57jrkzTsS2LgACzafmGCZj_peU1XeQ6_75mpsf64JJkBm2UUbe9PID8mw6rS2fD_WBhBn79TtE7c2tN0hkc7eCSMqiKFshCNZXn2"/>
+<span class="absolute top-3 left-3 bg-blue-700 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md">
+              LMS
+            </span>
+</div>
+<div class="p-5 flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-bold text-slate-900 group-hover:text-blue-700 text-base leading-snug line-clamp-2 transition-colors">
+                Tiếp thị cơ bản
+              </h3>
+<p class="mt-2 text-xs text-slate-500 font-medium">Khoa Marketing &amp; Kinh doanh quốc tế</p>
+</div>
+<div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+<span class="inline-flex items-center text-slate-700 font-medium bg-slate-100 px-2 py-0.5 rounded">Khóa học LMS</span>
+<span class="inline-flex items-center gap-1">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                8 Bài học
+              </span>
+</div>
+</div>
+</article>
+<!-- Course Card 6 -->
+<article class="bg-white rounded-xl shadow-sm hover:shadow-xl border border-slate-200/80 overflow-hidden flex flex-col transition-all duration-300 transform hover:-translate-y-1.5 group">
+<div class="relative h-44 bg-slate-100 overflow-hidden">
+<img alt="Khóa học Tâm lý học quảng cáo và marketing" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA50wOWVAtxBynx1wjSmcUlm4WPnw3GuyCMIrcviWhfJQcV527Aer-z51imyr1qa12MeH6Rxj0r0tzIbZe9CGKCZUXWPFdNig1W8Gxh-GJMZJciw_U1fNkyzm18D1xAZEhroUcCjDhaCUD4mDxE25f1nXlonhUj_zDdE0Is0TyjxL39pIWjLagBeoA473LsXBDIZ-oUSubblJC_8_eawSKtq2cLmjvoj1JeEUvQc6kXw_827j032vNP"/>
+<span class="absolute top-3 left-3 bg-blue-700 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md">
+              LMS
+            </span>
+</div>
+<div class="p-5 flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-bold text-slate-900 group-hover:text-blue-700 text-base leading-snug line-clamp-2 transition-colors">
+                Tâm lý học quảng cáo và marketing
+              </h3>
+<p class="mt-2 text-xs text-slate-500 font-medium">Khoa Khoa học Xã hội &amp; Quan hệ công chúng</p>
+</div>
+<div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+<span class="inline-flex items-center text-slate-700 font-medium bg-slate-100 px-2 py-0.5 rounded">Khóa học LMS</span>
+<span class="inline-flex items-center gap-1">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                7 Bài học
+              </span>
+</div>
+</div>
+</article>
+<!-- Course Card 7 -->
+<article class="bg-white rounded-xl shadow-sm hover:shadow-xl border border-slate-200/80 overflow-hidden flex flex-col transition-all duration-300 transform hover:-translate-y-1.5 group">
+<div class="relative h-44 bg-slate-100 overflow-hidden">
+<img alt="Khóa học Tâm lý học giao tiếp" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAG_IL3ffFRcKog3SzXT_F4zhvHE9D3MFQIBxnyAdgk1N8L4Ie337OC6il-yegV5W0Z_AUck52xjNxR-f4VYy5Ga3acl_fAUP8L11N7UKiaXXhStwGWmAjt8lZeDJfvlr1_0ikJpDygHMlhUk_bFIue7UTDv2D_8HDu2IS7H5-Fys8h7fN26Uj8kX_PgMC8jz1rrijI6z8YZeU6AU_H8OhwxtuVNinkA0XWVSM3EKNjUanX8PLW4Gij"/>
+<span class="absolute top-3 left-3 bg-blue-700 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md">
+              LMS
+            </span>
+</div>
+<div class="p-5 flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-bold text-slate-900 group-hover:text-blue-700 text-base leading-snug line-clamp-2 transition-colors">
+                Tâm lý học giao tiếp
+              </h3>
+<p class="mt-2 text-xs text-slate-500 font-medium">Khoa Khoa học Xã hội &amp; Quan hệ công chúng</p>
+</div>
+<div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+<span class="inline-flex items-center text-slate-700 font-medium bg-slate-100 px-2 py-0.5 rounded">Khóa học LMS</span>
+<span class="inline-flex items-center gap-1">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                7 Bài học
+              </span>
+</div>
+</div>
+</article>
+<!-- Course Card 8 -->
+<article class="bg-white rounded-xl shadow-sm hover:shadow-xl border border-slate-200/80 overflow-hidden flex flex-col transition-all duration-300 transform hover:-translate-y-1.5 group">
+<div class="relative h-44 bg-slate-100 overflow-hidden">
+<img alt="Khóa học Lý luận về Nhà nước và Pháp luật" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0YYNtGacw8Uzk5DSsJ_LfMuCcdAmmXBdIYE6XfZsoVhMhgmDiGgBicrx8b-eCgF3k5-cW3KnQOHc20jaTc47h-_mz5FJMfKB8sGPmsqV1qjaI2PH6CJ49fJFPurKlH_moLNmpnPa3LYzKkMhNi-xQXPsgzoMHxmLqTLpn9cLBbqUc1jYHQ2b_wponu5g5Sa-nZ7sOpAt0AfDcSqQq-1zLjOFvcqMlHq8_kvBJLDyB8vqr5D3Gdk3h"/>
+<span class="absolute top-3 left-3 bg-blue-700 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md">
+              LMS
+            </span>
+</div>
+<div class="p-5 flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-bold text-slate-900 group-hover:text-blue-700 text-base leading-snug line-clamp-2 transition-colors">
+                Lý luận về Nhà nước và Pháp luật
+              </h3>
+<p class="mt-2 text-xs text-slate-500 font-medium">Khoa Luật</p>
+</div>
+<div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+<span class="inline-flex items-center text-slate-700 font-medium bg-slate-100 px-2 py-0.5 rounded">Khóa học LMS</span>
+<span class="inline-flex items-center gap-1">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                8 Bài học
+              </span>
+</div>
+</div>
+</article>
+</div>
+<!-- Load More Button -->
+<div class="mt-12 text-center">
+<button class="inline-flex items-center justify-center px-8 py-3 rounded-full bg-white border border-slate-300 text-sm font-bold text-[#0B1E48] hover:bg-[#0B1E48] hover:text-white hover:border-[#0B1E48] shadow-sm transition-all duration-200" type="button">
+          Xem thêm khóa học khác
+        </button>
+</div>
+</div>
+</section>
+<!-- END: PopularCoursesSection -->
+<!-- BEGIN: InfoAndNewsSection -->
+<section class="py-16 lg:py-20 bg-white" id="news">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+<!-- Left Column: Featured News (7 cols) -->
+<div class="lg:col-span-7 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-3 mb-6 border-b border-slate-200">
+<h2 class="text-2xl font-extrabold text-[#0B1E48] flex items-center gap-2">
+<span>Thông tin - tin tức</span>
+<span class="text-amber-500 font-bold text-lg">›</span>
+</h2>
+<span class="text-xs text-slate-400 font-medium">Cập nhật mới nhất</span>
+</div>
+<!-- Featured News Card -->
+<div class="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
+<!-- Split 3 Banner Visual Cards inside single article -->
+<div class="grid grid-cols-3 gap-1 bg-slate-200 p-1">
+<div class="relative h-44 sm:h-52 bg-blue-950 overflow-hidden group">
+<img alt="Introducing eLearning" class="w-full h-full object-cover opacity-90 transition-transform group-hover:scale-105 duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWG8bunICh1OEn8rKwiyzsXCqZ_hHAoxXv_PniTanK6ObDs6DX71emaANfLez2FpIiplIV8LO5G_GHsPKymfIJO7fqmaL4ocmEEeTv0rmsHwJSZzGDSGYFz7qd8oThkJepb_jCU-GcL56cEV2NIffAGtpvQK3-bMpSvoN3BJGGxzJ2bhQZrf8gxyqmRQw2UgufVKRVsdnyV4EoaYO4Djs856iHSDa_lbp4FPfOUbOSK3hIFFZVf8q-"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-3">
+<p class="text-xs font-bold text-white leading-tight">Introducing eLearning</p>
+</div>
+</div>
+<div class="relative h-44 sm:h-52 bg-slate-800 overflow-hidden group">
+<img alt="Insight" class="w-full h-full object-cover opacity-90 transition-transform group-hover:scale-105 duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBo2UDpMUUlcPFYhZvI5NBfIyQGml6TI1AMpYWRoQWxC1kP9jJ-t71KMxDD9hJ3z3_XumW7TJQ_qr-MKkhqFeWe70u_qwMDM65MjD__BCxxipYTG8PJIvWkeK67MYn0At4_5vGfT8OpAHwTbEwwjLAr_goQL2Dm9qgQ3g7THPQA6VLMMKXUy8hpc3_xvt41GeoupsY32GL0xqdo8wY0sGUKfyo5layOhqYS8l8A46pe8k2fO2keTpxv"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-3">
+<p class="text-xs font-bold text-white leading-tight">Insight &amp; Báo cáo</p>
+</div>
+</div>
+<div class="relative h-44 sm:h-52 bg-slate-900 overflow-hidden group">
+<img alt="Course" class="w-full h-full object-cover opacity-90 transition-transform group-hover:scale-105 duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD07g8ufHk_BIrx2NPGzMuh8RgYAerBM7wflP4XB7S8x1MP0Y-JgctfFdRoGcEPvWtFyGUiu7jg2cenl5TKYDIuvnzics_zQgCNA8Ov07Dv4ujGpEUCvj3OjtlvVUC43eYxqoD9Ve0TSInzggq32J0_n45ZLZaQH3QTSmJrOZtyCOyd4Al5cvLA7jVLRzu1fsDPZgqRr6r1TqeDiYYeaXExzwkza97dZWAyqsu-Rw5pxwzavN8pbBmO"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-3">
+<p class="text-xs font-bold text-white leading-tight">Course MOOCS</p>
+</div>
+</div>
+</div>
+<!-- Article Excerpt -->
+<div class="p-6">
+<a class="block" href="#">
+<h3 class="text-xl font-bold text-slate-900 hover:text-blue-700 transition-colors">
+                    Hệ thống học tập trực tuyến HUTECH eLearning
+                  </h3>
+</a>
+<p class="mt-3 text-sm text-slate-600 leading-relaxed">
+                  HUTECH eLearning là hệ thống hỗ trợ học tập trực tuyến được Trường Đại học Công nghệ TP.HCM đưa vào sử dụng với mục đích ứng dụng công nghệ vào công tác dạy và học, giúp nâng cao chất lượng đào tạo gắn với nhu cầu xã hội hiện nay.
+                </p>
+<!-- Indicator Dots -->
+<div class="mt-6 flex items-center justify-center space-x-2">
+<span class="w-2.5 h-2.5 rounded-full bg-blue-900 cursor-pointer"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-slate-300 hover:bg-slate-400 cursor-pointer transition-colors"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-slate-300 hover:bg-slate-400 cursor-pointer transition-colors"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-slate-300 hover:bg-slate-400 cursor-pointer transition-colors"></span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Events / Workshops (5 cols) -->
+<div class="lg:col-span-5 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-3 mb-6 border-b border-slate-200">
+<h2 class="text-2xl font-extrabold text-[#0B1E48]">Sự kiện</h2>
+<a class="text-xs font-semibold text-blue-700 hover:underline" href="#">Xem thêm lịch</a>
+</div>
+<!-- Event Items List -->
+<div class="space-y-4">
+<!-- Event Item 1 -->
+<div class="p-4 bg-slate-50 hover:bg-blue-50/50 rounded-xl border border-slate-200/80 transition-all flex items-start space-x-4 group">
+<!-- Date Badge -->
+<div class="flex-shrink-0 w-24 text-center rounded-lg bg-white border border-slate-200 overflow-hidden shadow-sm">
+<div class="bg-amber-500 text-white text-xs font-bold py-1 uppercase tracking-wider">
+                    Thứ 7
+                  </div>
+<div class="p-1.5">
+<p class="text-xs font-semibold text-slate-800">18/07/2026</p>
+<p class="text-[11px] text-slate-500">08:00 - 10:30</p>
+<span class="inline-block mt-0.5 text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded">Khu E</span>
+</div>
+</div>
+<!-- Content -->
+<div class="flex-1">
+<a class="font-bold text-slate-800 group-hover:text-blue-700 text-sm leading-snug transition-colors line-clamp-2" href="#">
+                    Tập huấn Xây dựng - Vận hành khóa học LMS trên Hệ thống HUTECH eLearning
+                  </a>
+<p class="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                    Hội trường E-01.02, Trụ sở chính
+                  </p>
+</div>
+</div>
+<!-- Event Item 2 -->
+<div class="p-4 bg-slate-50 hover:bg-blue-50/50 rounded-xl border border-slate-200/80 transition-all flex items-start space-x-4 group">
+<!-- Date Badge -->
+<div class="flex-shrink-0 w-24 text-center rounded-lg bg-white border border-slate-200 overflow-hidden shadow-sm">
+<div class="bg-amber-500 text-white text-xs font-bold py-1 uppercase tracking-wider">
+                    Thứ 6
+                  </div>
+<div class="p-1.5">
+<p class="text-xs font-semibold text-slate-800">10/07/2026</p>
+<p class="text-[11px] text-slate-500">14:00 - 16:30</p>
+<span class="inline-block mt-0.5 text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded">Khu A-B</span>
+</div>
+</div>
+<!-- Content -->
+<div class="flex-1">
+<a class="font-bold text-slate-800 group-hover:text-blue-700 text-sm leading-snug transition-colors line-clamp-2" href="#">
+                    Tập huấn Xây dựng - Vận hành khóa học LMS trên Hệ thống HUTECH eLearning (Đợt 2)
+                  </a>
+<p class="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                    Phòng máy B-04.12
+                  </p>
+</div>
+</div>
+<!-- Event Item 3 -->
+<div class="p-4 bg-slate-50 hover:bg-blue-50/50 rounded-xl border border-slate-200/80 transition-all flex items-start space-x-4 group">
+<!-- Date Badge -->
+<div class="flex-shrink-0 w-24 text-center rounded-lg bg-white border border-slate-200 overflow-hidden shadow-sm">
+<div class="bg-amber-500 text-white text-xs font-bold py-1 uppercase tracking-wider">
+                    Thứ 6
+                  </div>
+<div class="p-1.5">
+<p class="text-xs font-semibold text-slate-800">10/07/2026</p>
+<p class="text-[11px] text-slate-500">08:00 - 10:30</p>
+<span class="inline-block mt-0.5 text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded">Khu A-B</span>
+</div>
+</div>
+<!-- Content -->
+<div class="flex-1">
+<a class="font-bold text-slate-800 group-hover:text-blue-700 text-sm leading-snug transition-colors line-clamp-2" href="#">
+                    Tập huấn Xây dựng - Vận hành khóa học LMS trên Hệ thống HUTECH eLearning (Đợt 1)
+                  </a>
+<p class="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
+<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                    Phòng hội thảo A-08.20
+                  </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: InfoAndNewsSection -->
+<!-- BEGIN: MainFooter -->
+<footer class="bg-[#081430] text-slate-300 text-sm pt-14 pb-10 border-t border-blue-900/40">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<!-- 4 Columns Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 pb-12 border-b border-blue-900/50">
+<!-- Col 1: Brand Info & Contact (4 cols) -->
+<div class="lg:col-span-4 space-y-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1">
+<svg class="w-7 h-7 text-[#0B1E48]" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+<path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+</svg>
+</div>
+<div>
+<span class="text-lg font-black tracking-wider text-amber-400">HUTECH</span>
+<span class="text-lg font-bold text-white">eLearning</span>
+</div>
+</div>
+<ul class="space-y-2.5 text-xs text-slate-300">
+<li class="flex items-start gap-2.5">
+<svg class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span><strong>TRUNG TÂM DẠY HỌC SỐ - HUTECH</strong></span>
+</li>
+<li class="flex items-start gap-2.5">
+<svg class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span>475A Điện Biên Phủ, Phường Thạnh Mỹ Tây, TP.HCM</span>
+</li>
+<li class="flex items-center gap-2.5">
+<svg class="w-4 h-4 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span>Hotline: <a class="hover:text-white font-medium" href="tel:0817673820">0817 673 820</a></span>
+</li>
+<li class="flex items-center gap-2.5">
+<svg class="w-4 h-4 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span>Email: <a class="hover:text-white" href="mailto:dayhocso@hutech.edu.vn">dayhocso@hutech.edu.vn</a></span>
+</li>
+</ul>
+</div>
+<!-- Col 2: Download App & QR (3 cols) -->
+<div class="lg:col-span-3">
+<h4 class="text-white font-bold text-sm uppercase tracking-wider mb-4">Tải ứng dụng LMS</h4>
+<div class="flex items-start space-x-3">
+<!-- App Badges -->
+<div class="space-y-2.5 flex-1">
+<a class="block bg-slate-900 border border-slate-700 hover:border-slate-500 rounded-lg p-2 transition-all group" href="#">
+<div class="flex items-center space-x-2">
+<svg class="w-5 h-5 text-white" fill="currentColor" viewbox="0 0 24 24">
+<path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.61-.75 1.04-1.8 0.92-2.87-.9.04-2 .6-2.63 1.34-.56.64-.99 1.69-.87 2.71 1 .08 2-.44 2.58-1.18z"></path>
+</svg>
+<div>
+<span class="block text-[9px] uppercase leading-none text-slate-400">Download on</span>
+<span class="block text-xs font-semibold text-white leading-tight">App Store</span>
+</div>
+</div>
+</a>
+<a class="block bg-slate-900 border border-slate-700 hover:border-slate-500 rounded-lg p-2 transition-all group" href="#">
+<div class="flex items-center space-x-2">
+<svg class="w-5 h-5 text-white" fill="currentColor" viewbox="0 0 24 24">
+<path d="M3.609 1.814L13.792 12 3.61 22.186a2.122 2.122 0 0 1-.22-.303V2.117c.07-.11.144-.213.22-.303zm11.233 11.236l2.124-2.124-2.124-2.124-6.425-6.425 7.472 4.314c1.178.68 1.178 1.79 0 2.47l-7.472 4.314 6.425-6.425zM4.328.665l9.046 9.046-2.124 2.124-9.14-9.14c.48-.48 1.43-.48 2.218-.03zm0 22.67l9.046-9.046-2.124-2.124-9.14 9.14c.48.48 1.43.48 2.218.03z"></path>
+</svg>
+<div>
+<span class="block text-[9px] uppercase leading-none text-slate-400">Get it on</span>
+<span class="block text-xs font-semibold text-white leading-tight">Google Play</span>
+</div>
+</div>
+</a>
+</div>
+<!-- QR Code Placeholder -->
+<div class="w-20 h-20 bg-white p-1 rounded-lg flex items-center justify-center flex-shrink-0 shadow">
+<img alt="QR Code Tải ứng dụng" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbFIDt01Zvlc0Z5Av3gtVb2H6BwcrWBoLNSwRfI1tgQddssG4ROmQxhOKvfk1YlabuUrSP5mgOnkcNYdI2ghxLBCXtKw-1e9ZussyVM0qBko-ExO3z-ij9tCr32GaxI4gQtdl7eazGtXHXt5IH-ewbFn1B-6DQAchtwq_u0v_yKc_w9Ey94ILfVcvzNNKLQFYJyG74a5E_1ZT7_ZlEFZbGxysF-NHQHkD26LPbXyOmVk9fS3rUZAWn"/>
+</div>
+</div>
+</div>
+<!-- Col 3: Social Connections (2 cols) -->
+<div class="lg:col-span-2">
+<h4 class="text-white font-bold text-sm uppercase tracking-wider mb-4">Kết nối</h4>
+<ul class="space-y-2.5 text-xs">
+<li>
+<a class="inline-flex items-center gap-2 hover:text-white transition-colors group" href="#">
+<svg class="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" fill="currentColor" viewbox="0 0 24 24"><path d="M9 8H6v4h3v12h5V12h3.642L18 8h-4V6.333C14 5.374 14.5 5 15.7 5H18V0h-3.808C10.595 0 9 1.583 9 4.615V8z"></path></svg>
+<span>Facebook</span>
+</a>
+</li>
+<li>
+<a class="inline-flex items-center gap-2 hover:text-white transition-colors group" href="#">
+<svg class="w-4 h-4 text-red-500 group-hover:scale-110 transition-transform" fill="currentColor" viewbox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"></path></svg>
+<span>Youtube</span>
+</a>
+</li>
+<li>
+<a class="inline-flex items-center gap-2 hover:text-white transition-colors group" href="#">
+<svg class="w-4 h-4 text-pink-400 group-hover:scale-110 transition-transform" fill="currentColor" viewbox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path></svg>
+<span>Instagram</span>
+</a>
+</li>
+</ul>
+</div>
+<!-- Col 4: Terms & Policies (3 cols) -->
+<div class="lg:col-span-3">
+<h4 class="text-white font-bold text-sm uppercase tracking-wider mb-4">Điều khoản và Chính sách</h4>
+<ul class="space-y-2 text-xs">
+<li>
+<a class="hover:text-white transition-colors" href="#">Điều khoản sử dụng hệ thống</a>
+</li>
+<li>
+<a class="hover:text-white transition-colors" href="#">Chính sách bảo mật thông tin</a>
+</li>
+<li>
+<a class="hover:text-white transition-colors" href="#">Quy chế đào tạo trực tuyến</a>
+</li>
+<li>
+<a class="hover:text-white transition-colors" href="#">Hướng dẫn xử lý sự cố tài khoản</a>
+</li>
+</ul>
+</div>
+</div>
+<!-- Bottom Copyright Strip -->
+<div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-4">
+<p>© 2026 HUTECH eLearning. Bảo lưu mọi quyền.</p>
+<p class="text-[11px] text-slate-400">Phát triển bởi Trung tâm Dạy học số HUTECH</p>
+</div>
+</div>
+</footer>
+<!-- END: MainFooter -->
+<!-- BEGIN: FloatingHelpButton -->
+<!-- Support & Help floating badge at bottom right -->
+<aside aria-label="Hỗ trợ trực tuyến" class="fixed bottom-6 right-6 z-40">
+<button aria-label="Trợ giúp và hỏi đáp" class="w-13 h-13 p-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-200 transform hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-400/50" type="button">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"></path>
+</svg>
+</button>
+</aside>
+<!-- END: FloatingHelpButton -->
+</body></html>

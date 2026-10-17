@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { SiteFooter } from '../../../components/layout/SiteFooter';
+import { Breadcrumb } from '../../../components/common/Breadcrumb';
+import {
+  breadcrumbCourseTitle,
+  breadcrumbCourses,
+  breadcrumbHome,
+} from '../../../navigation/breadcrumb-trail';
 import type { Lesson } from '../../catalog/types/lesson.types';
 import type { SectionWithLessons } from '../../catalog/hooks/useCourseCurriculum';
 import { useCourseCurriculum } from '../../catalog/hooks/useCourseCurriculum';
@@ -26,6 +31,7 @@ export function LearningWorkspacePage() {
     error: progressError,
     reload: reloadProgress,
     markLessonComplete,
+    syncLessonCompleted,
     completeError,
     clearCompleteError,
   } = useCourseProgress({
@@ -43,6 +49,7 @@ export function LearningWorkspacePage() {
     lessonId: selected?.id,
   });
 
+  const isQuizLesson = selected?.lessonType === 'QUIZ';
   const selectedCompleted = selected
     ? (progressByLessonId.get(selected.id)?.isCompleted ?? false)
     : false;
@@ -60,6 +67,13 @@ export function LearningWorkspacePage() {
     }
     void markLessonComplete(selected.id);
   }, [markLessonComplete, selected, selectedCompleted]);
+
+  const handleQuizPassed = useCallback(() => {
+    if (!selected || selected.lessonType !== 'QUIZ') {
+      return;
+    }
+    syncLessonCompleted(selected.id);
+  }, [selected, syncLessonCompleted]);
 
   useEffect(() => {
     clearCompleteError();
@@ -113,15 +127,17 @@ export function LearningWorkspacePage() {
           />
           <div className="learning-stage-column">
             <LessonStage
-              lesson={content.lesson}
-              loading={content.loading || curriculum.loading}
-              error={content.error}
-              onRetry={content.reload}
+              courseId={courseId}
+              lesson={isQuizLesson ? (content.lesson ?? selected ?? null) : content.lesson}
+              loading={curriculum.loading || (!isQuizLesson && content.loading)}
+              error={isQuizLesson ? null : content.error}
+              onRetry={isQuizLesson ? curriculum.reload : content.reload}
               missingSelection={Boolean(lessonId) && !curriculum.loading && !selected}
               isCompleted={selectedCompleted}
               autoCompleteEnabled={autoCompleteEnabled}
               onAutoComplete={handleAutoComplete}
               completeError={completeError}
+              onQuizPassed={handleQuizPassed}
             />
             <LessonNav
               courseId={courseId}
@@ -138,10 +154,21 @@ export function LearningWorkspacePage() {
     );
   }
 
+  const breadcrumbItems = courseId
+    ? [
+        breadcrumbHome(),
+        breadcrumbCourses(),
+        breadcrumbCourseTitle(courseId, detail.course?.title, detail.loading),
+        { label: selected?.title?.trim() || 'Không gian học' },
+      ]
+    : [breadcrumbHome(), breadcrumbCourses(), { label: 'Không gian học' }];
+
   return (
     <div className="learning-page">
+      <div className="learning-breadcrumb-bar landing-container">
+        <Breadcrumb items={breadcrumbItems} />
+      </div>
       {workspace}
-      <SiteFooter />
     </div>
   );
 }

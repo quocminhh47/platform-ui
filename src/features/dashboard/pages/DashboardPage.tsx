@@ -1,3 +1,5 @@
+import { Breadcrumb } from '../../../components/common/Breadcrumb';
+import { breadcrumbDashboard, breadcrumbHome } from '../../../navigation/breadcrumb-trail';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { ContinueLearningSection } from '../components/ContinueLearningSection';
 import { DashboardHeader } from '../components/DashboardHeader';
@@ -19,6 +21,7 @@ export function DashboardPage() {
 
   return (
     <DashboardLayout sidebar={<DashboardSidebar />} header={<DashboardHeader user={user} />}>
+      <Breadcrumb items={[breadcrumbHome(), breadcrumbDashboard()]} />
       <WelcomeSection name={user.fullName} />
       <LearningStats />
       <div className="dashboard-split">
