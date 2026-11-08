@@ -6,7 +6,7 @@ import {
   unpublishCourse,
   updateCourse,
 } from './admin-courses.api';
-import { createLesson, listSectionLessons, updateLesson } from './admin-lessons.api';
+import { createLesson, getLesson, listSectionLessons, updateLesson } from './admin-lessons.api';
 import { createSection, listCourseSections, updateSection } from './admin-sections.api';
 import { createUser, getUserById, listUsersPage, updateUser } from './admin-users.api';
 
@@ -177,6 +177,15 @@ describe('admin lessons api', () => {
 
     expect(apiRequest).toHaveBeenCalledWith(
       '/api/courses/course-1/sections/section-1/lessons',
+      { accessToken: token },
+    );
+  });
+
+  it('loads one lesson with its saved content URL', async () => {
+    await getLesson(token, 'course-1', 'section-1', 'lesson-1');
+
+    expect(apiRequest).toHaveBeenCalledWith(
+      '/api/courses/course-1/sections/section-1/lessons/lesson-1',
       { accessToken: token },
     );
   });

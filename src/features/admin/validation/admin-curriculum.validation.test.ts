@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createLessonPayloadFromForm,
+  lessonContentUrlFromLesson,
   lessonFormValuesForTypeChange,
   lessonFormValuesFromLesson,
   updateLessonPayloadFromForm,
@@ -82,6 +83,49 @@ describe('admin curriculum validation', () => {
         contentUrl: null,
         durationSeconds: null,
       }).contentUrl,
+    ).toBe('');
+  });
+
+  it('maps each lesson type to the URL property returned by the API', () => {
+    expect(
+      lessonContentUrlFromLesson({
+        lessonType: 'VIDEO',
+        contentUrl: 'https://example.com/video.mp4',
+      }),
+    ).toBe('https://example.com/video.mp4');
+    expect(
+      lessonContentUrlFromLesson({
+        lessonType: 'ASSIGNMENT',
+        contentUrl: 'https://example.com/brief.pdf',
+      }),
+    ).toBe('https://example.com/brief.pdf');
+    expect(
+      lessonContentUrlFromLesson({
+        lessonType: 'ARTICLE',
+        contentUrl: 'https://example.com/post',
+        article: { sourceUrl: 'https://example.com/ignored' },
+      }),
+    ).toBe('https://example.com/post');
+    expect(
+      lessonContentUrlFromLesson({
+        lessonType: 'ARTICLE',
+        contentUrl: null,
+        article: { sourceUrl: 'https://example.com/article' },
+      }),
+    ).toBe('https://example.com/article');
+    expect(
+      lessonContentUrlFromLesson({
+        lessonType: 'VIDEO',
+        contentUrl: null,
+        article: { sourceUrl: 'https://example.com/not-a-video' },
+      }),
+    ).toBe('');
+    expect(
+      lessonContentUrlFromLesson({
+        lessonType: 'QUIZ',
+        contentUrl: 'https://example.com/ignored',
+        article: { sourceUrl: 'https://example.com/also-ignored' },
+      }),
     ).toBe('');
   });
 

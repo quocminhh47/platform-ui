@@ -14,6 +14,22 @@ export function listSectionLessons(
   );
 }
 
+/**
+ * GET /api/courses/{courseId}/sections/{sectionId}/lessons/{lessonId}
+ * Full lesson. Section lists omit contentUrl (and article sourceUrl).
+ */
+export function getLesson(
+  accessToken: string,
+  courseId: string,
+  sectionId: string,
+  lessonId: string,
+): Promise<Lesson> {
+  return apiRequest<Lesson>(
+    `/api/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}`,
+    { accessToken },
+  );
+}
+
 /** POST /api/courses/{courseId}/sections/{sectionId}/lessons — ADMIN only. */
 export function createLesson(
   accessToken: string,
