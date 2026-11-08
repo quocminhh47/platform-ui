@@ -9,6 +9,7 @@ import {
 } from '../validation/auth.validation';
 import { FormField } from './FormField';
 import { fieldDescribedBy } from './fieldDescribedBy';
+import { UI_COPY } from '../../../ui/ui-copy';
 import { PasswordInput } from './PasswordInput';
 
 type FieldName = keyof RegisterValues;
@@ -115,18 +116,18 @@ export function RegisterForm() {
   return (
     <form className="auth-form" onSubmit={handleSubmit} noValidate>
       <div className="field-row">
-        <FormField id="register-firstName" label="First name" required error={errorFor('firstName')}>
-          {text('firstName', { autoComplete: 'given-name', placeholder: 'e.g. Minh' })}
+        <FormField id="register-firstName" label="Họ" required error={errorFor('firstName')}>
+          {text('firstName', { autoComplete: 'given-name', placeholder: 'vd. Minh' })}
         </FormField>
-        <FormField id="register-lastName" label="Last name" required error={errorFor('lastName')}>
-          {text('lastName', { autoComplete: 'family-name', placeholder: 'e.g. Pham' })}
+        <FormField id="register-lastName" label="Tên" required error={errorFor('lastName')}>
+          {text('lastName', { autoComplete: 'family-name', placeholder: 'vd. Pham' })}
         </FormField>
       </div>
 
       <div className="field-row">
         <FormField
           id="register-phoneNumber"
-          label="Phone number"
+          label="Số điện thoại"
           required
           error={errorFor('phoneNumber')}
         >
@@ -139,7 +140,7 @@ export function RegisterForm() {
         </FormField>
         <FormField
           id="register-dateOfBirth"
-          label="Date of birth"
+          label="Ngày sinh"
           required
           error={errorFor('dateOfBirth')}
         >
@@ -171,10 +172,10 @@ export function RegisterForm() {
       <div className="field-row">
         <FormField
           id="register-password"
-          label="Password"
+          label="Mật khẩu"
           required
           error={errorFor('password')}
-          hint="At least 8 characters."
+          hint="Ít nhất 8 ký tự."
         >
           <PasswordInput
             id="register-password"
@@ -183,18 +184,18 @@ export function RegisterForm() {
             onChange={(value) => setField('password', value)}
             onBlur={() => markTouched('password')}
             disabled={submitting}
-            placeholder="At least 8 characters"
+            placeholder="Ít nhất 8 ký tự"
             invalid={Boolean(errorFor('password'))}
             describedBy={fieldDescribedBy(
               'register-password',
               errorFor('password'),
-              'At least 8 characters.',
+              'Ít nhất 8 ký tự.',
             )}
           />
         </FormField>
         <FormField
           id="register-confirmPassword"
-          label="Confirm password"
+          label="Xác nhận mật khẩu"
           required
           error={errorFor('confirmPassword')}
         >
@@ -205,7 +206,7 @@ export function RegisterForm() {
             onChange={(value) => setField('confirmPassword', value)}
             onBlur={() => markTouched('confirmPassword')}
             disabled={submitting}
-            placeholder="Re-enter your password"
+            placeholder="Nhập lại mật khẩu"
             invalid={Boolean(errorFor('confirmPassword'))}
             describedBy={fieldDescribedBy('register-confirmPassword', errorFor('confirmPassword'))}
           />
@@ -219,7 +220,7 @@ export function RegisterForm() {
       ) : null}
 
       <button type="submit" disabled={submitting}>
-        {submitting ? 'Creating account…' : 'Create account'}
+        {submitting ? UI_COPY.creatingAccount : UI_COPY.createAccount}
       </button>
     </form>
   );

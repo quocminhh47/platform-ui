@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { RouterProvider, createMemoryRouter, type InitialEntry } from 'react-router-dom';
 import { AuthProvider } from '../../app/providers/AuthProvider';
+import { ToastProvider } from '../../components/feedback/ToastProvider';
 import { ApiError } from '../../services/api/api-error';
 import * as authApi from './api/auth.api';
 import { GuestRoute } from './components/GuestRoute';
@@ -55,27 +56,29 @@ function renderApp(initialEntry: InitialEntry) {
   );
   render(
     <AuthProvider>
-      <RouterProvider router={router} />
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
     </AuthProvider>,
   );
   return router;
 }
 
 function fillLogin(email: string, password: string) {
-  fireEvent.change(screen.getByLabelText(/^Email or phone number/), { target: { value: email } });
-  fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: password } });
-  fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+  fireEvent.change(screen.getByLabelText(/^Email hoặc số điện thoại/), { target: { value: email } });
+  fireEvent.change(screen.getByLabelText(/^Mật khẩu/), { target: { value: password } });
+  fireEvent.click(screen.getByRole('button', { name: 'Đăng nhập' }));
 }
 
 function fillRegister(overrides: Record<string, string> = {}) {
   const values: Record<string, string> = {
-    'First name': 'Minh',
-    'Last name': 'Pham',
-    'Phone number': '+84 912 345 678',
-    'Date of birth': '2000-01-15',
+    Họ: 'Minh',
+    Tên: 'Pham',
+    'Số điện thoại': '+84 912 345 678',
+    'Ngày sinh': '2000-01-15',
     Email: 'student@example.com',
-    Password: 'password123',
-    'Confirm password': 'password123',
+    'Mật khẩu': 'password123',
+    'Xác nhận mật khẩu': 'password123',
     ...overrides,
   };
   for (const [label, value] of Object.entries(values)) {
@@ -94,7 +97,7 @@ describe('route protection and login redirect', () => {
   it('redirects an unauthenticated visitor to login and keeps the destination', async () => {
     const router = renderApp('/account?tab=progress');
 
-    expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Đăng nhập' })).toBeTruthy();
     expect(router.state.location.pathname).toBe('/login');
     expect(router.state.location.state).toEqual({ from: '/account?tab=progress' });
   });
@@ -104,12 +107,37 @@ describe('route protection and login redirect', () => {
     api.fetchCurrentUser.mockResolvedValue(user);
     const router = renderApp('/account?tab=progress');
 
-    await screen.findByRole('heading', { name: 'Sign in' });
+    await screen.findByRole('heading', { name: 'Đăng nhập' });
     fillLogin('student@example.com', 'password123');
 
     expect(await screen.findByText('Account page')).toBeTruthy();
     expect(router.state.location.pathname).toBe('/account');
     expect(router.state.location.search).toBe('?tab=progress');
+  });
+
+  it('shows exactly one success toast after a successful login', async () => {
+    api.login.mockResolvedValue({ accessToken: 't', tokenType: 'Bearer', expiresInMs: 1 });
+    api.fetchCurrentUser.mockResolvedValue(user);
+    renderApp('/login');
+
+    fillLogin('student@example.com', 'password123');
+
+    expect(await screen.findByText('Home page')).toBeTruthy();
+    const statuses = await screen.findAllByRole('status');
+    const successToasts = statuses.filter((node) =>
+      node.textContent?.includes('Đăng nhập thành công'),
+    );
+    expect(successToasts).toHaveLength(1);
+  });
+
+  it('does not show a success toast when login fails', async () => {
+    api.login.mockRejectedValue(new ApiError(401, 'Invalid email or password'));
+    renderApp('/login');
+
+    fillLogin('student@example.com', 'wrong-password');
+
+    await screen.findByRole('alert');
+    expect(screen.queryByText('Đăng nhập thành công')).toBeNull();
   });
 
   it('falls back to home when there is no destination', async () => {
@@ -136,10 +164,10 @@ describe('route protection and login redirect', () => {
   it('keeps the destination when switching to the register page', async () => {
     const router = renderApp('/account');
 
-    await screen.findByRole('heading', { name: 'Sign in' });
-    fireEvent.click(screen.getByRole('link', { name: 'Register' }));
+    await screen.findByRole('heading', { name: 'Đăng nhập' });
+    fireEvent.click(screen.getByRole('link', { name: 'Đăng ký' }));
 
-    expect(await screen.findByRole('heading', { name: 'Create account' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Tạo tài khoản' })).toBeTruthy();
     expect(router.state.location.state).toEqual({ from: '/account' });
   });
 });
@@ -152,7 +180,7 @@ describe('server validation errors in forms', () => {
     fillLogin('student@example.com', 'wrong-password');
 
     const alert = await screen.findByRole('alert');
-    expect(alert.textContent).toBe('Invalid email/phone number or password.');
+    expect(alert.textContent).toBe('Email/số điện thoại hoặc mật khẩu không đúng.');
   });
 
   it('shows field messages from 400 details on register', async () => {
@@ -166,7 +194,7 @@ describe('server validation errors in forms', () => {
     renderApp('/register');
 
     fillRegister();
-    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo tài khoản' }));
 
     await waitFor(() =>
       expect(screen.getByText('size must be between 8 and 100')).toBeTruthy(),
@@ -179,15 +207,15 @@ describe('server validation errors in forms', () => {
     renderApp('/register');
 
     fillRegister();
-    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo tài khoản' }));
 
-    expect(await screen.findByText('An account with this email already exists.')).toBeTruthy();
+    expect(await screen.findByText('Email này đã được đăng ký.')).toBeTruthy();
   });
 
   it('does not expose raw server errors for unexpected failures', () => {
     expect(mapAuthError(new ApiError(500, 'org.postgresql.util.PSQLException: secret'), 'login'))
-      .toEqual({ form: 'Something went wrong. Please try again later.', fields: {} });
-    expect(mapAuthError(new TypeError('Failed to fetch'), 'login').form).toMatch(/reach the server/);
+      .toEqual({ form: 'Đã xảy ra lỗi. Vui lòng thử lại sau.', fields: {} });
+    expect(mapAuthError(new TypeError('Failed to fetch'), 'login').form).toMatch(/máy chủ/);
   });
 });
 
@@ -195,35 +223,35 @@ describe('register form validation', () => {
   it('shows field-specific errors and does not call the API for invalid input', async () => {
     renderApp('/register');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo tài khoản' }));
 
-    expect(await screen.findByText('First name is required')).toBeTruthy();
-    expect(screen.getByText('Last name is required')).toBeTruthy();
-    expect(screen.getByText('Phone number is required')).toBeTruthy();
-    expect(screen.getByText('Date of birth is required')).toBeTruthy();
-    expect(screen.getByText('Email is required')).toBeTruthy();
-    expect(screen.getByText('Password is required')).toBeTruthy();
+    expect(await screen.findByText('Vui lòng nhập họ')).toBeTruthy();
+    expect(screen.getByText('Vui lòng nhập tên')).toBeTruthy();
+    expect(screen.getByText('Vui lòng nhập số điện thoại')).toBeTruthy();
+    expect(screen.getByText('Vui lòng chọn ngày sinh')).toBeTruthy();
+    expect(screen.getByText('Vui lòng nhập email')).toBeTruthy();
+    expect(screen.getByText('Vui lòng nhập mật khẩu')).toBeTruthy();
     expect(api.register).not.toHaveBeenCalled();
   });
 
   it('shows immediate feedback on blur and for mismatched passwords', () => {
     renderApp('/register');
 
-    const phone = screen.getByLabelText(/^Phone number/);
+    const phone = screen.getByLabelText(/^Số điện thoại/);
     fireEvent.change(phone, { target: { value: 'abc' } });
     fireEvent.blur(phone);
-    expect(screen.getByText(/Enter a valid phone number/)).toBeTruthy();
+    expect(screen.getByText(/Số điện thoại không hợp lệ/)).toBeTruthy();
 
-    fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: 'password123' } });
-    const confirm = screen.getByLabelText(/^Confirm password/);
+    fireEvent.change(screen.getByLabelText(/^Mật khẩu/), { target: { value: 'password123' } });
+    const confirm = screen.getByLabelText(/^Xác nhận mật khẩu/);
     fireEvent.change(confirm, { target: { value: 'different' } });
     fireEvent.blur(confirm);
-    expect(screen.getByText('Passwords do not match')).toBeTruthy();
+    expect(screen.getByText('Mật khẩu xác nhận không khớp')).toBeTruthy();
   });
 
   it('prevents selecting a future date of birth', () => {
     renderApp('/register');
-    const dob = screen.getByLabelText(/^Date of birth/) as HTMLInputElement;
+    const dob = screen.getByLabelText(/^Ngày sinh/) as HTMLInputElement;
     expect(dob.max).toBe(latestDateOfBirth());
   });
 
@@ -232,8 +260,8 @@ describe('register form validation', () => {
     api.fetchCurrentUser.mockResolvedValue(user);
     renderApp('/register');
 
-    fillRegister({ 'First name': '  Minh ', Email: ' student@example.com ' });
-    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+    fillRegister({ Họ: '  Minh ', Email: ' student@example.com ' });
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo tài khoản' }));
 
     await waitFor(() => expect(api.register).toHaveBeenCalledTimes(1));
     expect(api.register).toHaveBeenCalledWith({
@@ -257,12 +285,12 @@ describe('register form validation', () => {
     renderApp('/register');
 
     fillRegister();
-    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo tài khoản' }));
 
     expect(
-      await screen.findByText('An account with this phone number already exists.'),
+      await screen.findByText('Số điện thoại này đã được đăng ký.'),
     ).toBeTruthy();
-    expect(screen.queryByText('An account with this email already exists.')).toBeNull();
+    expect(screen.queryByText('Email này đã được đăng ký.')).toBeNull();
   });
 
   it('maps firstName and dateOfBirth validation details from a 400', () => {
@@ -317,7 +345,7 @@ describe('login identifier', () => {
 
     fillLogin('not valid', 'password123');
 
-    expect(screen.getByText('Enter a valid email address or phone number')).toBeTruthy();
+    expect(screen.getByText('Email hoặc số điện thoại không hợp lệ')).toBeTruthy();
     expect(api.login).not.toHaveBeenCalled();
   });
 

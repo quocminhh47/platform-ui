@@ -80,6 +80,8 @@ export function AdminCourseFormPage() {
           published: values.published,
         });
         toast.success(ADMIN_COURSE_UPDATE_SUCCESS);
+        detail.reload();
+        return;
       }
       navigate('/admin/courses');
     } catch (cause: unknown) {

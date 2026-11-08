@@ -10,7 +10,9 @@ import { CatalogPage } from '../features/catalog/pages/CatalogPage';
 import { CourseDetailPage } from '../features/catalog/pages/CourseDetailPage';
 import { AdminRoute } from '../features/admin/components/AdminRoute';
 import { AdminCourseFormPage } from '../features/admin/pages/AdminCourseFormPage';
+import { AdminDashboardPage } from '../features/admin/pages/AdminDashboardPage';
 import { AdminCourseListPage } from '../features/admin/pages/AdminCourseListPage';
+import { AdminUserListPage } from '../features/admin/pages/AdminUserListPage';
 import { AdminCurriculumPage } from '../features/admin/pages/AdminCurriculumPage';
 import { AdminQuizBuilderPage } from '../features/admin/pages/AdminQuizBuilderPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
@@ -53,6 +55,8 @@ export const router = createBrowserRouter([
           {
             element: <AdminRoute />,
             children: [
+              { path: '/admin', element: <AdminDashboardPage /> },
+              { path: '/admin/users', element: <AdminUserListPage /> },
               { path: '/admin/courses', element: <AdminCourseListPage /> },
               { path: '/admin/courses/new', element: <AdminCourseFormPage /> },
               { path: '/admin/courses/:courseId/curriculum', element: <AdminCurriculumPage /> },

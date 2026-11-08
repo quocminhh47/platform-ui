@@ -82,7 +82,7 @@ export function useCourseCurriculum({
         setSections(null);
         setError(
           cause instanceof ApiError
-            ? 'The curriculum could not be loaded. Try again in a moment.'
+            ? 'Không tải được nội dung khóa học. Vui lòng thử lại sau.'
             : 'Unable to reach the server. Check your connection and try again.',
         );
       })

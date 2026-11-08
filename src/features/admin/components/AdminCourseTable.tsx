@@ -9,6 +9,8 @@ import {
   ADMIN_UNPUBLISH_SUCCESS,
   adminPublishMessage,
 } from '../utils/admin-messages';
+import { adminCurriculumIndicator } from '../utils/adminDashboardMetrics';
+import { formatAdminDateTime } from '../utils/formatAdminDateTime';
 import { instructorInitials } from '../utils/adminCourseListFilters';
 
 type AdminCourseTableProps = {
@@ -62,7 +64,8 @@ export function AdminCourseTable({
               <th scope="col">Thông tin khóa học</th>
               <th scope="col">Giảng viên</th>
               <th scope="col" className="admin-table-col-center">Trạng thái</th>
-              <th scope="col" className="admin-table-col-center">Số bài học</th>
+              <th scope="col" className="admin-table-col-center">Giáo trình</th>
+              <th scope="col" className="admin-table-col-date">Cập nhật</th>
               <th scope="col" className="admin-table-col-actions">Thao tác</th>
             </tr>
           </thead>
@@ -142,8 +145,11 @@ function AdminCourseRow({ course, busy, canPublish, onTogglePublish }: AdminCour
           {course.published ? 'Đã xuất bản' : 'Chưa xuất bản'}
         </span>
       </td>
-      <td data-label="Số bài học" className="admin-table-col-center">
-        <span className="admin-lesson-count">{formatLessonCount(course.lessonCount)}</span>
+      <td data-label="Giáo trình" className="admin-table-col-center">
+        <CurriculumCell lessonCount={course.lessonCount} />
+      </td>
+      <td data-label="Cập nhật" className="admin-table-col-date">
+        <time dateTime={course.updatedAt}>{formatAdminDateTime(course.updatedAt)}</time>
       </td>
       <td data-label="Thao tác" className="admin-table-col-actions">
         <div className="admin-row-actions">
@@ -178,12 +184,16 @@ function AdminCourseRow({ course, busy, canPublish, onTogglePublish }: AdminCour
   );
 }
 
-function formatLessonCount(count: number | undefined): string {
-  if (typeof count !== 'number') {
-    return '—';
-  }
-  if (count === 1) {
-    return '1 bài học';
-  }
-  return `${count} bài học`;
+function CurriculumCell({ lessonCount }: { lessonCount: number | undefined }) {
+  const indicator = adminCurriculumIndicator(lessonCount);
+  return (
+    <div className="admin-curriculum-cell">
+      <span className={`admin-curriculum-chip admin-curriculum-chip--${indicator.tone}`}>
+        {indicator.primary}
+      </span>
+      {indicator.secondary ? (
+        <span className="muted admin-curriculum-cell-sub">{indicator.secondary}</span>
+      ) : null}
+    </div>
+  );
 }

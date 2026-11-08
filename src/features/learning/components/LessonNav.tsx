@@ -9,16 +9,16 @@ type LessonNavProps = {
 
 export function LessonNav({ courseId, previous, next }: LessonNavProps) {
   return (
-    <nav className="learning-nav" aria-label="Lesson">
+    <nav className="learning-nav" aria-label="Bài học">
       {previous ? (
-        <Link to={`/courses/${courseId}/learn/${previous.id}`}>Previous lesson</Link>
+        <Link to={`/courses/${courseId}/learn/${previous.id}`}>Bài trước</Link>
       ) : (
-        <span className="learning-nav-disabled">Previous lesson</span>
+        <span className="learning-nav-disabled">Bài trước</span>
       )}
       {next ? (
-        <Link to={`/courses/${courseId}/learn/${next.id}`}>Next lesson</Link>
+        <Link to={`/courses/${courseId}/learn/${next.id}`}>Bài tiếp theo</Link>
       ) : (
-        <span className="learning-nav-disabled">Next lesson</span>
+        <span className="learning-nav-disabled">Bài tiếp theo</span>
       )}
     </nav>
   );

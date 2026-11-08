@@ -9,7 +9,7 @@ export function ProtectedRoute() {
   const location = useLocation();
 
   if (isInitializing) {
-    return <p className="page-status">Loading session…</p>;
+    return <p className="page-status">Đang tải phiên…</p>;
   }
 
   if (!isAuthenticated) {

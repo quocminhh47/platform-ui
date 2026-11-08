@@ -39,6 +39,15 @@ describe('validateAdminCourseForm', () => {
     expect(validateAdminCourseForm({ ...base, isFree: false, price: '99000' }, 'create').price).toBeUndefined();
   });
 
+  it('validates optional thumbnail URL format', () => {
+    const errors = validateAdminCourseForm(
+      { ...base, thumbnailUrl: 'not-a-url' },
+      'create',
+    );
+    expect(errors.thumbnailUrl).toBe('URL không hợp lệ.');
+    expect(validateAdminCourseForm({ ...base, thumbnailUrl: '' }, 'create').thumbnailUrl).toBeUndefined();
+  });
+
   it('enforces max lengths', () => {
     const errors = validateAdminCourseForm(
       {

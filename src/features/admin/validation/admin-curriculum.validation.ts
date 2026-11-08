@@ -1,9 +1,9 @@
 import type { LessonType } from '../../catalog/types/lesson.types';
 import type { CreateLessonPayload, UpdateLessonPayload } from '../types/lesson-request.types';
+import { validateHttpUrl } from './admin-url.validation';
 
 export type SectionFormValues = {
   title: string;
-  sortOrder: string;
 };
 
 export type LessonFormValues = {
@@ -11,7 +11,6 @@ export type LessonFormValues = {
   lessonType: LessonType;
   contentUrl: string;
   durationSeconds: string;
-  sortOrder: string;
 };
 
 export type SectionFormErrors = Partial<Record<keyof SectionFormValues, string>>;
@@ -38,11 +37,6 @@ export function validateSectionForm(values: SectionFormValues): SectionFormError
     errors.title = `Tiêu đề tối đa ${TITLE_MAX} ký tự.`;
   }
 
-  const sortOrder = parseOptionalInt(values.sortOrder);
-  if (Number.isNaN(sortOrder)) {
-    errors.sortOrder = 'Thứ tự phải là số nguyên.';
-  }
-
   return errors;
 }
 
@@ -58,8 +52,20 @@ export function validateLessonForm(values: LessonFormValues): LessonFormErrors {
   }
 
   if (type === 'VIDEO') {
-    if (!values.contentUrl.trim()) {
-      errors.contentUrl = 'Vui lòng nhập URL video.';
+    const urlError = validateHttpUrl(values.contentUrl, true);
+    if (urlError) {
+      errors.contentUrl = urlError === 'Vui lòng nhập URL.' ? 'Vui lòng nhập URL video.' : urlError;
+    }
+  } else if (type === 'ARTICLE') {
+    const urlError = validateHttpUrl(values.contentUrl, true);
+    if (urlError) {
+      errors.contentUrl =
+        urlError === 'Vui lòng nhập URL.' ? 'Vui lòng nhập URL bài đọc.' : urlError;
+    }
+  } else if (type === 'ASSIGNMENT') {
+    const urlError = validateHttpUrl(values.contentUrl, false);
+    if (urlError) {
+      errors.contentUrl = urlError;
     }
   }
 
@@ -70,11 +76,6 @@ export function validateLessonForm(values: LessonFormValues): LessonFormErrors {
     } else if (duration !== undefined && duration < 0) {
       errors.durationSeconds = 'Thời lượng phải ≥ 0.';
     }
-  }
-
-  const sortOrder = parseOptionalInt(values.sortOrder);
-  if (Number.isNaN(sortOrder)) {
-    errors.sortOrder = 'Thứ tự phải là số nguyên.';
   }
 
   return errors;
@@ -104,11 +105,9 @@ export function lessonFormValuesForTypeChange(
 }
 
 export function createLessonPayloadFromForm(values: LessonFormValues): CreateLessonPayload {
-  const sortOrder = parseOptionalInt(values.sortOrder);
   const payload: CreateLessonPayload = {
     title: values.title.trim(),
     lessonType: values.lessonType,
-    sortOrder: Number.isNaN(sortOrder as number) ? undefined : sortOrder,
   };
   if (values.lessonType === 'QUIZ') {
     payload.contentUrl = null;
@@ -124,11 +123,9 @@ export function createLessonPayloadFromForm(values: LessonFormValues): CreateLes
 }
 
 export function updateLessonPayloadFromForm(values: LessonFormValues): UpdateLessonPayload {
-  const sortOrder = parseOptionalInt(values.sortOrder);
   const payload: UpdateLessonPayload = {
     title: values.title.trim(),
     lessonType: values.lessonType,
-    sortOrder: Number.isNaN(sortOrder as number) ? undefined : sortOrder,
   };
   if (values.lessonType === 'QUIZ') {
     payload.contentUrl = null;
@@ -144,16 +141,12 @@ export function updateLessonPayloadFromForm(values: LessonFormValues): UpdateLes
 }
 
 export function emptySectionFormValues(): SectionFormValues {
-  return { title: '', sortOrder: '' };
+  return { title: '' };
 }
 
-export function sectionFormValuesFromSection(section: {
-  title: string;
-  sortOrder: number;
-}): SectionFormValues {
+export function sectionFormValuesFromSection(section: { title: string }): SectionFormValues {
   return {
     title: section.title,
-    sortOrder: String(section.sortOrder),
   };
 }
 
@@ -163,7 +156,6 @@ export function emptyLessonFormValues(): LessonFormValues {
     lessonType: 'VIDEO',
     contentUrl: '',
     durationSeconds: '',
-    sortOrder: '',
   };
 }
 
@@ -172,7 +164,6 @@ export function lessonFormValuesFromLesson(lesson: {
   lessonType: LessonType;
   contentUrl: string | null;
   durationSeconds: number | null;
-  sortOrder: number;
 }): LessonFormValues {
   return {
     title: lesson.title,
@@ -180,6 +171,5 @@ export function lessonFormValuesFromLesson(lesson: {
     contentUrl: lesson.contentUrl ?? '',
     durationSeconds:
       lesson.durationSeconds === null ? '' : String(lesson.durationSeconds),
-    sortOrder: String(lesson.sortOrder),
   };
 }

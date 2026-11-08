@@ -8,7 +8,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
   return (
     <header className="dashboard-header">
       <div>
-        <p className="dashboard-kicker">Student</p>
+        <p className="dashboard-kicker">Học viên</p>
         <p className="dashboard-header-name">{user.fullName}</p>
       </div>
       <p className="muted dashboard-header-email">{user.email}</p>

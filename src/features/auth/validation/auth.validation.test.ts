@@ -43,7 +43,9 @@ describe('validateRegister', () => {
   it('applies the backend password policy (8-100 chars) and confirmation', () => {
     expect(validateRegister({ ...valid, password: 'short', confirmPassword: 'short' }, now).password).toBeDefined();
     expect(validateRegister({ ...valid, password: 'x'.repeat(101), confirmPassword: 'x'.repeat(101) }, now).password).toBeDefined();
-    expect(validateRegister({ ...valid, confirmPassword: 'nope' }, now).confirmPassword).toBe('Passwords do not match');
+    expect(validateRegister({ ...valid, confirmPassword: 'nope' }, now).confirmPassword).toBe(
+      'Mật khẩu xác nhận không khớp',
+    );
   });
 });
 

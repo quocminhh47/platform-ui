@@ -17,6 +17,7 @@ import * as enrollmentsApi from './api/enrollments.api';
 import type { Enrollment } from './api/enrollments.api';
 import { ENROLL_SUCCESS_TOAST } from './enrollment-messages';
 import { MyCoursesPage } from './pages/MyCoursesPage';
+import { mockPage } from '../../testing/mockPageResponse';
 
 vi.mock('../auth/api/auth.api', () => ({
   fetchCurrentUser: vi.fn(),
@@ -25,7 +26,7 @@ vi.mock('../auth/api/auth.api', () => ({
 }));
 
 vi.mock('../catalog/api/courses.api', () => ({
-  listPublishedCourses: vi.fn(),
+  listCoursesPage: vi.fn(),
   getCourseById: vi.fn(),
   listCourseSections: vi.fn(),
   listSectionLessons: vi.fn(),
@@ -136,8 +137,8 @@ beforeEach(() => {
   courses.getCourseById.mockReset();
   courses.listCourseSections.mockReset();
   courses.listSectionLessons.mockReset();
-  courses.listPublishedCourses.mockReset();
-  courses.listPublishedCourses.mockResolvedValue([]);
+  courses.listCoursesPage.mockReset();
+  courses.listCoursesPage.mockResolvedValue(mockPage([]));
   enrollments.listMyEnrollments.mockReset();
   enrollments.enrollInCourse.mockReset();
   progress.listCourseProgress.mockReset();
@@ -152,7 +153,7 @@ describe('course enrollment on the detail page', () => {
   it('sends guests to sign in and keeps the course in the redirect', async () => {
     const router = renderDetail();
 
-    const link = await screen.findByRole('link', { name: 'Sign in to enroll' });
+    const link = await screen.findByRole('link', { name: 'Đăng nhập để ghi danh' });
     fireEvent.click(link);
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/login'));
@@ -160,22 +161,47 @@ describe('course enrollment on the detail page', () => {
     expect(enrollments.listMyEnrollments).not.toHaveBeenCalled();
   });
 
-  it('lets an authenticated student enroll and shows Start learning', async () => {
+  it('lets an authenticated student enroll and shows Bắt đầu học', async () => {
     setAccessToken('token');
     auth.fetchCurrentUser.mockResolvedValue(student);
     enrollments.enrollInCourse.mockResolvedValue(enrollment('ACTIVE'));
 
     renderDetail();
 
-    const button = await screen.findByRole('button', { name: 'Enroll' });
+    const button = await screen.findByRole('button', { name: 'Ghi danh' });
     fireEvent.click(button);
     expect((button as HTMLButtonElement).disabled).toBe(true);
 
-    const start = await screen.findByRole('link', { name: 'Start learning' });
+    const start = await screen.findByRole('link', { name: 'Bắt đầu học' });
     expect(start.getAttribute('href')).toBe(`/courses/${courseId}/learn`);
     expect(enrollments.enrollInCourse).toHaveBeenCalledWith(courseId, 'token');
     expect(enrollments.enrollInCourse).toHaveBeenCalledTimes(1);
     expect((await screen.findByRole('status')).textContent).toBe(ENROLL_SUCCESS_TOAST);
+    expect(screen.getByRole('link', { name: 'Xem khóa học của tôi' }).getAttribute('href')).toBe(
+      '/my-courses',
+    );
+  });
+
+  it('ignores duplicate enroll clicks while the request is in flight', async () => {
+    setAccessToken('token');
+    auth.fetchCurrentUser.mockResolvedValue(student);
+    let resolveEnroll: (value: Enrollment) => void = () => {};
+    enrollments.enrollInCourse.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveEnroll = resolve;
+        }),
+    );
+
+    renderDetail();
+
+    const button = await screen.findByRole('button', { name: 'Ghi danh' });
+    fireEvent.click(button);
+    fireEvent.click(button);
+    expect(enrollments.enrollInCourse).toHaveBeenCalledTimes(1);
+
+    resolveEnroll(enrollment('ACTIVE'));
+    expect(await screen.findByRole('link', { name: 'Bắt đầu học' })).toBeTruthy();
   });
 
   it('reconciles a duplicate enrollment from the current user list', async () => {
@@ -188,9 +214,9 @@ describe('course enrollment on the detail page', () => {
 
     renderDetail();
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Enroll' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Ghi danh' }));
 
-    expect(await screen.findByRole('link', { name: 'Start learning' })).toBeTruthy();
+    expect(await screen.findByRole('link', { name: 'Bắt đầu học' })).toBeTruthy();
     expect(enrollments.listMyEnrollments).toHaveBeenCalledTimes(2);
   });
 
@@ -202,22 +228,25 @@ describe('course enrollment on the detail page', () => {
 
     renderDetail();
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Enroll' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Ghi danh' }));
 
     const alert = await screen.findByRole('alert');
-    expect(alert.textContent).toMatch(/could not be confirmed/i);
-    expect(screen.queryByRole('link', { name: 'Start learning' })).toBeNull();
+    expect(alert.textContent).toMatch(/Không xác nhận được ghi danh/i);
+    expect(screen.queryByRole('link', { name: 'Bắt đầu học' })).toBeNull();
   });
 
-  it('shows Start learning for an active enrollment', async () => {
+  it('shows Bắt đầu học for an active enrollment', async () => {
     setAccessToken('token');
     auth.fetchCurrentUser.mockResolvedValue(student);
     enrollments.listMyEnrollments.mockResolvedValue([enrollment('ACTIVE')]);
 
     renderDetail();
 
-    expect(await screen.findByRole('link', { name: 'Start learning' })).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Enroll' })).toBeNull();
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Bắt đầu học' })).toBeTruthy();
+    });
+    expect(screen.queryByRole('button', { name: 'Ghi danh' })).toBeNull();
+    expect(screen.getByRole('link', { name: 'Xem khóa học của tôi' })).toBeTruthy();
   });
 
   it('shows a completed review state', async () => {
@@ -227,15 +256,17 @@ describe('course enrollment on the detail page', () => {
 
     renderDetail();
 
-    expect(await screen.findByText('Completed')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Review course' }).getAttribute('href')).toBe(
-      `/courses/${courseId}/learn`,
-    );
-    expect(screen.queryByRole('link', { name: 'Start learning' })).toBeNull();
+    expect(await screen.findByText('Đã hoàn thành', { selector: 'p' })).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Xem lại khóa học' }).getAttribute('href')).toBe(
+        `/courses/${courseId}/learn`,
+      );
+    });
+    expect(screen.queryByRole('link', { name: 'Bắt đầu học' })).toBeNull();
   });
 
   it.each(['PENDING', 'DROPPED'] as const)(
-    'does not offer Start learning for %s',
+    'does not offer Bắt đầu học for %s',
     async (status) => {
       setAccessToken('token');
       auth.fetchCurrentUser.mockResolvedValue(student);
@@ -243,9 +274,9 @@ describe('course enrollment on the detail page', () => {
 
       renderDetail();
 
-      expect(await screen.findByText(/not available/i)).toBeTruthy();
-      expect(screen.queryByRole('link', { name: 'Start learning' })).toBeNull();
-      expect(screen.queryByRole('button', { name: 'Enroll' })).toBeNull();
+      expect(await screen.findByText(/Không thể học|chưa thể học|đang chờ|đã hủy/i)).toBeTruthy();
+      expect(screen.queryByRole('link', { name: 'Bắt đầu học' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Ghi danh' })).toBeNull();
     },
   );
 });
@@ -254,7 +285,7 @@ describe('my courses', () => {
   it('sends unauthenticated visitors to login and keeps the destination', async () => {
     const router = renderMyCourses();
 
-    expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Đăng nhập' })).toBeTruthy();
     expect(router.state.location.pathname).toBe('/login');
     expect(router.state.location.state).toEqual({ from: '/my-courses' });
   });
@@ -280,9 +311,9 @@ describe('my courses', () => {
 
     expect(await screen.findByRole('heading', { name: 'Intro to Algebra' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Geometry' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'In progress' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Completed' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Not currently available' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Đang học' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Đã hoàn thành' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Tạm không khả dụng' })).toBeTruthy();
     await waitFor(() =>
       expect(screen.getAllByRole('link', { name: 'Bắt đầu học' }).length).toBe(2),
     );
@@ -347,7 +378,7 @@ describe('my courses', () => {
 
     renderMyCourses();
 
-    expect(await screen.findByText('You are not enrolled in any courses yet')).toBeTruthy();
+    expect(await screen.findByText('Bạn chưa ghi danh khóa học nào')).toBeTruthy();
   });
 
   it('retries a failed load without exposing server text', async () => {
@@ -362,8 +393,120 @@ describe('my courses', () => {
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).not.toMatch(/postgresql|secret/i);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Thử lại' }));
 
     expect(await screen.findByRole('heading', { name: 'Intro to Algebra' })).toBeTruthy();
+  });
+
+  it('shows Chưa bắt đầu for an active enrollment with no progress', async () => {
+    setAccessToken('token');
+    auth.fetchCurrentUser.mockResolvedValue(student);
+    enrollments.listMyEnrollments.mockResolvedValue([enrollment('ACTIVE')]);
+    // Sections with one lesson, no progress rows → hasProgress: false
+    courses.listCourseSections.mockResolvedValue([
+      { id: 'sec-1', courseId, title: 'Section', sortOrder: 1 },
+    ]);
+    courses.listSectionLessons.mockResolvedValue([
+      {
+        id: 'lesson-1',
+        sectionId: 'sec-1',
+        courseId,
+        title: 'Lesson 1',
+        lessonType: 'VIDEO',
+        contentUrl: null,
+        durationSeconds: null,
+        sortOrder: 1,
+      },
+    ]);
+    progress.listCourseProgress.mockResolvedValue([]);
+
+    renderMyCourses();
+
+    await screen.findByRole('heading', { name: 'Intro to Algebra' });
+    expect(await screen.findByText('Chưa bắt đầu')).toBeTruthy();
+  });
+
+  it('shows Đang học for an active enrollment with progress', async () => {
+    setAccessToken('token');
+    auth.fetchCurrentUser.mockResolvedValue(student);
+    enrollments.listMyEnrollments.mockResolvedValue([enrollment('ACTIVE')]);
+    courses.listCourseSections.mockResolvedValue([
+      { id: 'sec-1', courseId, title: 'Section', sortOrder: 1 },
+    ]);
+    courses.listSectionLessons.mockResolvedValue([
+      {
+        id: 'lesson-1',
+        sectionId: 'sec-1',
+        courseId,
+        title: 'Lesson 1',
+        lessonType: 'VIDEO',
+        contentUrl: null,
+        durationSeconds: null,
+        sortOrder: 1,
+      },
+      {
+        id: 'lesson-2',
+        sectionId: 'sec-1',
+        courseId,
+        title: 'Lesson 2',
+        lessonType: 'VIDEO',
+        contentUrl: null,
+        durationSeconds: null,
+        sortOrder: 2,
+      },
+    ]);
+    // lesson-1 completed → hasProgress: true
+    progress.listCourseProgress.mockResolvedValue([
+      {
+        lessonId: 'lesson-1',
+        isCompleted: true,
+        watchedDurationSeconds: 60,
+        lastAccessedAt: '2026-01-01T00:00:00Z',
+      },
+    ]);
+
+    renderMyCourses();
+
+    await screen.findByRole('heading', { name: 'Intro to Algebra' });
+    // The card status paragraph should show "Đang học" (not the group heading)
+    expect(await screen.findByText('Đang học', { selector: 'p' })).toBeTruthy();
+  });
+
+  it('shows Đã hoàn thành for a completed enrollment', async () => {
+    setAccessToken('token');
+    auth.fetchCurrentUser.mockResolvedValue(student);
+    enrollments.listMyEnrollments.mockResolvedValue([enrollment('COMPLETED')]);
+
+    renderMyCourses();
+
+    await screen.findByRole('heading', { name: 'Intro to Algebra' });
+    // Card status paragraph — distinct from the "Đã hoàn thành" section heading
+    expect(await screen.findByText('Đã hoàn thành', { selector: 'p' })).toBeTruthy();
+  });
+
+  it('shows Đang chờ for a pending enrollment and no learn CTA', async () => {
+    setAccessToken('token');
+    auth.fetchCurrentUser.mockResolvedValue(student);
+    enrollments.listMyEnrollments.mockResolvedValue([enrollment('PENDING')]);
+
+    renderMyCourses();
+
+    await screen.findByRole('heading', { name: 'Intro to Algebra' });
+    expect(await screen.findByText('Đang chờ')).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Bắt đầu học' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Tiếp tục học' })).toBeNull();
+  });
+
+  it('shows Đã hủy for a dropped enrollment and no learn CTA', async () => {
+    setAccessToken('token');
+    auth.fetchCurrentUser.mockResolvedValue(student);
+    enrollments.listMyEnrollments.mockResolvedValue([enrollment('DROPPED')]);
+
+    renderMyCourses();
+
+    await screen.findByRole('heading', { name: 'Intro to Algebra' });
+    expect(await screen.findByText('Đã hủy')).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Bắt đầu học' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Tiếp tục học' })).toBeNull();
   });
 });

@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createCourse,
-  listAllCourses,
+  listAdminCoursesPage,
   publishCourse,
   unpublishCourse,
   updateCourse,
 } from './admin-courses.api';
 import { createLesson, listSectionLessons, updateLesson } from './admin-lessons.api';
 import { createSection, listCourseSections, updateSection } from './admin-sections.api';
-import { listUsers } from './admin-users.api';
+import { createUser, getUserById, listUsersPage, updateUser } from './admin-users.api';
 
 const apiRequest = vi.fn();
 
@@ -24,10 +24,10 @@ describe('admin courses api', () => {
     apiRequest.mockResolvedValue({});
   });
 
-  it('lists all courses without a published filter', async () => {
-    await listAllCourses(token);
+  it('lists admin courses with default pagination query params', async () => {
+    await listAdminCoursesPage(token);
 
-    expect(apiRequest).toHaveBeenCalledWith('/api/courses', { accessToken: token });
+    expect(apiRequest).toHaveBeenCalledWith('/api/courses?page=0&size=20', { accessToken: token });
   });
 
   it('creates a course', async () => {
@@ -81,17 +81,50 @@ describe('admin users api', () => {
     apiRequest.mockResolvedValue([]);
   });
 
-  it('lists users', async () => {
-    await listUsers(token);
+  it('lists users with default pagination query params', async () => {
+    await listUsersPage(token);
 
-    expect(apiRequest).toHaveBeenCalledWith('/api/users', { accessToken: token });
+    expect(apiRequest).toHaveBeenCalledWith('/api/users?page=0&size=20', { accessToken: token });
   });
 
   it('lists users filtered by email query param', async () => {
-    await listUsers(token, 'instructor@example.com');
+    await listUsersPage(token, { email: 'instructor@example.com' });
 
-    expect(apiRequest).toHaveBeenCalledWith('/api/users?email=instructor%40example.com', {
+    expect(apiRequest).toHaveBeenCalledWith('/api/users?email=instructor%40example.com&page=0&size=20', {
       accessToken: token,
+    });
+  });
+
+  it('gets a user by id', async () => {
+    await getUserById(token, 'user-1');
+
+    expect(apiRequest).toHaveBeenCalledWith('/api/users/user-1', { accessToken: token });
+  });
+
+  it('creates a user', async () => {
+    const body = {
+      email: 'new@example.com',
+      password: 'password123',
+      fullName: 'New User',
+      role: 'STUDENT' as const,
+    };
+    await createUser(token, body);
+
+    expect(apiRequest).toHaveBeenCalledWith('/api/users', {
+      method: 'POST',
+      accessToken: token,
+      body,
+    });
+  });
+
+  it('updates a user', async () => {
+    const body = { fullName: 'Updated', active: false };
+    await updateUser(token, 'user-1', body);
+
+    expect(apiRequest).toHaveBeenCalledWith('/api/users/user-1', {
+      method: 'PUT',
+      accessToken: token,
+      body,
     });
   });
 });

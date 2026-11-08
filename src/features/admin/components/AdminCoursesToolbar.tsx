@@ -3,6 +3,7 @@ import type { AdminCourseSort, AdminCourseStatusFilter } from '../utils/adminCou
 
 type AdminCoursesToolbarProps = {
   totalCount: number;
+  visibleCount: number;
   publishedCount: number;
   draftCount: number;
   query: string;
@@ -15,6 +16,7 @@ type AdminCoursesToolbarProps = {
 
 export function AdminCoursesToolbar({
   totalCount,
+  visibleCount,
   publishedCount,
   draftCount,
   query,
@@ -38,6 +40,12 @@ export function AdminCoursesToolbar({
           Tạo khóa học mới
         </Link>
       </div>
+
+      <p className="admin-courses-results-meta muted">
+        {visibleCount === totalCount
+          ? `Hiển thị ${totalCount} khóa học`
+          : `Hiển thị ${visibleCount} / ${totalCount} khóa học`}
+      </p>
 
       <div className="admin-courses-filters">
         <label className="admin-search-field">

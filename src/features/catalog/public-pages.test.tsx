@@ -10,6 +10,7 @@ import { HomePage } from '../../pages/HomePage';
 import * as coursesApi from './api/courses.api';
 import { CatalogPage } from './pages/CatalogPage';
 import type { Course } from './types/course.types';
+import { mockPage } from '../../testing/mockPageResponse';
 
 vi.mock('../auth/api/auth.api', () => ({
   fetchCurrentUser: vi.fn(),
@@ -18,7 +19,7 @@ vi.mock('../auth/api/auth.api', () => ({
 }));
 
 vi.mock('./api/courses.api', () => ({
-  listPublishedCourses: vi.fn(),
+  listCoursesPage: vi.fn(),
 }));
 
 const auth = vi.mocked(authApi);
@@ -75,8 +76,8 @@ function renderAt(path: string) {
 beforeEach(() => {
   sessionStorage.clear();
   auth.fetchCurrentUser.mockReset();
-  courses.listPublishedCourses.mockReset();
-  courses.listPublishedCourses.mockResolvedValue([]);
+  courses.listCoursesPage.mockReset();
+  courses.listCoursesPage.mockResolvedValue(mockPage([]));
 });
 
 describe('public home', () => {
@@ -105,12 +106,14 @@ describe('public home', () => {
   });
 
   it('shows published courses and keeps a contained error from replacing the page', async () => {
-    courses.listPublishedCourses.mockResolvedValueOnce([
-      course('Intro to Algebra', 0, '11111111-1111-4111-8111-111111111101'),
-      course('Academic Writing', 49, '11111111-1111-4111-8111-111111111102'),
-      course('Biology Basics', 0, '11111111-1111-4111-8111-111111111103'),
-      course('Hidden Fourth', 0, '11111111-1111-4111-8111-111111111104'),
-    ]);
+    courses.listCoursesPage.mockResolvedValueOnce(
+      mockPage([
+        course('Intro to Algebra', 0, '11111111-1111-4111-8111-111111111101'),
+        course('Academic Writing', 49, '11111111-1111-4111-8111-111111111102'),
+        course('Biology Basics', 0, '11111111-1111-4111-8111-111111111103'),
+        course('Hidden Fourth', 0, '11111111-1111-4111-8111-111111111104'),
+      ]),
+    );
 
     renderAt('/');
 
@@ -121,7 +124,10 @@ describe('public home', () => {
     expect(screen.getByRole('link', { name: /Intro to Algebra/ }).getAttribute('href')).toBe(
       '/courses/11111111-1111-4111-8111-111111111101',
     );
-    expect(courses.listPublishedCourses).toHaveBeenCalledWith(null);
+    expect(courses.listCoursesPage).toHaveBeenCalledWith(
+      null,
+      expect.objectContaining({ published: true, page: 0, size: 8 }),
+    );
     expect(screen.getByRole('heading', { name: /Kho học liệu/ })).toBeTruthy();
   });
 
@@ -133,9 +139,9 @@ describe('public home', () => {
   });
 
   it('retries a failed featured-course request without hiding the hero', async () => {
-    courses.listPublishedCourses
+    courses.listCoursesPage
       .mockRejectedValueOnce(new ApiError(500, 'database exploded'))
-      .mockResolvedValueOnce([course('Intro to Algebra')]);
+      .mockResolvedValueOnce(mockPage([course('Intro to Algebra')]));
 
     renderAt('/');
 
@@ -153,10 +159,12 @@ describe('public catalog', () => {
   it('links each course card to its detail page', async () => {
     const algebraId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
     const writingId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
-    courses.listPublishedCourses.mockResolvedValue([
-      course('Intro to Algebra', 0, algebraId),
-      course('Academic Writing', 49, writingId),
-    ]);
+    courses.listCoursesPage.mockResolvedValue(
+      mockPage([
+        course('Intro to Algebra', 0, algebraId),
+        course('Academic Writing', 49, writingId),
+      ]),
+    );
 
     renderAt('/courses');
 
@@ -174,5 +182,34 @@ describe('public catalog', () => {
     renderAt('/courses');
 
     expect(await screen.findByText('Chưa có khóa học đã xuất bản')).toBeTruthy();
+  });
+
+  it('filters the catalog with the q search param without treating it as empty', async () => {
+    const all = [
+      course('Intro to Algebra', 0, '11111111-1111-4111-8111-111111111101'),
+      course('Business Chinese', 0, '11111111-1111-4111-8111-111111111102'),
+    ];
+    courses.listCoursesPage.mockImplementation(async (_token, params) => {
+      const q = params?.q?.toLowerCase() ?? '';
+      const rows = q.includes('algebra')
+        ? all.filter((c) => c.title.toLowerCase().includes('algebra'))
+        : all;
+      return mockPage(rows, { totalElements: rows.length });
+    });
+
+    renderAt('/courses?q=algebra');
+
+    expect(await screen.findByRole('heading', { name: 'Intro to Algebra' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Business Chinese' })).toBeNull();
+    expect(screen.getByText(/Đang tìm “algebra”/i)).toBeTruthy();
+  });
+
+  it('does not show an empty catalog when the API fails', async () => {
+    courses.listCoursesPage.mockRejectedValue(new ApiError(500, 'db down'));
+
+    renderAt('/courses');
+
+    expect(await screen.findByRole('alert')).toBeTruthy();
+    expect(screen.queryByText('Chưa có khóa học đã xuất bản')).toBeNull();
   });
 });

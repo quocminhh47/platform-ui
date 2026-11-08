@@ -46,11 +46,11 @@ export function CourseDetailPage() {
         <div className="landing-container course-detail-state">
           <Breadcrumb items={breadcrumbTrail} />
           <section className="course-detail-empty" aria-labelledby="missing-heading">
-            <h1 id="missing-heading">Course not available</h1>
+            <h1 id="missing-heading">Khóa học không khả dụng</h1>
             <p className="muted">
-              This course may be unpublished or the link may be incorrect.
+              Khóa học có thể chưa xuất bản hoặc đường dẫn không đúng.
             </p>
-            <Link to="/courses">Back to courses</Link>
+            <Link to="/courses">Quay lại danh mục</Link>
           </section>
         </div>
       </div>
@@ -63,14 +63,14 @@ export function CourseDetailPage() {
         <div className="landing-container course-detail-state">
           <Breadcrumb items={breadcrumbTrail} />
           <section className="course-detail-empty" aria-labelledby="error-heading">
-            <h1 id="error-heading">Could not load course</h1>
+            <h1 id="error-heading">Không tải được khóa học</h1>
             <div className="section-error" role="alert">
               <p>{detail.error}</p>
               <button type="button" onClick={detail.reload}>
-                Try again
+                Thử lại
               </button>
             </div>
-            <Link to="/courses">Back to courses</Link>
+            <Link to="/courses">Quay lại danh mục</Link>
           </section>
         </div>
       </div>

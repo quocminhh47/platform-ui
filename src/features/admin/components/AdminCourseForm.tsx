@@ -46,6 +46,7 @@ export function AdminCourseForm({
   const [touched, setTouched] = useState<Partial<Record<AdminCourseFormField, boolean>>>({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const hydratedCourseId = useRef<string | null>(null);
+  const submitInFlightRef = useRef(false);
 
   useEffect(() => {
     if (mode === 'edit' && course && hydratedCourseId.current !== course.id) {
@@ -86,18 +87,31 @@ export function AdminCourseForm({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting) {
+    if (submitting || submitInFlightRef.current) {
       return;
     }
     setSubmitAttempted(true);
     if (Object.keys(clientErrors).length > 0) {
       return;
     }
-    await onSubmit(values);
+    submitInFlightRef.current = true;
+    try {
+      await onSubmit(values);
+    } finally {
+      submitInFlightRef.current = false;
+    }
   }
 
   return (
-    <form className="auth-form admin-course-form" onSubmit={handleSubmit} noValidate>
+    <form
+      className="auth-form admin-course-form"
+      onSubmit={handleSubmit}
+      noValidate
+      aria-labelledby="admin-course-form-heading"
+    >
+      <p className="muted admin-course-form-mode" id="admin-course-form-mode">
+        {mode === 'create' ? 'Tạo khóa học mới' : 'Chỉnh sửa thông tin khóa học'}
+      </p>
       {formError ? (
         <div className="section-error admin-course-form-error" role="alert">
           <p>{formError}</p>

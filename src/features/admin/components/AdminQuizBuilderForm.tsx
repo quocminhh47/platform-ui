@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState, type FormEvent } from 'react';
+import { useCallback, useMemo, useRef, useState, type FormEvent } from 'react';
+import { fieldDescribedBy } from '../../auth/components/fieldDescribedBy';
 import { FormField } from '../../auth/components/FormField';
 import type { QuestionType } from '../types/admin-quiz.types';
 import {
@@ -12,6 +13,10 @@ import {
   setSingleCorrectOption,
   toggleMultipleCorrectOption,
 } from '../utils/admin-quiz-form.utils';
+import {
+  confirmRemoveQuizOption,
+  confirmRemoveQuizQuestion,
+} from '../utils/admin-quiz-confirmations';
 import {
   emptyQuestion,
   validateQuizBuilderForm,
@@ -45,6 +50,7 @@ export function AdminQuizBuilderForm({
   const [values, setValues] = useState(initialValues);
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [collapsedKeys, setCollapsedKeys] = useState<Set<string>>(() => new Set());
+  const submitInFlightRef = useRef(false);
 
   const clientErrors = useMemo(
     () => validateQuizBuilderForm(values, { questionsRequired: !questionsLocked }),
@@ -65,7 +71,7 @@ export function AdminQuizBuilderForm({
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (submitting) {
+    if (submitting || submitInFlightRef.current) {
       return;
     }
     setSubmitAttempted(true);
@@ -75,7 +81,12 @@ export function AdminQuizBuilderForm({
     if (!questionsLocked && (clientErrors.questions || clientErrors.form)) {
       return;
     }
-    await onSubmit(values);
+    submitInFlightRef.current = true;
+    try {
+      await onSubmit(values);
+    } finally {
+      submitInFlightRef.current = false;
+    }
   }
 
   return (
@@ -92,71 +103,107 @@ export function AdminQuizBuilderForm({
       ) : null}
 
       <div className="admin-quiz-layout">
-      <fieldset className="admin-quiz-settings">
-        <legend>Cài đặt quiz</legend>
-        <FormField
-          id="quiz-passing-score"
-          label="Điểm đạt (%)"
-          required
-          error={submitAttempted ? clientErrors.settings?.passingScore : undefined}
-        >
-          <input
-            id="quiz-passing-score"
-            inputMode="numeric"
-            value={values.settings.passingScore}
-            disabled={submitting}
-            onChange={(event) =>
-              setValues((current) => ({
-                ...current,
-                settings: { ...current.settings, passingScore: event.target.value },
-              }))
-            }
-          />
-        </FormField>
-        <FormField
-          id="quiz-time-limit"
-          label="Thời gian (phút)"
-          hint="Tùy chọn."
-          error={submitAttempted ? clientErrors.settings?.timeLimitMinutes : undefined}
-        >
-          <input
-            id="quiz-time-limit"
-            inputMode="numeric"
-            value={values.settings.timeLimitMinutes}
-            disabled={submitting}
-            onChange={(event) =>
-              setValues((current) => ({
-                ...current,
-                settings: { ...current.settings, timeLimitMinutes: event.target.value },
-              }))
-            }
-          />
-        </FormField>
-        <FormField
-          id="quiz-max-attempts"
-          label="Số lần làm tối đa"
-          hint="Tùy chọn."
-          error={submitAttempted ? clientErrors.settings?.maxAttempts : undefined}
-        >
-          <input
-            id="quiz-max-attempts"
-            inputMode="numeric"
-            value={values.settings.maxAttempts}
-            disabled={submitting}
-            onChange={(event) =>
-              setValues((current) => ({
-                ...current,
-                settings: { ...current.settings, maxAttempts: event.target.value },
-              }))
-            }
-          />
-        </FormField>
-      </fieldset>
+        <section className="admin-quiz-settings-panel" aria-labelledby="admin-quiz-settings-heading">
+          <h2 id="admin-quiz-settings-heading" className="admin-quiz-section-heading">
+            Cài đặt quiz
+          </h2>
+          <p className="muted admin-quiz-settings-intro">
+            Điểm đạt, thời gian và số lần làm áp dụng cho bài quiz này. Để trống thời gian hoặc số
+            lần nếu không giới hạn.
+          </p>
+          <div className="admin-quiz-settings-fields">
+            <FormField
+              id="quiz-passing-score"
+              label="Điểm đạt"
+              required
+              hint="Phần trăm từ 0 đến 100."
+              error={submitAttempted ? clientErrors.settings?.passingScore : undefined}
+            >
+              <div className="admin-quiz-input-with-unit">
+                <input
+                  id="quiz-passing-score"
+                  inputMode="numeric"
+                  value={values.settings.passingScore}
+                  disabled={submitting}
+                  aria-invalid={Boolean(submitAttempted && clientErrors.settings?.passingScore)}
+                  aria-describedby={fieldDescribedBy(
+                    'quiz-passing-score',
+                    submitAttempted ? clientErrors.settings?.passingScore : undefined,
+                    'hint',
+                  )}
+                  onChange={(event) =>
+                    setValues((current) => ({
+                      ...current,
+                      settings: { ...current.settings, passingScore: event.target.value },
+                    }))
+                  }
+                />
+                <span className="admin-quiz-input-unit" aria-hidden="true">
+                  %
+                </span>
+              </div>
+            </FormField>
+            <FormField
+              id="quiz-time-limit"
+              label="Thời gian làm bài"
+              hint="Tùy chọn. Số nguyên ≥ 1 (phút)."
+              error={submitAttempted ? clientErrors.settings?.timeLimitMinutes : undefined}
+            >
+              <div className="admin-quiz-input-with-unit">
+                <input
+                  id="quiz-time-limit"
+                  inputMode="numeric"
+                  value={values.settings.timeLimitMinutes}
+                  disabled={submitting}
+                  aria-invalid={Boolean(
+                    submitAttempted && clientErrors.settings?.timeLimitMinutes,
+                  )}
+                  onChange={(event) =>
+                    setValues((current) => ({
+                      ...current,
+                      settings: { ...current.settings, timeLimitMinutes: event.target.value },
+                    }))
+                  }
+                />
+                <span className="admin-quiz-input-unit" aria-hidden="true">
+                  phút
+                </span>
+              </div>
+            </FormField>
+            <FormField
+              id="quiz-max-attempts"
+              label="Số lần làm tối đa"
+              hint="Tùy chọn. Số nguyên ≥ 1."
+              error={submitAttempted ? clientErrors.settings?.maxAttempts : undefined}
+            >
+              <input
+                id="quiz-max-attempts"
+                inputMode="numeric"
+                value={values.settings.maxAttempts}
+                disabled={submitting}
+                aria-invalid={Boolean(submitAttempted && clientErrors.settings?.maxAttempts)}
+                onChange={(event) =>
+                  setValues((current) => ({
+                    ...current,
+                    settings: { ...current.settings, maxAttempts: event.target.value },
+                  }))
+                }
+              />
+            </FormField>
+          </div>
+        </section>
 
       {!questionsLocked ? (
-        <div className="admin-quiz-questions">
+        <section className="admin-quiz-questions-panel" aria-labelledby="admin-quiz-questions-heading">
           <div className="admin-quiz-questions-header">
-            <h2>Câu hỏi</h2>
+            <div>
+              <h2 id="admin-quiz-questions-heading" className="admin-quiz-section-heading">
+                Câu hỏi
+              </h2>
+              <p className="muted admin-quiz-questions-intro">
+                {values.questions.length} câu · Thứ tự hiển thị theo danh sách bên dưới
+              </p>
+            </div>
             <button
               type="button"
               className="button-secondary"
@@ -217,6 +264,9 @@ export function AdminQuizBuilderForm({
               onRemove={
                 values.questions.length > 1
                   ? () => {
+                      if (!confirmRemoveQuizQuestion(index + 1)) {
+                        return;
+                      }
                       setCollapsedKeys((current) => {
                         const next = new Set(current);
                         next.delete(question.key);
@@ -232,7 +282,7 @@ export function AdminQuizBuilderForm({
             />
           ))}
           </div>
-        </div>
+        </section>
       ) : (
         <p className="muted admin-quiz-locked-note admin-quiz-locked-note-span">
           Phần câu hỏi đã khóa vì đã có lượt làm bài. Bạn vẫn có thể cập nhật cài đặt phía trên.
@@ -240,7 +290,7 @@ export function AdminQuizBuilderForm({
       )}
       </div>
 
-      <div className="admin-form-actions">
+      <div className="admin-form-actions admin-quiz-form-actions">
         <button type="submit" className="button-primary" disabled={submitting}>
           {submitting ? 'Đang lưu…' : 'Lưu quiz'}
         </button>
@@ -289,6 +339,9 @@ function QuestionEditor({
     <article className="admin-quiz-question-card" data-collapsed={collapsed ? 'true' : 'false'}>
       <header className="admin-quiz-question-header">
         <div className="admin-quiz-question-heading">
+          <span className="admin-quiz-order-badge" aria-label={`Thứ tự câu ${index + 1}`}>
+            {index + 1}
+          </span>
           <button
             type="button"
             className="admin-quiz-collapse-toggle"
@@ -398,84 +451,119 @@ function QuestionEditor({
             />
           </FormField>
 
-          <div className="admin-quiz-options">
-            <p className="admin-field-label">Lựa chọn</p>
-            <p className="admin-field-label admin-quiz-correct-group-label">Đáp án đúng</p>
+          <fieldset className="admin-quiz-options-panel">
+            <legend className="admin-quiz-options-legend">Lựa chọn trả lời</legend>
+            <p className="muted admin-quiz-options-hint">
+              {isMultiple
+                ? 'Chọn một hoặc nhiều đáp án đúng (học viên phải khớp đúng tập đáp án).'
+                : 'Chọn đúng một đáp án đúng cho mỗi câu.'}
+            </p>
             {errors?.options ? (
-              <p className="field-error" role="alert">{errors.options}</p>
+              <p className="field-error" role="alert">
+                {errors.options}
+              </p>
             ) : null}
-            <ul className="admin-quiz-option-list">
-              {question.options.map((option, optionIndex) => {
-                const letter = optionDisplayLabel(optionIndex);
-                const correctId = `correct-${question.key}-${option.key}`;
-                return (
-                  <li key={option.key} className="admin-quiz-option-row">
-                    <span className="admin-quiz-option-letter" aria-hidden="true">
-                      {letter}.
-                    </span>
-                    <input
-                      id={correctId}
-                      className="admin-quiz-option-correct-input"
-                      type={correctControlType}
-                      name={isMultiple ? undefined : `correct-${question.key}`}
-                      checked={option.isCorrect}
-                      disabled={submitting}
-                      aria-label={`Đáp án đúng ${letter}`}
-                      onChange={() => {
-                        if (isMultiple) {
-                          onChange(toggleMultipleCorrectOption(question, option.key));
-                        } else {
-                          onChange(setSingleCorrectOption(question, option.key));
-                        }
-                      }}
-                    />
-                    {isTrueFalse ? (
-                      <span className="admin-quiz-option-fixed-text">{option.optionText}</span>
-                    ) : (
-                      <input
-                        type="text"
-                        className="admin-quiz-option-text"
-                        value={option.optionText}
-                        disabled={submitting}
-                        placeholder={`Nội dung lựa chọn ${letter}`}
-                        aria-label={`Nội dung lựa chọn ${letter}`}
-                        onChange={(event) =>
-                          onChange({
-                            ...question,
-                            options: question.options.map((o) =>
-                              o.key === option.key ? { ...o, optionText: event.target.value } : o,
-                            ),
-                          })
-                        }
-                      />
-                    )}
-                    {!isTrueFalse && question.options.length > 2 ? (
-                      <button
-                        type="button"
-                        className="icon-button admin-quiz-icon-button admin-quiz-icon-button-danger"
-                        title={`Xóa lựa chọn ${letter}`}
-                        aria-label={`Xóa lựa chọn ${letter}`}
-                        disabled={submitting}
-                        onClick={() => onChange(removeOptionFromQuestion(question, option.key))}
-                      >
-                        <TrashIcon />
-                      </button>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
+            <div className="admin-quiz-option-table" role="group" aria-label="Danh sách lựa chọn">
+              <div className="admin-quiz-option-table-head" aria-hidden="true">
+                <span>Lựa chọn</span>
+                <span>Nội dung</span>
+                <span>Đáp án đúng</span>
+                <span />
+              </div>
+              <ul className="admin-quiz-option-list">
+                {question.options.map((option, optionIndex) => {
+                  const letter = optionDisplayLabel(optionIndex);
+                  const correctId = `correct-${question.key}-${option.key}`;
+                  return (
+                    <li
+                      key={option.key}
+                      className={
+                        option.isCorrect
+                          ? 'admin-quiz-option-row admin-quiz-option-row-correct'
+                          : 'admin-quiz-option-row'
+                      }
+                    >
+                      <span className="admin-quiz-option-letter" aria-hidden="true">
+                        {letter}.
+                      </span>
+                      {isTrueFalse ? (
+                        <span className="admin-quiz-option-fixed-text">{option.optionText}</span>
+                      ) : (
+                        <input
+                          type="text"
+                          className="admin-quiz-option-text"
+                          value={option.optionText}
+                          disabled={submitting}
+                          placeholder={`Nội dung lựa chọn ${letter}`}
+                          aria-label={`Nội dung lựa chọn ${letter}`}
+                          onChange={(event) =>
+                            onChange({
+                              ...question,
+                              options: question.options.map((o) =>
+                                o.key === option.key
+                                  ? { ...o, optionText: event.target.value }
+                                  : o,
+                              ),
+                            })
+                          }
+                        />
+                      )}
+                      <div className="admin-quiz-option-correct-cell">
+                        <input
+                          id={correctId}
+                          className="admin-quiz-option-correct-input"
+                          type={correctControlType}
+                          name={isMultiple ? undefined : `correct-${question.key}`}
+                          checked={option.isCorrect}
+                          disabled={submitting}
+                          aria-label={`Đáp án đúng ${letter}`}
+                          onChange={() => {
+                            if (isMultiple) {
+                              onChange(toggleMultipleCorrectOption(question, option.key));
+                            } else {
+                              onChange(setSingleCorrectOption(question, option.key));
+                            }
+                          }}
+                        />
+                        <label htmlFor={correctId} className="admin-quiz-option-correct-label">
+                          Đúng
+                        </label>
+                      </div>
+                      {!isTrueFalse && question.options.length > 2 ? (
+                        <button
+                          type="button"
+                          className="icon-button admin-quiz-icon-button admin-quiz-icon-button-danger"
+                          title={`Xóa lựa chọn ${letter}`}
+                          aria-label={`Xóa lựa chọn ${letter}`}
+                          disabled={submitting}
+                          onClick={() => {
+                            if (!confirmRemoveQuizOption(letter)) {
+                              return;
+                            }
+                            onChange(removeOptionFromQuestion(question, option.key));
+                          }}
+                        >
+                          <TrashIcon />
+                        </button>
+                      ) : (
+                        <span className="admin-quiz-option-actions-spacer" aria-hidden="true" />
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
             {!isTrueFalse ? (
               <button
                 type="button"
-                className="button-secondary"
+                className="button-secondary admin-quiz-add-option"
                 disabled={submitting}
                 onClick={() => onChange(addOptionToQuestion(question))}
               >
                 + Thêm lựa chọn
               </button>
             ) : null}
-          </div>
+          </fieldset>
         </div>
       ) : null}
     </article>

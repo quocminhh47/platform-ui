@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Breadcrumb } from '../../../components/common/Breadcrumb';
 import {
@@ -18,12 +18,17 @@ import { DashboardSidebar } from '../../dashboard/components/DashboardSidebar';
 import { useAdminCourseDetail } from '../hooks/useAdminCourseDetail';
 import { useAdminCurriculum } from '../hooks/useAdminCurriculum';
 import { useQuizConfigStatuses } from '../hooks/useQuizConfigStatuses';
+import { reorderSections } from '../api/admin-sections.api';
+import { useCurriculumItemReorder } from '../hooks/useCurriculumItemReorder';
+import { sortBySortOrder } from '../utils/sort-by-sort-order';
+import { adminCurriculumSaveMessage } from '../utils/admin-curriculum-messages';
 
 export function AdminCurriculumPage() {
   const { courseId } = useParams();
   const { user, accessToken } = useAuth();
   const toast = useToast();
   const [showNewSection, setShowNewSection] = useState(false);
+  const [sectionReordering, setSectionReordering] = useState(false);
   const enabled = Boolean(user?.role === 'ADMIN' && courseId);
   const detail = useAdminCourseDetail(courseId, enabled);
   const curriculum = useAdminCurriculum(courseId, enabled && Boolean(detail.course));
@@ -34,6 +39,32 @@ export function AdminCurriculumPage() {
       ) ?? [],
     [curriculum.sections],
   );
+  const sortedSections = useMemo(
+    () => (curriculum.sections ? sortBySortOrder(curriculum.sections) : []),
+    [curriculum.sections],
+  );
+
+  const commitSectionOrder = useCallback(
+    async (orderedIds: string[]) => {
+      if (!accessToken || !courseId) {
+        return;
+      }
+      setSectionReordering(true);
+      try {
+        await reorderSections(accessToken, courseId, orderedIds);
+        await curriculum.refresh();
+      } catch (cause: unknown) {
+        toast.error(adminCurriculumSaveMessage(cause));
+        throw cause;
+      } finally {
+        setSectionReordering(false);
+      }
+    },
+    [accessToken, courseId, curriculum, toast],
+  );
+
+  const sectionReorder = useCurriculumItemReorder(sortedSections, commitSectionOrder);
+
   const quizConfigStatuses = useQuizConfigStatuses(
     courseId,
     quizLessonIds,
@@ -89,6 +120,11 @@ export function AdminCurriculumPage() {
                 Sửa thông tin khóa học
               </Link>
             </header>
+            <p className="muted admin-curriculum-integrity-note">
+              Chỉ thêm và chỉnh sửa chương, bài học qua giao diện này. Xóa chương hoặc bài học không
+              được hỗ trợ trên API hiện tại; tiến độ học và cấu hình quiz vẫn do hệ thống quản lý phía
+              máy chủ.
+            </p>
 
             {!curriculum.loading && curriculum.error ? (
               <div className="section-error" role="alert">
@@ -120,7 +156,7 @@ export function AdminCurriculumPage() {
                 ) : null}
 
                 <div className="admin-curriculum-sections">
-                  {curriculum.sections?.map((section) => (
+                  {sortedSections.map((section, index) => (
                     <AdminCurriculumSection
                       key={section.id}
                       courseId={courseId}
@@ -131,6 +167,26 @@ export function AdminCurriculumPage() {
                       onRefresh={curriculum.refresh}
                       onToastSuccess={(message) => toast.success(message)}
                       onToastError={(message) => toast.error(message)}
+                      sectionPosition={index + 1}
+                      sectionCount={sortedSections.length}
+                      sectionDragOver={sectionReorder.dragOverId === section.id}
+                      sectionReorderBusy={sectionReordering}
+                      onMoveSection={(direction) => sectionReorder.moveItem(section.id, direction)}
+                      sectionDragHandle={{
+                        onDragStart: sectionReorder.onDragStart(section.id),
+                        onKeyDown: (event) => {
+                          if (event.key === 'ArrowUp') {
+                            event.preventDefault();
+                            void sectionReorder.moveItem(section.id, 'up');
+                          } else if (event.key === 'ArrowDown') {
+                            event.preventDefault();
+                            void sectionReorder.moveItem(section.id, 'down');
+                          }
+                        },
+                      }}
+                      onSectionDragOver={sectionReorder.onDragOver(section.id)}
+                      onSectionDragLeave={sectionReorder.onDragLeave}
+                      onSectionDrop={sectionReorder.onDrop(section.id)}
                     />
                   ))}
                 </div>

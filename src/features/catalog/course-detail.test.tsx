@@ -10,9 +10,10 @@ import { CourseDetailPage } from './pages/CourseDetailPage';
 import type { Course } from './types/course.types';
 import type { Lesson } from './types/lesson.types';
 import type { Section } from './types/section.types';
+import { mockPage } from '../../testing/mockPageResponse';
 
 vi.mock('./api/courses.api', () => ({
-  listPublishedCourses: vi.fn(),
+  listCoursesPage: vi.fn(),
   getCourseById: vi.fn(),
   listCourseSections: vi.fn(),
   listSectionLessons: vi.fn(),
@@ -78,8 +79,8 @@ function renderRoutes(initialEntry: string) {
 }
 
 beforeEach(() => {
-  api.listPublishedCourses.mockReset();
-  api.listPublishedCourses.mockResolvedValue([]);
+  api.listCoursesPage.mockReset();
+  api.listCoursesPage.mockResolvedValue(mockPage([]));
   api.getCourseById.mockReset();
   api.listCourseSections.mockReset();
   api.listSectionLessons.mockReset();
@@ -87,7 +88,7 @@ beforeEach(() => {
 
 describe('course detail navigation', () => {
   it('navigates from a catalog card to the detail URL', async () => {
-    api.listPublishedCourses.mockResolvedValue([course]);
+    api.listCoursesPage.mockResolvedValue(mockPage([course]));
 
     const router = renderRoutes('/courses');
     const link = await screen.findByRole('link', { name: /Intro to Algebra/ });
@@ -102,6 +103,15 @@ describe('course detail navigation', () => {
 });
 
 describe('course detail page', () => {
+  it('shows a loading state while the course is fetched', async () => {
+    api.getCourseById.mockImplementation(() => new Promise(() => {}));
+
+    renderRoutes(`/courses/${courseId}`);
+
+    expect(await screen.findByText('Đang tải khóa học…')).toBeTruthy();
+    expect(api.listCourseSections).not.toHaveBeenCalled();
+  });
+
   it('renders course information and curriculum from the API', async () => {
     api.getCourseById.mockResolvedValue(course);
     api.listCourseSections.mockResolvedValue([section]);
@@ -131,8 +141,8 @@ describe('course detail page', () => {
 
     renderRoutes(`/courses/${courseId}`);
 
-    expect(await screen.findByRole('heading', { name: 'Course not available' })).toBeTruthy();
-    expect(screen.getByText(/unpublished/i)).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Khóa học không khả dụng' })).toBeTruthy();
+    expect(screen.getByText(/chưa xuất bản/i)).toBeTruthy();
     expect(api.listCourseSections).not.toHaveBeenCalled();
   });
 
@@ -148,7 +158,7 @@ describe('course detail page', () => {
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).not.toMatch(/postgresql|secret/i);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Thử lại' }));
 
     expect(await screen.findByRole('heading', { name: 'Intro to Algebra' })).toBeTruthy();
   });

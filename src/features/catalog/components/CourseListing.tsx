@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { UI_COPY } from '../../../ui/ui-copy';
 import type { PublishedCoursesState } from '../hooks/usePublishedCourses';
 import { CourseCard } from './CourseCard';
 
@@ -25,13 +26,13 @@ export function CourseListing({
 
   return (
     <div className="course-listing">
-      {loading ? <p className="page-status">Loading courses…</p> : null}
+      {loading ? <p className="page-status">Đang tải khóa học…</p> : null}
 
       {!loading && error ? (
         <div className="section-error" role="alert">
           <p>{error}</p>
           <button type="button" onClick={reload}>
-            Try again
+            {UI_COPY.tryAgain}
           </button>
         </div>
       ) : null}
@@ -54,7 +55,7 @@ export function CourseListing({
           </ul>
           {hiddenCount > 0 ? (
             <p className="listing-more">
-              <Link to="/courses">See all {courses?.length} courses</Link>
+              <Link to="/courses">Xem tất cả {courses?.length} khóa học</Link>
             </p>
           ) : null}
         </>

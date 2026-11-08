@@ -8,6 +8,9 @@ import { ProtectedRoute } from '../auth/components/ProtectedRoute';
 import { LoginPage } from '../auth/pages/LoginPage';
 import type { User } from '../auth/types/auth.types';
 import { AdminRoute } from './components/AdminRoute';
+import { mockPage } from '../../testing/mockPageResponse';
+import * as adminCoursesApi from './api/admin-courses.api';
+import * as adminMetricsApi from './api/admin-metrics.api';
 import { AdminCourseListPage } from './pages/AdminCourseListPage';
 
 vi.mock('../auth/api/auth.api', () => ({
@@ -17,12 +20,18 @@ vi.mock('../auth/api/auth.api', () => ({
 }));
 
 vi.mock('./api/admin-courses.api', () => ({
-  listAllCourses: vi.fn().mockResolvedValue([]),
+  listAdminCoursesPage: vi.fn(),
   publishCourse: vi.fn(),
   unpublishCourse: vi.fn(),
 }));
 
+vi.mock('./api/admin-metrics.api', () => ({
+  fetchCourseMetrics: vi.fn(),
+}));
+
 const auth = vi.mocked(authApi);
+const metricsApi = vi.mocked(adminMetricsApi);
+const coursesApi = vi.mocked(adminCoursesApi);
 
 const student: User = {
   id: 'u-student',
@@ -75,13 +84,23 @@ function renderAdminRoute(initialPath = '/admin/courses') {
 beforeEach(() => {
   sessionStorage.clear();
   auth.fetchCurrentUser.mockReset();
+  metricsApi.fetchCourseMetrics.mockReset();
+  metricsApi.fetchCourseMetrics.mockResolvedValue({
+    total: 0,
+    published: 0,
+    draft: 0,
+    withLessons: 0,
+    emptyCurriculum: 0,
+  });
+  coursesApi.listAdminCoursesPage.mockReset();
+  coursesApi.listAdminCoursesPage.mockResolvedValue(mockPage([]));
 });
 
 describe('AdminRoute', () => {
   it('redirects unauthenticated visitors to login with return path', async () => {
     const router = renderAdminRoute();
 
-    expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Đăng nhập' })).toBeTruthy();
     expect(router.state.location.pathname).toBe('/login');
     expect(router.state.location.state).toEqual({ from: '/admin/courses' });
   });

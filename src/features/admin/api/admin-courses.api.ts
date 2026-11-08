@@ -1,13 +1,20 @@
 import { apiRequest } from '../../../services/api/client';
+import {
+  listCoursesPage,
+  type CourseListParams,
+} from '../../catalog/api/courses.api';
+import type { PageResponse } from '../../../types/pagination.types';
 import type { Course } from '../../catalog/types/course.types';
 import type { CreateCoursePayload, UpdateCoursePayload } from '../types/course-request.types';
 
 /**
- * GET /api/courses
- * ADMIN callers receive published and unpublished courses when no filter is applied.
+ * GET /api/courses — ADMIN paginated list.
  */
-export function listAllCourses(accessToken: string): Promise<Course[]> {
-  return apiRequest<Course[]>('/api/courses', { accessToken });
+export function listAdminCoursesPage(
+  accessToken: string,
+  params: CourseListParams = {},
+): Promise<PageResponse<Course>> {
+  return listCoursesPage(accessToken, params);
 }
 
 /** POST /api/courses — ADMIN only. */

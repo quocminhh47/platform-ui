@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { UI_COPY } from '../../../ui/ui-copy';
 import { Link } from 'react-router-dom';
 import type { SectionWithLessons } from '../../catalog/hooks/useCourseCurriculum';
 import type { CourseProgressSummary } from '../types/progress.types';
@@ -50,15 +51,15 @@ export function CurriculumSidebar({
   }
 
   return (
-    <aside className="learning-sidebar" aria-label="Curriculum">
+    <aside className="learning-sidebar" aria-label={UI_COPY.curriculum}>
       <div className="learning-sidebar-bar">
-        {collapsed ? null : <p className="sidebar-label">Curriculum</p>}
+        {collapsed ? null : <p className="sidebar-label">{UI_COPY.curriculum}</p>}
         <button
           type="button"
           className="learning-sidebar-toggle"
           aria-expanded={!collapsed}
           aria-controls="learning-curriculum"
-          aria-label={collapsed ? 'Expand curriculum' : 'Collapse curriculum'}
+          aria-label={collapsed ? 'Mở rộng nội dung khóa học' : 'Thu gọn nội dung khóa học'}
           onClick={onToggleCollapsed}
         >
           <ChevronIcon direction={collapsed ? 'right' : 'left'} />
@@ -73,7 +74,7 @@ export function CurriculumSidebar({
         {!collapsed && courseSummary.totalCount > 0 ? (
           <div className="learning-course-progress">
             <div className="learning-course-progress-label">
-              <span>Course progress</span>
+              <span>Tiến độ khóa học</span>
               <span>{courseSummary.percent}%</span>
             </div>
             <div
@@ -82,7 +83,7 @@ export function CurriculumSidebar({
               aria-valuenow={courseSummary.percent}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label={`${courseSummary.completedCount} of ${courseSummary.totalCount} lessons completed`}
+              aria-label={`${courseSummary.completedCount} / ${courseSummary.totalCount} bài đã hoàn thành`}
             >
               <div
                 className="learning-course-progress-fill"
@@ -90,35 +91,35 @@ export function CurriculumSidebar({
               />
             </div>
             <p className="learning-course-progress-meta muted">
-              {courseSummary.completedCount} of {courseSummary.totalCount} lessons completed
+              {courseSummary.completedCount} / {courseSummary.totalCount} bài đã hoàn thành
             </p>
           </div>
         ) : null}
 
-        {progressLoading ? <p className="page-status">Loading progress…</p> : null}
+        {progressLoading ? <p className="page-status">Đang tải tiến độ…</p> : null}
 
         {!progressLoading && progressError ? (
           <div className="section-error learning-progress-error" role="alert">
             <p>{progressError}</p>
             <button type="button" onClick={onRetryProgress}>
-              Try again
+              {UI_COPY.tryAgain}
             </button>
           </div>
         ) : null}
 
-        {loading ? <p className="page-status">Loading curriculum…</p> : null}
+        {loading ? <p className="page-status">Đang tải nội dung khóa học…</p> : null}
 
         {!loading && error ? (
           <div className="section-error" role="alert">
             <p>{error}</p>
             <button type="button" onClick={onRetry}>
-              Try again
+              {UI_COPY.tryAgain}
             </button>
           </div>
         ) : null}
 
         {!loading && !error && sections && sections.length === 0 ? (
-          <p className="muted">This course does not have any sections yet.</p>
+          <p className="muted">Khóa học chưa có chương nào.</p>
         ) : null}
 
         {!loading && !error && sections && sections.length > 0 ? (

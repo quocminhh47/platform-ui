@@ -1,3 +1,5 @@
+import { validateHttpUrl } from './admin-url.validation';
+
 export type AdminCourseFormValues = {
   title: string;
   description: string;
@@ -32,6 +34,11 @@ export function validateAdminCourseForm(
   const thumbnail = values.thumbnailUrl.trim();
   if (thumbnail.length > THUMBNAIL_MAX) {
     errors.thumbnailUrl = `URL ảnh tối đa ${THUMBNAIL_MAX} ký tự.`;
+  } else {
+    const urlError = validateHttpUrl(thumbnail, false);
+    if (urlError) {
+      errors.thumbnailUrl = urlError;
+    }
   }
 
   if (mode === 'create' && !values.instructorId) {

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { UI_COPY } from '../../../ui/ui-copy';
 import { CourseListing } from '../../catalog/components/CourseListing';
 import type { PublishedCoursesState } from '../../catalog/hooks/usePublishedCourses';
 
@@ -10,15 +11,15 @@ export function RecommendedCoursesSection({ state }: RecommendedCoursesSectionPr
   return (
     <section className="dashboard-section" aria-labelledby="explore-heading">
       <div className="section-heading">
-        <h2 id="explore-heading">Published courses</h2>
+        <h2 id="explore-heading">Khóa học đã xuất bản</h2>
         <p className="muted">
-          The same catalog as <Link to="/courses">Explore courses</Link>.
+          Cùng danh mục với <Link to="/courses">{UI_COPY.navExploreCourses}</Link>.
         </p>
       </div>
       <CourseListing
         state={state}
-        emptyTitle="No published courses"
-        emptyDescription="When an administrator publishes a course, it will appear here."
+        emptyTitle="Chưa có khóa học đã xuất bản"
+        emptyDescription="Khi quản trị viên xuất bản khóa học, chúng sẽ xuất hiện tại đây."
       />
     </section>
   );

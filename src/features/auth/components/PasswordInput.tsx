@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { UI_COPY } from '../../../ui/ui-copy';
 
 type PasswordInputProps = {
   id: string;
@@ -44,11 +45,11 @@ export function PasswordInput({
         type="button"
         className="password-toggle"
         onClick={() => setVisible((current) => !current)}
-        aria-label={visible ? 'Hide password' : 'Show password'}
+        aria-label={visible ? UI_COPY.hidePassword : UI_COPY.showPassword}
         aria-pressed={visible}
         disabled={disabled}
       >
-        {visible ? 'Hide' : 'Show'}
+        {visible ? UI_COPY.hide : UI_COPY.show}
       </button>
     </span>
   );

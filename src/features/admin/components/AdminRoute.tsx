@@ -9,7 +9,7 @@ export function AdminRoute() {
   const { user, isInitializing } = useAuth();
 
   if (isInitializing) {
-    return <p className="page-status">Loading session…</p>;
+    return <p className="page-status">Đang tải phiên…</p>;
   }
 
   if (user?.role !== 'ADMIN') {

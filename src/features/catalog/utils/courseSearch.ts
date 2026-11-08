@@ -17,3 +17,12 @@ function searchableText(course: Course): string {
     .join(' ')
     .toLowerCase();
 }
+
+/** Preserve client-side search when navigating to the full catalog. */
+export function catalogPathWithSearchQuery(query: string): string {
+  const trimmed = query.trim();
+  if (!trimmed) {
+    return '/courses';
+  }
+  return `/courses?q=${encodeURIComponent(trimmed)}`;
+}

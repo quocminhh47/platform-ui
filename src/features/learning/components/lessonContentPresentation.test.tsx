@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { ArticleLesson } from './ArticleLesson';
+import { ArticleReader } from './ArticleReader';
 import { VideoLesson } from './VideoLesson';
 
 describe('VideoLesson', () => {
@@ -38,6 +39,33 @@ describe('VideoLesson', () => {
   });
 });
 
+describe('ArticleReader', () => {
+  it('renders sanitized article metadata and body', () => {
+    render(
+      <ArticleReader
+        lessonTitle="Lesson"
+        article={{
+          sourceUrl: 'https://example.com/post',
+          extractedTitle: 'Article headline',
+          author: 'Author A',
+          publishedAt: '2025-06-01T00:00:00Z',
+          featuredImageUrl: 'https://cdn.example/hero.jpg',
+          contentHtml: '<p>Body text</p>',
+          extractionStatus: 'SUCCESS',
+          extractedAt: '2025-06-02T00:00:00Z',
+        }}
+      />,
+    );
+
+    expect(screen.getByRole('heading', { name: 'Article headline' })).toBeTruthy();
+    expect(screen.getByText(/Tác giả: Author A/)).toBeTruthy();
+    expect(screen.getByTestId('article-reader-content').innerHTML).toContain('Body text');
+    expect(screen.getByRole('link', { name: 'Xem bài gốc' }).getAttribute('href')).toBe(
+      'https://example.com/post',
+    );
+  });
+});
+
 describe('ArticleLesson', () => {
   it('renders Drive preview first with a secondary external link', () => {
     const url = 'https://drive.google.com/file/d/abc123XYZ/view';
@@ -45,7 +73,7 @@ describe('ArticleLesson', () => {
 
     const iframe = document.querySelector('iframe');
     expect(iframe?.getAttribute('src')).toBe('https://drive.google.com/file/d/abc123XYZ/preview');
-    const link = screen.getByRole('link', { name: 'Open in Google Drive' });
+    const link = screen.getByRole('link', { name: 'Mở trên Google Drive' });
     expect(link.getAttribute('href')).toBe(url);
     expect(link.closest('.learning-external-fallback-secondary')).toBeTruthy();
   });
@@ -63,14 +91,46 @@ describe('ArticleLesson', () => {
     );
   });
 
-  it('shows message and fallback link for unsupported article URLs', () => {
-    const url = 'https://example.com/article.html';
-    render(<ArticleLesson title="Web page" contentUrl={url} />);
+  it('uses the native reader for extracted external articles', () => {
+    render(
+      <ArticleLesson
+        title="Web page"
+        contentUrl="https://example.com/article.html"
+        article={{
+          sourceUrl: 'https://example.com/article.html',
+          extractedTitle: 'Story',
+          author: null,
+          publishedAt: null,
+          featuredImageUrl: null,
+          contentHtml: '<p>Extracted</p>',
+          extractionStatus: 'SUCCESS',
+          extractedAt: null,
+        }}
+      />,
+    );
 
     expect(document.querySelector('iframe')).toBeNull();
-    expect(screen.getByText(/cannot be previewed inside the lesson page/i)).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Open article externally' }).getAttribute('href')).toBe(
-      url,
+    expect(screen.getByTestId('article-reader-content').innerHTML).toContain('Extracted');
+  });
+
+  it('shows pending state for articles still extracting', () => {
+    render(
+      <ArticleLesson
+        title="Web page"
+        contentUrl="https://example.com/article.html"
+        article={{
+          sourceUrl: 'https://example.com/article.html',
+          extractedTitle: null,
+          author: null,
+          publishedAt: null,
+          featuredImageUrl: null,
+          contentHtml: null,
+          extractionStatus: 'PENDING',
+          extractedAt: null,
+        }}
+      />,
     );
+
+    expect(screen.getByText(/Đang trích xuất/)).toBeTruthy();
   });
 });

@@ -1,1 +1,1 @@
-export const ENROLL_SUCCESS_TOAST = 'You are enrolled in this course.';
+export const ENROLL_SUCCESS_TOAST = 'Bạn đã ghi danh thành công vào khóa học này.';

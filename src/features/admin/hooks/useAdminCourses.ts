@@ -1,89 +1,110 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { PageResponse } from '../../../types/pagination.types';
+import { useDebouncedValue } from '../../../hooks/useDebouncedValue';
 import { useAuth } from '../../auth/hooks/useAuth';
-import { listAllCourses } from '../api/admin-courses.api';
 import type { Course } from '../../catalog/types/course.types';
+import { listAdminCoursesPage } from '../api/admin-courses.api';
+import type { CourseListParams } from '../../catalog/api/courses.api';
 import { adminCoursesLoadMessage } from '../utils/admin-messages';
+import {
+  adminCourseSortToApi,
+  adminCourseStatusToPublished,
+} from '../utils/adminListQueryMappers';
+import type { AdminCourseSort, AdminCourseStatusFilter } from '../utils/adminCourseListFilters';
+
+export type AdminCoursesQuery = {
+  q: string;
+  status: AdminCourseStatusFilter;
+  sort: AdminCourseSort;
+  page: number;
+  size: number;
+};
 
 export type AdminCoursesState = {
-  courses: Course[] | null;
+  page: PageResponse<Course> | null;
   loading: boolean;
   error: string | null;
   reload: () => void;
-  refresh: () => Promise<Course[]>;
+  refresh: () => Promise<PageResponse<Course> | null>;
 };
 
-export function useAdminCourses(enabled: boolean): AdminCoursesState {
+const DEFAULT_QUERY: AdminCoursesQuery = {
+  q: '',
+  status: 'all',
+  sort: 'newest',
+  page: 0,
+  size: 20,
+};
+
+export function useAdminCourses(
+  enabled: boolean,
+  query: AdminCoursesQuery = DEFAULT_QUERY,
+): AdminCoursesState {
   const { accessToken } = useAuth();
-  const [courses, setCourses] = useState<Course[] | null>(null);
+  const debouncedQ = useDebouncedValue(query.q, 300);
+  const [page, setPage] = useState<PageResponse<Course> | null>(null);
   const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
   const [requestId, setRequestId] = useState(0);
-  const [query, setQuery] = useState({ enabled, accessToken, requestId });
-
-  if (
-    query.enabled !== enabled ||
-    query.accessToken !== accessToken ||
-    query.requestId !== requestId
-  ) {
-    setQuery({ enabled, accessToken, requestId });
-    if (!enabled || !accessToken) {
-      setLoading(false);
-      setError(null);
-      setCourses(null);
-    } else {
-      setLoading(true);
-      setError(null);
-    }
-  }
+  const fetchGeneration = useRef(0);
 
   const reload = useCallback(() => {
     setRequestId((current) => current + 1);
   }, []);
 
+  const apiParams: CourseListParams = {
+    q: debouncedQ.trim() || undefined,
+    published: adminCourseStatusToPublished(query.status),
+    sort: adminCourseSortToApi(query.sort),
+    page: query.page,
+    size: query.size,
+  };
+
   const refresh = useCallback(async () => {
     if (!accessToken) {
-      setCourses(null);
-      return [];
+      setPage(null);
+      return null;
     }
-    const result = await listAllCourses(accessToken);
-    setCourses(result);
+    const result = await listAdminCoursesPage(accessToken, apiParams);
+    setPage(result);
     setError(null);
     setLoading(false);
     return result;
-  }, [accessToken]);
+  }, [accessToken, apiParams]);
 
   useEffect(() => {
     if (!enabled || !accessToken) {
+      setLoading(false);
+      setPage(null);
+      setError(null);
       return;
     }
 
-    let active = true;
+    const generation = ++fetchGeneration.current;
+    setLoading(true);
+    setError(null);
 
-    listAllCourses(accessToken)
+    listAdminCoursesPage(accessToken, apiParams)
       .then((result) => {
-        if (!active) {
+        if (generation !== fetchGeneration.current) {
           return;
         }
-        setCourses(result);
+        setPage(result);
         setError(null);
       })
       .catch((cause: unknown) => {
-        if (!active) {
+        if (generation !== fetchGeneration.current) {
           return;
         }
-        setCourses(null);
+        setPage(null);
         setError(adminCoursesLoadMessage(cause));
       })
       .finally(() => {
-        if (active) {
+        if (generation === fetchGeneration.current) {
           setLoading(false);
         }
       });
+  }, [enabled, accessToken, requestId, debouncedQ, query.status, query.sort, query.page, query.size]);
 
-    return () => {
-      active = false;
-    };
-  }, [enabled, accessToken, requestId]);
-
-  return { courses, loading, error, reload, refresh };
+  return { page, loading, error, reload, refresh };
 }
