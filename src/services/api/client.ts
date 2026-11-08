@@ -5,7 +5,7 @@ const rawBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 if (typeof rawBaseUrl !== 'string' || rawBaseUrl.trim() === '') {
   throw new Error(
-    'VITE_API_BASE_URL is not set. Copy .env.example to .env in the platform-ui project root',
+    'VITE_API_BASE_URL is not set. For local dev, use .env.development or copy .env.example to .env. For Vercel, set VITE_API_BASE_URL in Project Settings → Environment Variables before building.',
   );
 }
 
