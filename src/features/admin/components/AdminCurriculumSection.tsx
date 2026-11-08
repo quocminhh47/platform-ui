@@ -1,5 +1,4 @@
 import {
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -13,7 +12,7 @@ import { FormField } from '../../auth/components/FormField';
 import { fieldDescribedBy } from '../../auth/components/fieldDescribedBy';
 import type { Lesson } from '../../catalog/types/lesson.types';
 import type { Section } from '../../catalog/types/section.types';
-import { createLesson, reorderLessons, updateLesson } from '../api/admin-lessons.api';
+import { createLesson, getLesson, reorderLessons, updateLesson } from '../api/admin-lessons.api';
 import { createSection, updateSection } from '../api/admin-sections.api';
 import { AdminArticleExtractionControls } from './AdminArticleExtractionControls';
 import { AdminCurriculumReorderControls } from './AdminCurriculumReorderControls';
@@ -26,6 +25,7 @@ import {
   ADMIN_SECTION_CREATE_SUCCESS,
   ADMIN_SECTION_UPDATE_SUCCESS,
   QUIZ_LESSON_HINT,
+  adminCurriculumLoadMessage,
   adminCurriculumSaveMessage,
 } from '../utils/admin-curriculum-messages';
 import type { QuizConfigStatus } from '../hooks/useQuizConfigStatuses';
@@ -36,6 +36,7 @@ import {
 import {
   emptyLessonFormValues,
   emptySectionFormValues,
+  lessonContentUrlFromLesson,
   lessonFormValuesFromLesson,
   createLessonPayloadFromForm,
   lessonFormValuesForTypeChange,
@@ -92,9 +93,46 @@ export function AdminCurriculumSection({
   const [editingSection, setEditingSection] = useState(false);
   const [addingLesson, setAddingLesson] = useState(false);
   const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
+  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
+  const [editingLessonError, setEditingLessonError] = useState<string | null>(null);
   const [lessonReordering, setLessonReordering] = useState(false);
+  const editingLessonRequestRef = useRef(0);
 
   const sortedLessons = useMemo(() => sortBySortOrder(lessons), [lessons]);
+
+  function closeLessonEditor() {
+    editingLessonRequestRef.current += 1;
+    setEditingLessonId(null);
+    setEditingLesson(null);
+    setEditingLessonError(null);
+  }
+
+  function openLessonEditor(lessonId: string) {
+    setAddingLesson(false);
+    setEditingLessonId(lessonId);
+    setEditingLesson(null);
+    setEditingLessonError(null);
+    const requestId = editingLessonRequestRef.current + 1;
+    editingLessonRequestRef.current = requestId;
+    void getLesson(accessToken, courseId, section.id, lessonId)
+      .then((detail) => {
+        if (editingLessonRequestRef.current !== requestId) {
+          return;
+        }
+        if (detail.id !== lessonId) {
+          return;
+        }
+        setEditingLesson(detail);
+      })
+      .catch((cause: unknown) => {
+        if (editingLessonRequestRef.current !== requestId) {
+          return;
+        }
+        const message = adminCurriculumLoadMessage(cause);
+        setEditingLessonError(message);
+        onToastError(message);
+      });
+  }
 
   const lessonReorder = useCurriculumItemReorder(sortedLessons, async (orderedIds) => {
     setLessonReordering(true);
@@ -186,44 +224,60 @@ export function AdminCurriculumSection({
               onDrop={lessonReorder.onDrop(lesson.id)}
             >
               {editingLessonId === lesson.id ? (
-                <AdminLessonForm
-                  key={`lesson-edit-${lesson.id}`}
-                  mode="edit"
-                  formId={`lesson-edit-${lesson.id}`}
-                  initialSnapshotKey={`${lesson.id}:${lesson.sortOrder}:${lesson.contentUrl ?? ''}:${lesson.lessonType}:${lesson.article?.extractionStatus ?? ''}`}
-                  initialValues={lessonFormValuesFromLesson(lesson)}
-                  submitLabel="Lưu bài học"
-                  onCancel={() => setEditingLessonId(null)}
-                  articleExtraction={
-                    lesson.lessonType === 'ARTICLE' ? (
-                      <AdminArticleExtractionControls
-                        courseId={courseId}
-                        sectionId={section.id}
-                        lessonId={lesson.id}
-                        accessToken={accessToken}
-                        article={lesson.article}
-                        onLessonUpdated={onRefresh}
-                        onToastSuccess={onToastSuccess}
-                        onToastError={onToastError}
-                      />
-                    ) : null
-                  }
-                onSubmit={async (values) => {
-                  await updateLesson(
-                    accessToken,
-                    courseId,
-                    section.id,
-                    lesson.id,
-                    updateLessonPayloadFromForm(values),
-                  );
-                  onToastSuccess(ADMIN_LESSON_UPDATE_SUCCESS);
-                  setEditingLessonId(null);
-                  await onRefresh();
-                }}
-                onError={onToastError}
-              />
-            ) : (
-              <>
+                editingLesson?.id === lesson.id ? (
+                  <AdminLessonForm
+                    key={`lesson-edit-${editingLesson.id}`}
+                    mode="edit"
+                    formId={`lesson-edit-${editingLesson.id}`}
+                    initialSnapshotKey={`${editingLesson.id}:${editingLesson.sortOrder}:${lessonContentUrlFromLesson(editingLesson)}:${editingLesson.lessonType}:${editingLesson.article?.extractionStatus ?? ''}`}
+                    initialValues={lessonFormValuesFromLesson(editingLesson)}
+                    submitLabel="Lưu bài học"
+                    onCancel={closeLessonEditor}
+                    articleExtraction={
+                      editingLesson.lessonType === 'ARTICLE' ? (
+                        <AdminArticleExtractionControls
+                          courseId={courseId}
+                          sectionId={section.id}
+                          lessonId={editingLesson.id}
+                          accessToken={accessToken}
+                          article={lesson.article ?? editingLesson.article}
+                          onLessonUpdated={onRefresh}
+                          onToastSuccess={onToastSuccess}
+                          onToastError={onToastError}
+                        />
+                      ) : null
+                    }
+                    onSubmit={async (values) => {
+                      const lessonId = editingLesson.id;
+                      await updateLesson(
+                        accessToken,
+                        courseId,
+                        section.id,
+                        lessonId,
+                        updateLessonPayloadFromForm(values),
+                      );
+                      onToastSuccess(ADMIN_LESSON_UPDATE_SUCCESS);
+                      closeLessonEditor();
+                      await onRefresh();
+                    }}
+                    onError={onToastError}
+                  />
+                ) : (
+                  <div className="admin-lesson-edit-loading">
+                    {editingLessonError ? (
+                      <div className="section-error" role="alert">
+                        <p>{editingLessonError}</p>
+                      </div>
+                    ) : (
+                      <p className="muted">Đang tải bài học…</p>
+                    )}
+                    <button type="button" className="button-secondary" onClick={closeLessonEditor}>
+                      Hủy
+                    </button>
+                  </div>
+                )
+              ) : (
+                <>
                 <div className="admin-lesson-summary">
                   <p className="admin-lesson-title">
                     <AdminLessonTypeIcon type={lesson.lessonType} />
@@ -274,16 +328,13 @@ export function AdminCurriculumSection({
                   <button
                     type="button"
                     className="button-secondary"
-                    onClick={() => {
-                      setAddingLesson(false);
-                      setEditingLessonId(lesson.id);
-                    }}
+                    onClick={() => openLessonEditor(lesson.id)}
                   >
                     Sửa bài học
                   </button>
                 </div>
-              </>
-            )}
+                </>
+              )}
             </li>
           ))}
         </ul>
@@ -315,7 +366,7 @@ export function AdminCurriculumSection({
           type="button"
           className="button-secondary admin-add-lesson"
           onClick={() => {
-            setEditingLessonId(null);
+            closeLessonEditor();
             setAddingLesson(true);
           }}
         >
@@ -456,14 +507,16 @@ export function AdminLessonForm({
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const inFlightRef = useRef(false);
+  const [appliedSnapshotKey, setAppliedSnapshotKey] = useState(initialSnapshotKey);
 
-  const clientErrors = useMemo(() => validateLessonForm(values), [values]);
-
-  useEffect(() => {
+  if (appliedSnapshotKey !== initialSnapshotKey) {
+    setAppliedSnapshotKey(initialSnapshotKey);
     setValues(initialValues);
     setSubmitAttempted(false);
     setFormError(null);
-  }, [initialSnapshotKey, initialValues]);
+  }
+
+  const clientErrors = useMemo(() => validateLessonForm(values), [values]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();

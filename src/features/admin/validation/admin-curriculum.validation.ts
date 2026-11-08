@@ -159,16 +159,41 @@ export function emptyLessonFormValues(): LessonFormValues {
   };
 }
 
+/**
+ * URL stored on the lesson. VIDEO and ASSIGNMENT use `contentUrl`.
+ * ARTICLE uses `contentUrl`, then `article.sourceUrl` when the list/detail
+ * payload only echoes the saved link on the article snapshot.
+ * QUIZ has no content URL.
+ */
+export function lessonContentUrlFromLesson(lesson: {
+  lessonType: LessonType;
+  contentUrl: string | null;
+  article?: { sourceUrl?: string | null } | null;
+}): string {
+  if (lesson.lessonType === 'QUIZ') {
+    return '';
+  }
+  const contentUrl = lesson.contentUrl?.trim() ?? '';
+  if (contentUrl) {
+    return contentUrl;
+  }
+  if (lesson.lessonType === 'ARTICLE') {
+    return lesson.article?.sourceUrl?.trim() ?? '';
+  }
+  return '';
+}
+
 export function lessonFormValuesFromLesson(lesson: {
   title: string;
   lessonType: LessonType;
   contentUrl: string | null;
   durationSeconds: number | null;
+  article?: { sourceUrl?: string | null } | null;
 }): LessonFormValues {
   return {
     title: lesson.title,
     lessonType: lesson.lessonType,
-    contentUrl: lesson.contentUrl ?? '',
+    contentUrl: lessonContentUrlFromLesson(lesson),
     durationSeconds:
       lesson.durationSeconds === null ? '' : String(lesson.durationSeconds),
   };

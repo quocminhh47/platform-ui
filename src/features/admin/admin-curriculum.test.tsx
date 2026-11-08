@@ -32,6 +32,7 @@ vi.mock('./api/admin-sections.api', () => ({
 
 vi.mock('./api/admin-lessons.api', () => ({
   listSectionLessons: vi.fn(),
+  getLesson: vi.fn(),
   createLesson: vi.fn(),
   updateLesson: vi.fn(),
   reorderLessons: vi.fn(),
@@ -139,6 +140,7 @@ beforeEach(() => {
   sectionsApi.createSection.mockReset();
   sectionsApi.updateSection.mockReset();
   lessonsApi.listSectionLessons.mockReset();
+  lessonsApi.getLesson.mockReset();
   lessonsApi.createLesson.mockReset();
   lessonsApi.updateLesson.mockReset();
   lessonsApi.reorderLessons.mockReset();
@@ -148,6 +150,28 @@ beforeEach(() => {
   quizApi.getQuiz.mockRejectedValue(new ApiError(404, 'Not found'));
   sectionsApi.listCourseSections.mockResolvedValue([]);
   lessonsApi.listSectionLessons.mockResolvedValue([]);
+  lessonsApi.getLesson.mockImplementation(async (_token, _courseId, _sectionId, lessonId) => {
+    const settled = await Promise.all(
+      lessonsApi.listSectionLessons.mock.results.map(async (result) => {
+        try {
+          return await result.value;
+        } catch {
+          return null;
+        }
+      }),
+    );
+    for (let index = settled.length - 1; index >= 0; index -= 1) {
+      const value = settled[index];
+      if (!Array.isArray(value)) {
+        continue;
+      }
+      const match = value.find((item: Lesson) => item.id === lessonId);
+      if (match) {
+        return match;
+      }
+    }
+    throw new Error(`Lesson ${lessonId} was not in the section list mock`);
+  });
   setAccessToken('admin-token');
   auth.fetchCurrentUser.mockResolvedValue(admin);
   catalogCourses.getCourseById.mockResolvedValue(course);
@@ -308,6 +332,74 @@ describe('AdminCurriculumPage', () => {
     expect(screen.queryByLabelText(/^Thứ tự/)).toBeNull();
   });
 
+  it('prefills the URL from the lesson detail when the section list omits it', async () => {
+    const listed: Lesson = {
+      ...lesson,
+      title: 'Welcome Video',
+      contentUrl: null,
+      durationSeconds: 300,
+    };
+    sectionsApi.listCourseSections.mockResolvedValue([sectionB]);
+    lessonsApi.listSectionLessons.mockResolvedValue([listed]);
+    lessonsApi.getLesson.mockResolvedValue({
+      ...listed,
+      contentUrl: 'https://example.com/welcome.mp4',
+    });
+
+    renderCurriculum();
+    await screen.findByRole('heading', { name: 'Chương A' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sửa bài học' }));
+
+    expect(((await screen.findByLabelText(/^URL video/)) as HTMLInputElement).value).toBe(
+      'https://example.com/welcome.mp4',
+    );
+    expect((screen.getByLabelText(/^Tiêu đề bài học/) as HTMLInputElement).value).toBe(
+      'Welcome Video',
+    );
+    expect(lessonsApi.getLesson).toHaveBeenCalledWith(
+      'admin-token',
+      'course-1',
+      'sec-1',
+      'lesson-1',
+    );
+  });
+
+  it('prefills an article URL from contentUrl or article.sourceUrl', async () => {
+    const listed: Lesson = {
+      ...lesson,
+      title: 'Reading',
+      lessonType: 'ARTICLE',
+      contentUrl: null,
+      article: {
+        sourceUrl: null,
+        extractedTitle: null,
+        author: null,
+        publishedAt: null,
+        featuredImageUrl: null,
+        contentHtml: null,
+        extractionStatus: 'SUCCESS',
+        extractedAt: null,
+      },
+    };
+    sectionsApi.listCourseSections.mockResolvedValue([sectionB]);
+    lessonsApi.listSectionLessons.mockResolvedValue([listed]);
+    lessonsApi.getLesson.mockResolvedValue({
+      ...listed,
+      contentUrl: null,
+      article: { ...listed.article!, sourceUrl: 'https://example.com/article' },
+    });
+
+    renderCurriculum();
+    await screen.findByRole('heading', { name: 'Chương A' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sửa bài học' }));
+
+    expect(((await screen.findByLabelText(/^URL bài đọc/)) as HTMLInputElement).value).toBe(
+      'https://example.com/article',
+    );
+  });
+
   it('loads the newly selected lesson when switching edit targets', async () => {
     const lessonA: Lesson = {
       ...lesson,
@@ -338,6 +430,111 @@ describe('AdminCurriculumPage', () => {
     expect(
       ((await screen.findByLabelText(/^Tiêu đề bài học/)) as HTMLInputElement).value,
     ).toBe('Lesson B');
+    expect((screen.getByLabelText(/^URL video/) as HTMLInputElement).value).toBe(
+      'https://example.com/b.mp4',
+    );
+  });
+
+  it('does not keep the previous lesson URL when the list omits content URLs', async () => {
+    const lessonA: Lesson = {
+      ...lesson,
+      id: 'lesson-a',
+      title: 'Lesson A',
+      contentUrl: null,
+    };
+    const lessonB: Lesson = {
+      ...lesson,
+      id: 'lesson-b',
+      title: 'Lesson B',
+      contentUrl: null,
+      sortOrder: 2,
+    };
+    sectionsApi.listCourseSections.mockResolvedValue([sectionB]);
+    lessonsApi.listSectionLessons.mockResolvedValue([lessonA, lessonB]);
+    let resolveLessonA: (value: Lesson) => void = () => {};
+    lessonsApi.getLesson.mockImplementation((_token, _courseId, _sectionId, lessonId) => {
+      if (lessonId === 'lesson-a') {
+        return new Promise<Lesson>((resolve) => {
+          resolveLessonA = resolve;
+        });
+      }
+      return Promise.resolve({ ...lessonB, contentUrl: 'https://example.com/b.mp4' });
+    });
+
+    renderCurriculum();
+    await screen.findByRole('heading', { name: 'Chương A' });
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Sửa bài học' })[0]);
+    fireEvent.click(screen.getByRole('button', { name: 'Sửa bài học' }));
+
+    expect(((await screen.findByLabelText(/^URL video/)) as HTMLInputElement).value).toBe(
+      'https://example.com/b.mp4',
+    );
+    resolveLessonA({ ...lessonA, contentUrl: 'https://example.com/a.mp4' });
+    await waitFor(() =>
+      expect((screen.getByLabelText(/^URL video/) as HTMLInputElement).value).toBe(
+        'https://example.com/b.mp4',
+      ),
+    );
+    expect((screen.getByLabelText(/^Tiêu đề bài học/) as HTMLInputElement).value).toBe('Lesson B');
+  });
+
+  it('saves an edited URL and prefills that URL the next time the lesson is opened', async () => {
+    const listed: Lesson = {
+      ...lesson,
+      title: 'Welcome Video',
+      contentUrl: null,
+    };
+    sectionsApi.listCourseSections.mockResolvedValue([sectionB]);
+    lessonsApi.listSectionLessons.mockResolvedValue([listed]);
+    lessonsApi.getLesson
+      .mockResolvedValueOnce({ ...listed, contentUrl: 'https://example.com/old.mp4' })
+      .mockResolvedValueOnce({ ...listed, contentUrl: 'https://example.com/new.mp4' });
+    lessonsApi.updateLesson.mockResolvedValue({
+      ...listed,
+      contentUrl: 'https://example.com/new.mp4',
+    });
+
+    renderCurriculum();
+    await screen.findByRole('heading', { name: 'Chương A' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sửa bài học' }));
+    fireEvent.change(await screen.findByLabelText(/^URL video/), {
+      target: { value: 'https://example.com/new.mp4' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu bài học' }));
+
+    await waitFor(() => expect(lessonsApi.updateLesson).toHaveBeenCalled());
+    expect(lessonsApi.updateLesson).toHaveBeenCalledWith(
+      'admin-token',
+      'course-1',
+      'sec-1',
+      'lesson-1',
+      {
+        title: 'Welcome Video',
+        lessonType: 'VIDEO',
+        contentUrl: 'https://example.com/new.mp4',
+        durationSeconds: 120,
+      },
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Sửa bài học' }));
+    expect(((await screen.findByLabelText(/^URL video/)) as HTMLInputElement).value).toBe(
+      'https://example.com/new.mp4',
+    );
+  });
+
+  it('starts a new lesson with an empty URL and does not load an existing lesson', async () => {
+    sectionsApi.listCourseSections.mockResolvedValue([sectionB]);
+    lessonsApi.listSectionLessons.mockResolvedValue([lesson]);
+
+    renderCurriculum();
+    await screen.findByRole('heading', { name: 'Chương A' });
+
+    fireEvent.click(screen.getByRole('button', { name: '+ Thêm bài học' }));
+
+    expect(((await screen.findByLabelText(/^URL video/)) as HTMLInputElement).value).toBe('');
+    expect(lessonsApi.getLesson).not.toHaveBeenCalled();
   });
 
   it('preserves unchanged fields when only the title is edited', async () => {
@@ -384,7 +581,7 @@ describe('AdminCurriculumPage', () => {
     await screen.findByRole('heading', { name: 'Chương A' });
 
     fireEvent.click(screen.getByRole('button', { name: 'Sửa bài học' }));
-    fireEvent.change(screen.getByLabelText(/^Tiêu đề bài học/), {
+    fireEvent.change(await screen.findByLabelText(/^Tiêu đề bài học/), {
       target: { value: 'Changed but canceled' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Hủy' }));
