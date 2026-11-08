@@ -26,10 +26,11 @@ Optional demo courses: `lms/scripts/seed/README.md`.
 From `platform-ui/`:
 
 ```bash
-cp .env.example .env
 npm install
 npm run dev
 ```
+
+Local API URL defaults from `.env.development` (`http://localhost:8080`). Override with `.env` or `.env.local` if needed. Production hosting: see [DEPLOYMENT.md](../DEPLOYMENT.md).
 
 Default dev URL: **http://localhost:5173** — add this origin to backend `CORS_ALLOWED_ORIGINS`.
 
