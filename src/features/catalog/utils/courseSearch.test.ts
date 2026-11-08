@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { resolveCourseImageUrl } from '../config/courseImages';
 import type { Course } from '../types/course.types';
-import { searchLoadedCourses } from './courseSearch';
+import { catalogPathWithSearchQuery, searchLoadedCourses } from './courseSearch';
 
 function course(partial: Partial<Course> & Pick<Course, 'id' | 'title'>): Course {
   return {
@@ -29,6 +29,14 @@ describe('searchLoadedCourses', () => {
   it('matches title, description, and instructor on the loaded list only', () => {
     expect(searchLoadedCourses(courses, 'grammar').map((item) => item.id)).toEqual(['a']);
     expect(searchLoadedCourses(courses, 'lan pham').map((item) => item.id)).toEqual(['b']);
+  });
+});
+
+describe('catalogPathWithSearchQuery', () => {
+  it('preserves the search query in the catalog URL', () => {
+    expect(catalogPathWithSearchQuery('')).toBe('/courses');
+    expect(catalogPathWithSearchQuery('  ')).toBe('/courses');
+    expect(catalogPathWithSearchQuery('HSK 1')).toBe('/courses?q=HSK%201');
   });
 });
 

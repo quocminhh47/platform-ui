@@ -1,14 +1,49 @@
 import { apiRequest } from '../../../services/api/client';
+import { appendPageQuery, type PageResponse } from '../../../types/pagination.types';
 import type { Course } from '../types/course.types';
 import type { Lesson } from '../types/lesson.types';
 import type { Section } from '../types/section.types';
 
+export type CourseListParams = {
+  published?: boolean;
+  instructorId?: string;
+  q?: string;
+  page?: number;
+  size?: number;
+  sort?: string;
+};
+
+/** GET /api/courses — paginated list with optional filters. */
+export function listCoursesPage(
+  accessToken: string | null,
+  params: CourseListParams = {},
+): Promise<PageResponse<Course>> {
+  const path = appendPageQuery('/api/courses', {
+    published: params.published,
+    instructorId: params.instructorId,
+    q: params.q,
+    page: params.page ?? 0,
+    size: params.size ?? 20,
+    sort: params.sort,
+  });
+  return apiRequest<PageResponse<Course>>(path, { accessToken });
+}
+
 /**
- * GET /api/courses?published=true
- * Non-admin callers only ever receive published courses.
+ * Convenience helper for callers that only need the first page of published courses.
  */
-export function listPublishedCourses(accessToken: string | null): Promise<Course[]> {
-  return apiRequest<Course[]>('/api/courses?published=true', { accessToken });
+export async function listPublishedCourses(
+  accessToken: string | null,
+  options: { page?: number; size?: number; q?: string; sort?: string } = {},
+): Promise<Course[]> {
+  const page = await listCoursesPage(accessToken, {
+    published: true,
+    page: options.page ?? 0,
+    size: options.size ?? 20,
+    q: options.q,
+    sort: options.sort,
+  });
+  return page.content;
 }
 
 /** GET /api/courses/{id} — unpublished courses return 404 for non-admin callers. */

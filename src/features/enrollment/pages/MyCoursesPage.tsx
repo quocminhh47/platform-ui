@@ -1,4 +1,5 @@
 import { Breadcrumb } from '../../../components/common/Breadcrumb';
+import { UI_COPY } from '../../../ui/ui-copy';
 import { breadcrumbHome, breadcrumbMyCourses } from '../../../navigation/breadcrumb-trail';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { DashboardHeader } from '../../dashboard/components/DashboardHeader';
@@ -27,34 +28,34 @@ export function MyCoursesPage() {
     <DashboardLayout sidebar={<DashboardSidebar />} header={<DashboardHeader user={user} />}>
       <Breadcrumb items={[breadcrumbHome(), breadcrumbMyCourses()]} />
       <section className="my-courses" aria-labelledby="my-courses-heading">
-        <h1 id="my-courses-heading">Khóa học của tôi</h1>
+        <h1 id="my-courses-heading">{UI_COPY.navMyCourses}</h1>
 
-        {mine.loading ? <p className="page-status">Loading your courses…</p> : null}
+        {mine.loading ? <p className="page-status">Đang tải khóa học…</p> : null}
 
         {!mine.loading && mine.error ? (
           <div className="section-error" role="alert">
             <p>{mine.error}</p>
             <button type="button" onClick={mine.reload}>
-              Try again
+              {UI_COPY.tryAgain}
             </button>
           </div>
         ) : null}
 
         {!mine.loading && !mine.error && enrollments.length === 0 ? (
           <div className="empty-state">
-            <p className="empty-state-title">You are not enrolled in any courses yet</p>
-            <p className="muted">Open a published course and enroll to see it here.</p>
+            <p className="empty-state-title">Bạn chưa ghi danh khóa học nào</p>
+            <p className="muted">Mở khóa học đã xuất bản và ghi danh để thấy tại đây.</p>
           </div>
         ) : null}
 
         {!mine.loading && !mine.error && active.length > 0 ? (
-          <EnrollmentGroup title="In progress" items={active} />
+          <EnrollmentGroup title="Đang học" items={active} />
         ) : null}
         {!mine.loading && !mine.error && completed.length > 0 ? (
-          <EnrollmentGroup title="Completed" items={completed} />
+          <EnrollmentGroup title={UI_COPY.completed} items={completed} />
         ) : null}
         {!mine.loading && !mine.error && inactive.length > 0 ? (
-          <EnrollmentGroup title="Not currently available" items={inactive} />
+          <EnrollmentGroup title="Tạm không khả dụng" items={inactive} />
         ) : null}
       </section>
     </DashboardLayout>

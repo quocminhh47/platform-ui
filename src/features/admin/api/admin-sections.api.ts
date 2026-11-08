@@ -33,3 +33,16 @@ export function updateSection(
     body: payload,
   });
 }
+
+/** PUT /api/courses/{courseId}/sections/reorder — ADMIN only. */
+export function reorderSections(
+  accessToken: string,
+  courseId: string,
+  orderedIds: string[],
+): Promise<void> {
+  return apiRequest<void>(`/api/courses/${courseId}/sections/reorder`, {
+    method: 'PUT',
+    accessToken,
+    body: { orderedIds },
+  });
+}

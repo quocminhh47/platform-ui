@@ -15,6 +15,7 @@ import type { Section } from '../catalog/types/section.types';
 import * as lessonsApi from './api/lessons.api';
 import * as progressApi from './api/progress.api';
 import { LearningWorkspacePage } from './pages/LearningWorkspacePage';
+import { mockPage } from '../../testing/mockPageResponse';
 
 vi.mock('../auth/api/auth.api', () => ({
   fetchCurrentUser: vi.fn(),
@@ -23,7 +24,7 @@ vi.mock('../auth/api/auth.api', () => ({
 }));
 
 vi.mock('../catalog/api/courses.api', () => ({
-  listPublishedCourses: vi.fn(),
+  listCoursesPage: vi.fn(),
   getCourseById: vi.fn(),
   listCourseSections: vi.fn(),
   listSectionLessons: vi.fn(),
@@ -140,13 +141,13 @@ beforeEach(() => {
   courses.getCourseById.mockReset();
   courses.listCourseSections.mockReset();
   courses.listSectionLessons.mockReset();
-  courses.listPublishedCourses.mockReset();
+  courses.listCoursesPage.mockReset();
   lessons.getLessonContent.mockReset();
   progress.listCourseProgress.mockReset();
   progress.completeLessonProgress.mockReset();
   progress.listCourseProgress.mockResolvedValue([]);
   courses.getCourseById.mockResolvedValue(course);
-  courses.listPublishedCourses.mockResolvedValue([]);
+  courses.listCoursesPage.mockResolvedValue(mockPage([]));
   courses.listCourseSections.mockResolvedValue(sections);
   courses.listSectionLessons.mockImplementation(async (_courseId, sectionId) => {
     if (sectionId === sectionA) {
@@ -188,7 +189,7 @@ describe('learning workspace curriculum', () => {
     expect(video?.getAttribute('src')).toBe('https://cdn.example/algebra.mp4');
     expect(video?.getAttribute('src')).not.toBe(summaryA.contentUrl);
     expect(lessons.getLessonContent).toHaveBeenCalledWith(courseId, sectionA, lessonA, 'token');
-    expect(screen.getByRole('main', { name: 'Lesson' })).toBeTruthy();
+    expect(screen.getByRole('main', { name: 'Bài học' })).toBeTruthy();
     const sidebarScroll = document.querySelector('.learning-sidebar-scroll');
     const stage = document.querySelector('.learning-stage');
     expect(sidebarScroll).toBeTruthy();
@@ -203,25 +204,25 @@ describe('learning workspace curriculum', () => {
 
     expect(await screen.findByRole('heading', { name: 'What is algebra?' })).toBeTruthy();
     expect(lessons.getLessonContent).toHaveBeenCalledTimes(1);
-    const stage = screen.getByRole('main', { name: 'Lesson' });
+    const stage = screen.getByRole('main', { name: 'Bài học' });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Collapse curriculum' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Thu gọn nội dung khóa học' }));
 
-    expect(screen.getByRole('button', { name: 'Expand curriculum' }).getAttribute('aria-expanded')).toBe(
+    expect(screen.getByRole('button', { name: 'Mở rộng nội dung khóa học' }).getAttribute('aria-expanded')).toBe(
       'false',
     );
     expect(screen.queryByRole('button', { name: 'Basics' })).toBeNull();
     expect(screen.getByRole('heading', { name: 'What is algebra?' })).toBeTruthy();
-    expect(screen.getByRole('main', { name: 'Lesson' })).toBe(stage);
+    expect(screen.getByRole('main', { name: 'Bài học' })).toBe(stage);
     expect(lessons.getLessonContent).toHaveBeenCalledTimes(1);
     expect(router.state.location.pathname).toBe(`/courses/${courseId}/learn`);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Expand curriculum' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Mở rộng nội dung khóa học' }));
 
     expect(
-      screen.getByRole('button', { name: 'Collapse curriculum' }).getAttribute('aria-expanded'),
+      screen.getByRole('button', { name: 'Thu gọn nội dung khóa học' }).getAttribute('aria-expanded'),
     ).toBe('true');
-    expect(screen.getByRole('main', { name: 'Lesson' })).toBe(stage);
+    expect(screen.getByRole('main', { name: 'Bài học' })).toBe(stage);
     expect(screen.getByRole('link', { name: 'What is algebra?' }).getAttribute('aria-current')).toBe(
       'page',
     );
@@ -243,7 +244,7 @@ describe('learning workspace curriculum', () => {
     expect(screen.getByRole('link', { name: 'What is algebra?' })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Basics/ }).getAttribute('aria-expanded')).toBe('true');
 
-    fireEvent.click(screen.getByRole('link', { name: 'Next lesson' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Bài tiếp theo' }));
 
     await waitFor(() =>
       expect(router.state.location.pathname).toBe(`/courses/${courseId}/learn/${lessonB}`),
@@ -313,10 +314,10 @@ describe('learning workspace curriculum', () => {
     expect(await screen.findByRole('heading', { name: 'Reading handout' })).toBeTruthy();
     const iframe = document.querySelector('iframe');
     expect(iframe?.getAttribute('src')).toBe('https://docs.google.com/document/d/docId9AbC/preview');
-    const link = screen.getByRole('link', { name: 'Open in Google Docs' });
-    expect(link.getAttribute('href')).toBe(docUrl);
-    expect(link.closest('.learning-external-fallback-secondary')).toBeTruthy();
-    expect(screen.getByText(/may not work for every file type/i)).toBeTruthy();
+    const link = screen.getAllByRole('link').find((node) => node.getAttribute('href') === docUrl);
+    expect(link).toBeDefined();
+    expect(link!.closest('.learning-external-fallback-secondary')).toBeTruthy();
+    expect(screen.getByText(/Xem trước có thể không hoạt động/i)).toBeTruthy();
   });
 
   it('auto-completes a video lesson after protected content loads and updates sidebar progress', async () => {
@@ -332,7 +333,7 @@ describe('learning workspace curriculum', () => {
     renderWorkspace();
 
     expect(await screen.findByRole('heading', { name: 'What is algebra?' })).toBeTruthy();
-    expect(screen.getByText('Not completed')).toBeTruthy();
+    expect(screen.getByText('Chưa hoàn thành')).toBeTruthy();
     expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('0');
     expect(progress.completeLessonProgress).not.toHaveBeenCalled();
 
@@ -340,11 +341,11 @@ describe('learning workspace curriculum', () => {
     expect(video).toBeTruthy();
     fireEvent.loadedData(video!);
 
-    await waitFor(() => expect(screen.getByText('Completed')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText('Đã hoàn thành')).toBeTruthy());
     expect(progress.completeLessonProgress).toHaveBeenCalledTimes(1);
     expect(progress.completeLessonProgress).toHaveBeenCalledWith(courseId, lessonA, 'token');
     expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('50');
-    expect(screen.getByText('1 of 2 lessons completed')).toBeTruthy();
+    expect(screen.getByText('1 / 2 bài đã hoàn thành')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Mark as complete' })).toBeNull();
 
     fireEvent.loadedData(video!);
@@ -374,5 +375,85 @@ describe('learning workspace curriculum', () => {
     expect(alert.textContent).toMatch(/active enrollment/i);
     expect(alert.textContent).not.toMatch(/summary\.example/);
     expect(document.querySelector('video')).toBeNull();
+  });
+
+  describe('course completion callout', () => {
+    it('shows the callout when all lessons are completed', async () => {
+      setAccessToken('token');
+      auth.fetchCurrentUser.mockResolvedValue(student);
+      // Both lessons completed
+      progress.listCourseProgress.mockResolvedValue([
+        {
+          lessonId: lessonA,
+          isCompleted: true,
+          watchedDurationSeconds: 60,
+          lastAccessedAt: '2026-01-01T00:00:00Z',
+        },
+        {
+          lessonId: lessonB,
+          isCompleted: true,
+          watchedDurationSeconds: 60,
+          lastAccessedAt: '2026-01-02T00:00:00Z',
+        },
+      ]);
+      progress.completeLessonProgress.mockResolvedValue({
+        lessonId: lessonA,
+        isCompleted: true,
+        watchedDurationSeconds: 60,
+        lastAccessedAt: '2026-01-01T00:00:00Z',
+      });
+
+      renderWorkspace();
+
+      await screen.findByRole('heading', { name: 'What is algebra?' });
+      expect(await screen.findByRole('status')).toBeTruthy();
+      expect(screen.getByText(/Chúc mừng/)).toBeTruthy();
+      expect(screen.getByRole('link', { name: 'Xem khóa học của tôi' })).toBeTruthy();
+    });
+
+    it('does not show the callout when progress is partially complete', async () => {
+      setAccessToken('token');
+      auth.fetchCurrentUser.mockResolvedValue(student);
+      // Only lessonA complete; lessonB not started
+      progress.listCourseProgress.mockResolvedValue([
+        {
+          lessonId: lessonA,
+          isCompleted: true,
+          watchedDurationSeconds: 60,
+          lastAccessedAt: '2026-01-01T00:00:00Z',
+        },
+      ]);
+
+      renderWorkspace();
+
+      await screen.findByRole('heading', { name: 'What is algebra?' });
+      await waitFor(() => expect(progress.listCourseProgress).toHaveBeenCalled());
+      expect(screen.queryByText(/Chúc mừng/)).toBeNull();
+    });
+
+    it('does not show the callout when progress fails to load', async () => {
+      setAccessToken('token');
+      auth.fetchCurrentUser.mockResolvedValue(student);
+      progress.listCourseProgress.mockRejectedValue(new ApiError(500, 'db error'));
+
+      renderWorkspace();
+
+      await screen.findByRole('heading', { name: 'What is algebra?' });
+      await waitFor(() => expect(progress.listCourseProgress).toHaveBeenCalled());
+      expect(screen.queryByText(/Chúc mừng/)).toBeNull();
+    });
+
+    it('does not show the callout for a course with no lessons', async () => {
+      setAccessToken('token');
+      auth.fetchCurrentUser.mockResolvedValue(student);
+      // Empty sections → totalCount = 0
+      courses.listCourseSections.mockResolvedValue([]);
+
+      renderWorkspace();
+
+      expect(await screen.findByText('Khóa học chưa có chương nào.')).toBeTruthy();
+      await waitFor(() => expect(progress.listCourseProgress).toHaveBeenCalled());
+      expect(screen.queryByText(/Chúc mừng/)).toBeNull();
+    });
   });
 });

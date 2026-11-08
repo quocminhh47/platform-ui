@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/hooks/useAuth';
-import { listUsers } from '../api/admin-users.api';
+import { listUsersPage } from '../api/admin-users.api';
 import { adminInstructorsLoadMessage } from '../utils/admin-form-messages';
 import { filterEligibleInstructors } from '../utils/eligible-instructors';
 import type { User } from '../../auth/types/auth.types';
@@ -47,12 +47,12 @@ export function useEligibleInstructors(enabled: boolean): EligibleInstructorsSta
 
     let active = true;
 
-    listUsers(accessToken)
+    listUsersPage(accessToken, { page: 0, size: 100, sort: 'fullName,asc' })
       .then((result) => {
         if (!active) {
           return;
         }
-        setUsers(result);
+        setUsers(result.content);
         setError(null);
       })
       .catch((cause: unknown) => {

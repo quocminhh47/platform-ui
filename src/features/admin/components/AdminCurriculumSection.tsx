@@ -1,11 +1,25 @@
-import { useMemo, useRef, useState, type FormEvent } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type DragEvent,
+  type FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react';
 import { Link } from 'react-router-dom';
 import { FormField } from '../../auth/components/FormField';
 import { fieldDescribedBy } from '../../auth/components/fieldDescribedBy';
 import type { Lesson } from '../../catalog/types/lesson.types';
 import type { Section } from '../../catalog/types/section.types';
-import { createLesson, updateLesson } from '../api/admin-lessons.api';
+import { createLesson, reorderLessons, updateLesson } from '../api/admin-lessons.api';
 import { createSection, updateSection } from '../api/admin-sections.api';
+import { AdminArticleExtractionControls } from './AdminArticleExtractionControls';
+import { AdminCurriculumReorderControls } from './AdminCurriculumReorderControls';
+import { adminArticleExtractionStatusLabel } from '../utils/admin-article-extraction';
+import { useCurriculumItemReorder } from '../hooks/useCurriculumItemReorder';
+import { sortBySortOrder } from '../utils/sort-by-sort-order';
 import {
   ADMIN_LESSON_CREATE_SUCCESS,
   ADMIN_LESSON_UPDATE_SUCCESS,
@@ -21,10 +35,10 @@ import {
 } from '../utils/lesson-type-labels';
 import {
   emptyLessonFormValues,
+  emptySectionFormValues,
   lessonFormValuesFromLesson,
   createLessonPayloadFromForm,
   lessonFormValuesForTypeChange,
-  parseOptionalInt,
   sectionFormValuesFromSection,
   updateLessonPayloadFromForm,
   validateLessonForm,
@@ -42,6 +56,18 @@ type AdminCurriculumSectionProps = {
   onRefresh: () => Promise<unknown>;
   onToastSuccess: (message: string) => void;
   onToastError: (message: string) => void;
+  sectionPosition: number;
+  sectionCount: number;
+  sectionDragOver?: boolean;
+  sectionReorderBusy?: boolean;
+  onMoveSection: (direction: 'up' | 'down') => Promise<void>;
+  sectionDragHandle: {
+    onDragStart: (event: DragEvent<HTMLButtonElement>) => void;
+    onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void;
+  };
+  onSectionDragOver: (event: DragEvent<HTMLElement>) => void;
+  onSectionDragLeave: () => void;
+  onSectionDrop: (event: DragEvent<HTMLElement>) => void;
 };
 
 export function AdminCurriculumSection({
@@ -53,35 +79,85 @@ export function AdminCurriculumSection({
   onRefresh,
   onToastSuccess,
   onToastError,
+  sectionPosition,
+  sectionCount,
+  sectionDragOver,
+  sectionReorderBusy = false,
+  onMoveSection,
+  sectionDragHandle,
+  onSectionDragOver,
+  onSectionDragLeave,
+  onSectionDrop,
 }: AdminCurriculumSectionProps) {
   const [editingSection, setEditingSection] = useState(false);
   const [addingLesson, setAddingLesson] = useState(false);
   const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
+  const [lessonReordering, setLessonReordering] = useState(false);
+
+  const sortedLessons = useMemo(() => sortBySortOrder(lessons), [lessons]);
+
+  const lessonReorder = useCurriculumItemReorder(sortedLessons, async (orderedIds) => {
+    setLessonReordering(true);
+    try {
+      await reorderLessons(accessToken, courseId, section.id, orderedIds);
+      await onRefresh();
+    } catch (cause: unknown) {
+      onToastError(adminCurriculumSaveMessage(cause));
+      throw cause;
+    } finally {
+      setLessonReordering(false);
+    }
+  });
 
   return (
-    <article className="admin-curriculum-section" aria-labelledby={`section-${section.id}`}>
+    <article
+      className="admin-curriculum-section admin-curriculum-section-parent"
+      aria-labelledby={`section-${section.id}`}
+      data-drag-over={sectionDragOver ? 'true' : undefined}
+      onDragOver={onSectionDragOver}
+      onDragLeave={onSectionDragLeave}
+      onDrop={onSectionDrop}
+    >
       <header className="admin-curriculum-section-header">
         <div>
+          <p className="admin-curriculum-section-kicker">Chương {sectionPosition}</p>
           <h2 id={`section-${section.id}`}>{section.title}</h2>
-          <p className="muted admin-curriculum-meta">Thứ tự: {section.sortOrder}</p>
+          <p className="muted admin-curriculum-meta">
+            {lessons.length > 0 ? `${lessons.length} bài học` : 'Chưa có bài học'}
+          </p>
         </div>
-        {!editingSection ? (
-          <button type="button" className="button-secondary" onClick={() => setEditingSection(true)}>
-            Sửa chương
-          </button>
-        ) : null}
+        <div className="admin-curriculum-section-header-actions">
+          <AdminCurriculumReorderControls
+            subjectLabel={`chương ${section.title}`}
+            disableMoveUp={sectionPosition <= 1 || sectionReorderBusy}
+            disableMoveDown={sectionPosition >= sectionCount || sectionReorderBusy}
+            onMoveUp={() => onMoveSection('up')}
+            onMoveDown={() => onMoveSection('down')}
+            dragHandle={{
+              draggable: !sectionReorderBusy && !lessonReordering,
+              onDragStart: sectionDragHandle.onDragStart,
+              onKeyDown: sectionDragHandle.onKeyDown,
+            }}
+          />
+          {!editingSection ? (
+            <button type="button" className="button-secondary" onClick={() => setEditingSection(true)}>
+              Sửa chương
+            </button>
+          ) : null}
+        </div>
       </header>
 
       {editingSection ? (
         <AdminSectionForm
+          key={`section-edit-${section.id}`}
+          mode="edit"
+          formId={`section-${section.id}`}
           initialValues={sectionFormValuesFromSection(section)}
           submitLabel="Lưu chương"
           onCancel={() => setEditingSection(false)}
           onSubmit={async (values) => {
-            const sortOrder = parseOptionalInt(values.sortOrder);
             await updateSection(accessToken, courseId, section.id, {
               title: values.title.trim(),
-              sortOrder,
             });
             onToastSuccess(ADMIN_SECTION_UPDATE_SUCCESS);
             setEditingSection(false);
@@ -91,17 +167,47 @@ export function AdminCurriculumSection({
         />
       ) : null}
 
-      <ul className="admin-lesson-list">
-        {lessons.length === 0 ? (
-          <li className="admin-lesson-empty muted">Chưa có bài học trong chương này.</li>
-        ) : null}
-        {lessons.map((lesson) => (
-          <li key={lesson.id} className="admin-lesson-item">
-            {editingLessonId === lesson.id ? (
-              <AdminLessonForm
-                initialValues={lessonFormValuesFromLesson(lesson)}
-                submitLabel="Lưu bài học"
-                onCancel={() => setEditingLessonId(null)}
+      <div
+        className="admin-curriculum-lessons-nest"
+        role="group"
+        aria-label={`Bài học trong ${section.title}`}
+      >
+        <ul className="admin-lesson-list">
+          {lessons.length === 0 ? (
+            <li className="admin-lesson-empty muted">Chưa có bài học trong chương này.</li>
+          ) : null}
+          {sortedLessons.map((lesson, lessonIndex) => (
+            <li
+              key={lesson.id}
+              className="admin-lesson-item admin-lesson-item-nested"
+              data-drag-over={lessonReorder.dragOverId === lesson.id ? 'true' : undefined}
+              onDragOver={lessonReorder.onDragOver(lesson.id)}
+              onDragLeave={lessonReorder.onDragLeave}
+              onDrop={lessonReorder.onDrop(lesson.id)}
+            >
+              {editingLessonId === lesson.id ? (
+                <AdminLessonForm
+                  key={`lesson-edit-${lesson.id}`}
+                  mode="edit"
+                  formId={`lesson-edit-${lesson.id}`}
+                  initialSnapshotKey={`${lesson.id}:${lesson.sortOrder}:${lesson.contentUrl ?? ''}:${lesson.lessonType}:${lesson.article?.extractionStatus ?? ''}`}
+                  initialValues={lessonFormValuesFromLesson(lesson)}
+                  submitLabel="Lưu bài học"
+                  onCancel={() => setEditingLessonId(null)}
+                  articleExtraction={
+                    lesson.lessonType === 'ARTICLE' ? (
+                      <AdminArticleExtractionControls
+                        courseId={courseId}
+                        sectionId={section.id}
+                        lessonId={lesson.id}
+                        accessToken={accessToken}
+                        article={lesson.article}
+                        onLessonUpdated={onRefresh}
+                        onToastSuccess={onToastSuccess}
+                        onToastError={onToastError}
+                      />
+                    ) : null
+                  }
                 onSubmit={async (values) => {
                   await updateLesson(
                     accessToken,
@@ -119,9 +225,15 @@ export function AdminCurriculumSection({
             ) : (
               <>
                 <div className="admin-lesson-summary">
-                  <p className="admin-lesson-title">{lesson.title}</p>
-                  <p className="muted admin-curriculum-meta">
-                    {adminLessonTypeLabel(lesson.lessonType)} · Thứ tự {lesson.sortOrder}
+                  <p className="admin-lesson-title">
+                    <AdminLessonTypeIcon type={lesson.lessonType} />
+                    <span>{lesson.title}</span>
+                  </p>
+                  <p className="muted admin-curriculum-meta admin-lesson-meta">
+                    {adminLessonTypeLabel(lesson.lessonType)} · Bài {lessonIndex + 1}
+                    {lesson.lessonType === 'ARTICLE' && lesson.article?.extractionStatus
+                      ? ` · ${adminArticleExtractionStatusLabel(lesson.article.extractionStatus)}`
+                      : ''}
                     {lesson.durationSeconds !== null
                       ? ` · ${lesson.durationSeconds}s`
                       : ''}
@@ -131,6 +243,26 @@ export function AdminCurriculumSection({
                   ) : null}
                 </div>
                 <div className="admin-lesson-actions">
+                  <AdminCurriculumReorderControls
+                    subjectLabel={`bài học ${lesson.title}`}
+                    disableMoveUp={lessonIndex === 0 || lessonReordering}
+                    disableMoveDown={lessonIndex >= sortedLessons.length - 1 || lessonReordering}
+                    onMoveUp={() => lessonReorder.moveItem(lesson.id, 'up')}
+                    onMoveDown={() => lessonReorder.moveItem(lesson.id, 'down')}
+                    dragHandle={{
+                      draggable: !lessonReordering,
+                      onDragStart: lessonReorder.onDragStart(lesson.id),
+                      onKeyDown: (event) => {
+                        if (event.key === 'ArrowUp') {
+                          event.preventDefault();
+                          void lessonReorder.moveItem(lesson.id, 'up');
+                        } else if (event.key === 'ArrowDown') {
+                          event.preventDefault();
+                          void lessonReorder.moveItem(lesson.id, 'down');
+                        }
+                      },
+                    }}
+                  />
                   {lesson.lessonType === 'QUIZ' ? (
                     <Link
                       className="button-primary admin-quiz-config-link"
@@ -152,12 +284,16 @@ export function AdminCurriculumSection({
                 </div>
               </>
             )}
-          </li>
-        ))}
-      </ul>
+            </li>
+          ))}
+        </ul>
+      </div>
 
       {addingLesson ? (
         <AdminLessonForm
+          key="lesson-create"
+          mode="create"
+          formId="lesson-create"
           initialValues={emptyLessonFormValues()}
           submitLabel="Thêm bài học"
           onCancel={() => setAddingLesson(false)}
@@ -191,6 +327,8 @@ export function AdminCurriculumSection({
 }
 
 type AdminSectionFormProps = {
+  mode: 'create' | 'edit';
+  formId?: string;
   initialValues: SectionFormValues;
   submitLabel: string;
   onCancel: () => void;
@@ -199,6 +337,8 @@ type AdminSectionFormProps = {
 };
 
 export function AdminSectionForm({
+  mode,
+  formId = 'section',
   initialValues,
   submitLabel,
   onCancel,
@@ -237,46 +377,43 @@ export function AdminSectionForm({
     }
   }
 
+  const titleId = `${formId}-title`;
+
   return (
-    <form className="admin-inline-form" onSubmit={handleSubmit} noValidate>
+    <form
+      className={
+        mode === 'edit'
+          ? 'admin-inline-form admin-section-form admin-section-form-edit'
+          : 'admin-inline-form admin-section-form admin-section-form-create'
+      }
+      onSubmit={handleSubmit}
+      noValidate
+    >
+      <h3 className="admin-lesson-form-heading">
+        {mode === 'edit' ? 'Chỉnh sửa chương' : 'Thêm chương mới'}
+      </h3>
       {formError ? (
         <div className="section-error" role="alert">
           <p>{formError}</p>
         </div>
       ) : null}
       <FormField
-        id="section-title"
+        id={titleId}
         label="Tiêu đề chương"
         required
         error={submitAttempted ? clientErrors.title : undefined}
       >
         <input
-          id="section-title"
+          id={titleId}
           value={values.title}
           maxLength={255}
           disabled={submitting}
           aria-invalid={Boolean(submitAttempted && clientErrors.title)}
           aria-describedby={fieldDescribedBy(
-            'section-title',
+            titleId,
             submitAttempted ? clientErrors.title : undefined,
           )}
           onChange={(event) => setValues((current) => ({ ...current, title: event.target.value }))}
-        />
-      </FormField>
-      <FormField
-        id="section-sort"
-        label="Thứ tự"
-        hint="Tùy chọn. Số nguyên; mặc định do hệ thống."
-        error={submitAttempted ? clientErrors.sortOrder : undefined}
-      >
-        <input
-          id="section-sort"
-          inputMode="numeric"
-          value={values.sortOrder}
-          disabled={submitting}
-          onChange={(event) =>
-            setValues((current) => ({ ...current, sortOrder: event.target.value }))
-          }
         />
       </FormField>
       <div className="admin-inline-form-actions">
@@ -292,19 +429,27 @@ export function AdminSectionForm({
 }
 
 type AdminLessonFormProps = {
+  mode: 'create' | 'edit';
+  formId?: string;
+  initialSnapshotKey?: string;
   initialValues: LessonFormValues;
   submitLabel: string;
   onCancel: () => void;
   onSubmit: (values: LessonFormValues) => Promise<void>;
   onError: (message: string) => void;
+  articleExtraction?: ReactNode;
 };
 
 export function AdminLessonForm({
+  mode,
+  formId = 'lesson',
+  initialSnapshotKey,
   initialValues,
   submitLabel,
   onCancel,
   onSubmit,
   onError,
+  articleExtraction,
 }: AdminLessonFormProps) {
   const [values, setValues] = useState(initialValues);
   const [submitAttempted, setSubmitAttempted] = useState(false);
@@ -313,6 +458,12 @@ export function AdminLessonForm({
   const inFlightRef = useRef(false);
 
   const clientErrors = useMemo(() => validateLessonForm(values), [values]);
+
+  useEffect(() => {
+    setValues(initialValues);
+    setSubmitAttempted(false);
+    setFormError(null);
+  }, [initialSnapshotKey, initialValues]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -338,103 +489,135 @@ export function AdminLessonForm({
     }
   }
 
+  const titleId = `${formId}-title`;
+  const typeId = `${formId}-type`;
+  const contentUrlId = `${formId}-content-url`;
+  const durationId = `${formId}-duration`;
+  const titleError = submitAttempted ? clientErrors.title : undefined;
+  const contentUrlError = submitAttempted ? clientErrors.contentUrl : undefined;
+  const durationError = submitAttempted ? clientErrors.durationSeconds : undefined;
   return (
-    <form className="admin-inline-form" onSubmit={handleSubmit} noValidate>
+    <form
+      className={
+        mode === 'edit'
+          ? 'admin-inline-form admin-lesson-form admin-lesson-form-edit'
+          : 'admin-inline-form admin-lesson-form admin-lesson-form-create'
+      }
+      onSubmit={handleSubmit}
+      noValidate
+      aria-labelledby={`${formId}-heading`}
+    >
+      <header className="admin-lesson-form-header">
+        <h3 className="admin-lesson-form-heading" id={`${formId}-heading`}>
+          {mode === 'edit' ? 'Chỉnh sửa bài học' : 'Thêm bài học mới'}
+        </h3>
+        <p className="admin-lesson-form-mode-hint muted">
+          {mode === 'edit'
+            ? 'Cập nhật thông tin bài học trong chương này.'
+            : 'Thêm bài học mới vào chương hiện tại.'}
+        </p>
+      </header>
       {formError ? (
-        <div className="section-error" role="alert">
+        <div className="section-error admin-lesson-form-error" role="alert">
           <p>{formError}</p>
         </div>
       ) : null}
-      <FormField
-        id="lesson-title"
-        label="Tiêu đề bài học"
-        required
-        error={submitAttempted ? clientErrors.title : undefined}
-      >
-        <input
-          id="lesson-title"
-          value={values.title}
-          maxLength={255}
-          disabled={submitting}
-          onChange={(event) => setValues((current) => ({ ...current, title: event.target.value }))}
-        />
-      </FormField>
-      <FormField id="lesson-type" label="Loại bài học" required>
-        <select
-          id="lesson-type"
-          value={values.lessonType}
-          disabled={submitting}
-          onChange={(event) =>
-            setValues((current) =>
-              lessonFormValuesForTypeChange(
-                current,
-                event.target.value as LessonFormValues['lessonType'],
-              ),
-            )
-          }
-        >
-          {ADMIN_LESSON_TYPE_OPTIONS.map((type) => (
-            <option key={type} value={type}>
-              {adminLessonTypeLabel(type)}
-            </option>
-          ))}
-        </select>
-      </FormField>
-      {values.lessonType === 'QUIZ' ? <p className="admin-quiz-hint">{QUIZ_LESSON_HINT}</p> : null}
-      {values.lessonType === 'VIDEO' || values.lessonType === 'ARTICLE' || values.lessonType === 'ASSIGNMENT' ? (
-        <FormField
-          id="lesson-content-url"
-          label={values.lessonType === 'VIDEO' ? 'URL video' : 'URL nội dung'}
-          required={values.lessonType === 'VIDEO'}
-          hint={values.lessonType === 'ARTICLE' ? 'Tùy chọn. Liên kết bài đọc hoặc tài liệu.' : values.lessonType === 'ASSIGNMENT' ? 'Tùy chọn.' : undefined}
-          error={submitAttempted ? clientErrors.contentUrl : undefined}
-        >
+      <div className="admin-lesson-form-fields">
+        <FormField id={titleId} label="Tiêu đề bài học" required error={titleError}>
           <input
-            id="lesson-content-url"
-            type="url"
-            value={values.contentUrl}
+            id={titleId}
+            value={values.title}
+            maxLength={255}
             disabled={submitting}
-            onChange={(event) =>
-              setValues((current) => ({ ...current, contentUrl: event.target.value }))
-            }
+            aria-invalid={Boolean(titleError)}
+            aria-describedby={fieldDescribedBy(titleId, titleError)}
+            onChange={(event) => setValues((current) => ({ ...current, title: event.target.value }))}
           />
         </FormField>
-      ) : null}
-      {values.lessonType !== 'QUIZ' ? (
-        <FormField
-          id="lesson-duration"
-          label="Thời lượng (giây)"
-          hint="Tùy chọn. Phải ≥ 0 nếu nhập."
-          error={submitAttempted ? clientErrors.durationSeconds : undefined}
-        >
-          <input
-            id="lesson-duration"
-            inputMode="numeric"
-            value={values.durationSeconds}
+        <FormField id={typeId} label="Loại bài học" required>
+          <select
+            id={typeId}
+            value={values.lessonType}
             disabled={submitting}
             onChange={(event) =>
-              setValues((current) => ({ ...current, durationSeconds: event.target.value }))
+              setValues((current) =>
+                lessonFormValuesForTypeChange(
+                  current,
+                  event.target.value as LessonFormValues['lessonType'],
+                ),
+              )
             }
-          />
+          >
+            {ADMIN_LESSON_TYPE_OPTIONS.map((type) => (
+              <option key={type} value={type}>
+                {adminLessonTypeLabel(type)}
+              </option>
+            ))}
+          </select>
         </FormField>
-      ) : null}
-      <FormField
-        id="lesson-sort"
-        label="Thứ tự"
-        hint="Tùy chọn."
-        error={submitAttempted ? clientErrors.sortOrder : undefined}
-      >
-        <input
-          id="lesson-sort"
-          inputMode="numeric"
-          value={values.sortOrder}
-          disabled={submitting}
-          onChange={(event) =>
-            setValues((current) => ({ ...current, sortOrder: event.target.value }))
-          }
-        />
-      </FormField>
-      <div className="admin-inline-form-actions">
+        {values.lessonType === 'QUIZ' ? (
+          <p className="admin-quiz-hint admin-lesson-form-quiz-hint">{QUIZ_LESSON_HINT}</p>
+        ) : null}
+        {values.lessonType === 'VIDEO' ||
+        values.lessonType === 'ARTICLE' ||
+        values.lessonType === 'ASSIGNMENT' ? (
+          <FormField
+            id={contentUrlId}
+            label={
+              values.lessonType === 'VIDEO'
+                ? 'URL video'
+                : values.lessonType === 'ARTICLE'
+                  ? 'URL bài đọc'
+                  : 'URL nội dung'
+            }
+            required={values.lessonType === 'VIDEO' || values.lessonType === 'ARTICLE'}
+            hint={
+              values.lessonType === 'ARTICLE'
+                ? 'Liên kết bài viết công khai (HTTP/HTTPS). Hệ thống sẽ trích xuất nội dung để đọc trong LMS.'
+                : values.lessonType === 'ASSIGNMENT'
+                  ? 'Tùy chọn.'
+                  : undefined
+            }
+            error={contentUrlError}
+          >
+            <input
+              id={contentUrlId}
+              type="url"
+              value={values.contentUrl}
+              disabled={submitting}
+              aria-invalid={Boolean(contentUrlError)}
+              aria-describedby={fieldDescribedBy(contentUrlId, contentUrlError)}
+              onChange={(event) =>
+                setValues((current) => ({ ...current, contentUrl: event.target.value }))
+              }
+            />
+          </FormField>
+        ) : null}
+        <div className="admin-lesson-form-metrics">
+          {values.lessonType !== 'QUIZ' ? (
+            <FormField
+              id={durationId}
+              label="Thời lượng (giây)"
+              hint="Tùy chọn. Phải ≥ 0 nếu nhập."
+              error={durationError}
+            >
+              <input
+                id={durationId}
+                inputMode="numeric"
+                value={values.durationSeconds}
+                disabled={submitting}
+                aria-invalid={Boolean(durationError)}
+                aria-describedby={fieldDescribedBy(durationId, durationError)}
+                onChange={(event) =>
+                  setValues((current) => ({ ...current, durationSeconds: event.target.value }))
+                }
+              />
+            </FormField>
+          ) : null}
+        </div>
+      </div>
+      {mode === 'edit' && values.lessonType === 'ARTICLE' ? articleExtraction : null}
+      <div className="admin-lesson-form-actions">
         <button type="submit" className="button-primary" disabled={submitting}>
           {submitting ? 'Đang lưu…' : submitLabel}
         </button>
@@ -479,14 +662,15 @@ export function AdminNewSectionPanel({
     <section className="admin-new-section" aria-label="Thêm chương mới">
       <h2 className="admin-new-section-heading">Chương mới</h2>
       <AdminSectionForm
-        initialValues={{ title: '', sortOrder: '' }}
+        key="section-create"
+        mode="create"
+        formId="section-new"
+        initialValues={emptySectionFormValues()}
         submitLabel="Tạo chương"
         onCancel={onClose}
         onSubmit={async (values) => {
-          const sortOrder = parseOptionalInt(values.sortOrder);
           await createSection(accessToken, courseId, {
             title: values.title.trim(),
-            sortOrder,
           });
           onToastSuccess(ADMIN_SECTION_CREATE_SUCCESS);
           onClose();
@@ -495,6 +679,15 @@ export function AdminNewSectionPanel({
         onError={onToastError}
       />
     </section>
+  );
+}
+
+function AdminLessonTypeIcon({ type }: { type: Lesson['lessonType'] }) {
+  return (
+    <span
+      className={`admin-lesson-type-icon admin-lesson-type-icon-${type.toLowerCase()}`}
+      aria-hidden="true"
+    />
   );
 }
 

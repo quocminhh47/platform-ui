@@ -139,21 +139,21 @@ export function CourseCurriculum({ state, variant = 'default' }: CourseCurriculu
 
   return (
     <section id="curriculum" className="course-curriculum" aria-labelledby="curriculum-heading">
-      <h2 id="curriculum-heading">Curriculum</h2>
+      <h2 id="curriculum-heading">Nội dung khóa học</h2>
 
-      {loading ? <p className="page-status">Loading curriculum…</p> : null}
+      {loading ? <p className="page-status">Đang tải nội dung khóa học…</p> : null}
 
       {!loading && error ? (
         <div className="section-error" role="alert">
           <p>{error}</p>
           <button type="button" onClick={reload}>
-            Try again
+            Thử lại
           </button>
         </div>
       ) : null}
 
       {!loading && !error && sections && sections.length === 0 ? (
-        <p className="muted">This course does not have any sections yet.</p>
+        <p className="muted">Khóa học chưa có chương nào.</p>
       ) : null}
 
       {!loading && !error && sections && sections.length > 0 ? (
@@ -184,7 +184,7 @@ export function CourseCurriculum({ state, variant = 'default' }: CourseCurriculu
                   {expanded ? (
                     <div id={panelId} className="curriculum-panel">
                       {section.lessons.length === 0 ? (
-                        <p className="muted">No lessons in this section yet.</p>
+                        <p className="muted">Chưa có bài học trong phần này.</p>
                       ) : (
                         <ul className="curriculum-lessons">
                           {section.lessons.map((lesson) => {
@@ -216,7 +216,7 @@ export function CourseCurriculum({ state, variant = 'default' }: CourseCurriculu
 }
 
 function lessonCountLabel(count: number): string {
-  return count === 1 ? '1 lesson' : `${count} lessons`;
+  return count === 1 ? '1 bài học' : `${count} bài học`;
 }
 
 function formatLessonTypeDetail(lessonType: LessonType): string {

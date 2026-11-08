@@ -50,17 +50,17 @@ export function validateLogin(values: LoginCredentials): FieldErrors {
   const identifier = values.identifier.trim();
 
   if (!identifier) {
-    errors.identifier = 'Enter your email or phone number';
+    errors.identifier = 'Nhập email hoặc số điện thoại';
   } else if (identifier.includes('@')) {
     if (!isValidEmail(identifier)) {
-      errors.identifier = 'Enter a valid email address or phone number';
+      errors.identifier = 'Email hoặc số điện thoại không hợp lệ';
     }
   } else if (!isValidPhone(identifier)) {
-    errors.identifier = 'Enter a valid email address or phone number';
+    errors.identifier = 'Email hoặc số điện thoại không hợp lệ';
   }
 
   if (!values.password) {
-    errors.password = 'Password is required';
+    errors.password = 'Vui lòng nhập mật khẩu';
   }
 
   return errors;
@@ -73,56 +73,56 @@ export function validateRegister(values: RegisterValues, now: Date = new Date())
 
   const firstName = values.firstName.trim();
   if (!firstName) {
-    errors.firstName = 'First name is required';
+    errors.firstName = 'Vui lòng nhập họ';
   } else if (firstName.length > NAME_MAX_LENGTH) {
-    errors.firstName = `First name must be at most ${NAME_MAX_LENGTH} characters`;
+    errors.firstName = `Họ tối đa ${NAME_MAX_LENGTH} ký tự`;
   }
 
   const lastName = values.lastName.trim();
   if (!lastName) {
-    errors.lastName = 'Last name is required';
+    errors.lastName = 'Vui lòng nhập tên';
   } else if (lastName.length > NAME_MAX_LENGTH) {
-    errors.lastName = `Last name must be at most ${NAME_MAX_LENGTH} characters`;
+    errors.lastName = `Tên tối đa ${NAME_MAX_LENGTH} ký tự`;
   }
 
   const phone = values.phoneNumber.trim();
   if (!phone) {
-    errors.phoneNumber = 'Phone number is required';
+    errors.phoneNumber = 'Vui lòng nhập số điện thoại';
   } else if (!isValidPhone(phone)) {
-    errors.phoneNumber = 'Enter a valid phone number (8-15 digits, e.g. +84 912 345 678)';
+    errors.phoneNumber = 'Số điện thoại không hợp lệ (8–15 chữ số, vd. +84 912 345 678)';
   }
 
   if (!values.dateOfBirth) {
-    errors.dateOfBirth = 'Date of birth is required';
+    errors.dateOfBirth = 'Vui lòng chọn ngày sinh';
   } else if (!isRealCalendarDate(values.dateOfBirth)) {
-    errors.dateOfBirth = 'Enter a valid date of birth';
+    errors.dateOfBirth = 'Ngày sinh không hợp lệ';
   } else if (values.dateOfBirth > latestDateOfBirth(now)) {
-    errors.dateOfBirth = 'Date of birth must be in the past';
+    errors.dateOfBirth = 'Ngày sinh phải là ngày trong quá khứ';
   }
 
   const email = values.email.trim();
   if (!email) {
-    errors.email = 'Email is required';
+    errors.email = 'Vui lòng nhập email';
   } else if (!isValidEmail(email)) {
-    errors.email = 'Enter a valid email address';
+    errors.email = 'Email không hợp lệ';
   }
 
   if (!values.password) {
-    errors.password = 'Password is required';
+    errors.password = 'Vui lòng nhập mật khẩu';
   } else if (values.password.length < PASSWORD_MIN_LENGTH) {
-    errors.password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters`;
+    errors.password = `Mật khẩu tối thiểu ${PASSWORD_MIN_LENGTH} ký tự`;
   } else if (values.password.length > PASSWORD_MAX_LENGTH) {
-    errors.password = `Password must be at most ${PASSWORD_MAX_LENGTH} characters`;
+    errors.password = `Mật khẩu tối đa ${PASSWORD_MAX_LENGTH} ký tự`;
   }
 
   if (!values.confirmPassword) {
-    errors.confirmPassword = 'Confirm your password';
+    errors.confirmPassword = 'Vui lòng xác nhận mật khẩu';
   } else if (values.confirmPassword !== values.password) {
-    errors.confirmPassword = 'Passwords do not match';
+    errors.confirmPassword = 'Mật khẩu xác nhận không khớp';
   }
 
   if (values.avatarUrl && values.avatarUrl.length > 2048) {
-    errors.avatarUrl = 'Avatar URL must be at most 2048 characters';
+    errors.avatarUrl = 'URL ảnh đại diện tối đa 2048 ký tự';
   }
 
   return errors;

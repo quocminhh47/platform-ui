@@ -48,3 +48,36 @@ export function updateLesson(
     },
   );
 }
+
+/** PUT /api/courses/{courseId}/sections/{sectionId}/lessons/reorder — ADMIN only. */
+/** POST /api/courses/{courseId}/sections/{sectionId}/lessons/{lessonId}/article/refresh — ADMIN only. */
+export function refreshLessonArticle(
+  accessToken: string,
+  courseId: string,
+  sectionId: string,
+  lessonId: string,
+): Promise<Lesson> {
+  return apiRequest<Lesson>(
+    `/api/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}/article/refresh`,
+    {
+      method: 'POST',
+      accessToken,
+    },
+  );
+}
+
+export function reorderLessons(
+  accessToken: string,
+  courseId: string,
+  sectionId: string,
+  orderedIds: string[],
+): Promise<void> {
+  return apiRequest<void>(
+    `/api/courses/${courseId}/sections/${sectionId}/lessons/reorder`,
+    {
+      method: 'PUT',
+      accessToken,
+      body: { orderedIds },
+    },
+  );
+}

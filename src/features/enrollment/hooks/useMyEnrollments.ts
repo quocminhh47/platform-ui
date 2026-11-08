@@ -91,10 +91,10 @@ export function useMyEnrollments(enabled: boolean): MyEnrollmentsState {
 
 export function enrollmentLoadMessage(cause: unknown): string {
   if (cause instanceof ApiError && cause.status === 401) {
-    return 'Your session has expired. Sign in again.';
+    return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
   }
   if (cause instanceof ApiError) {
-    return 'Your enrollments could not be loaded. Try again in a moment.';
+    return 'Không tải được danh sách ghi danh. Vui lòng thử lại sau.';
   }
-  return 'Unable to reach the server. Check your connection and try again.';
+  return 'Không kết nối được máy chủ. Kiểm tra mạng và thử lại.';
 }

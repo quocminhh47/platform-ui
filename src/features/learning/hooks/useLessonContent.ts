@@ -91,7 +91,7 @@ export function useLessonContent({
 
 export function lessonContentMessage(cause: unknown): string {
   if (cause instanceof ApiError && cause.status === 401) {
-    return 'Your session has expired. Sign in again.';
+    return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
   }
   if (cause instanceof ApiError && cause.status === 403) {
     return 'You need an active enrollment to view this lesson.';
@@ -100,7 +100,7 @@ export function lessonContentMessage(cause: unknown): string {
     return 'This lesson is not available.';
   }
   if (cause instanceof ApiError) {
-    return 'This lesson could not be loaded. Try again in a moment.';
+    return 'Không tải được bài học. Vui lòng thử lại sau.';
   }
   return 'Unable to reach the server. Check your connection and try again.';
 }

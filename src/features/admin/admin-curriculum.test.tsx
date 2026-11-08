@@ -27,17 +27,19 @@ vi.mock('./api/admin-sections.api', () => ({
   listCourseSections: vi.fn(),
   createSection: vi.fn(),
   updateSection: vi.fn(),
+  reorderSections: vi.fn(),
 }));
 
 vi.mock('./api/admin-lessons.api', () => ({
   listSectionLessons: vi.fn(),
   createLesson: vi.fn(),
   updateLesson: vi.fn(),
+  reorderLessons: vi.fn(),
 }));
 
 vi.mock('../catalog/api/courses.api', () => ({
   getCourseById: vi.fn(),
-  listPublishedCourses: vi.fn(),
+  listCoursesPage: vi.fn(),
   listCourseSections: vi.fn(),
   listSectionLessons: vi.fn(),
 }));
@@ -139,6 +141,8 @@ beforeEach(() => {
   lessonsApi.listSectionLessons.mockReset();
   lessonsApi.createLesson.mockReset();
   lessonsApi.updateLesson.mockReset();
+  lessonsApi.reorderLessons.mockReset();
+  sectionsApi.reorderSections.mockReset();
   catalogCourses.getCourseById.mockReset();
   quizApi.getQuiz.mockReset();
   quizApi.getQuiz.mockRejectedValue(new ApiError(404, 'Not found'));
@@ -249,6 +253,292 @@ describe('AdminCurriculumPage', () => {
       '/admin/courses/course-1/lessons/lesson-quiz/quiz',
     );
     expect(quizApi.getQuiz).toHaveBeenCalledWith('admin-token', 'course-1', 'lesson-quiz');
+  });
+
+  it('renders nested lesson hierarchy under each section', async () => {
+    sectionsApi.listCourseSections.mockResolvedValue([sectionB]);
+    lessonsApi.listSectionLessons.mockResolvedValue([lesson]);
+
+    renderCurriculum();
+    await screen.findByRole('heading', { name: 'Chương A' });
+
+    expect(document.querySelector('.admin-curriculum-section-parent')).toBeTruthy();
+    expect(document.querySelector('.admin-curriculum-lessons-nest')).toBeTruthy();
+    expect(document.querySelector('.admin-lesson-item-nested')).toBeTruthy();
+    expect(document.querySelector('.admin-curriculum-section-kicker')?.textContent).toBe('Chương 1');
+  });
+
+  it('shows create mode heading when adding a lesson', async () => {
+    sectionsApi.listCourseSections.mockResolvedValue([sectionB]);
+    lessonsApi.listSectionLessons.mockResolvedValue([]);
+
+    renderCurriculum();
+    await screen.findByRole('heading', { name: 'Chương A' });
+
+    fireEvent.click(screen.getByRole('button', { name: '+ Thêm bài học' }));
+
+    expect(await screen.findByRole('heading', { name: 'Thêm bài học mới' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Chỉnh sửa bài học' })).toBeNull();
+  });
+
+  it('prepopulates the lesson edit form with current lesson data', async () => {
+    const videoLesson: Lesson = {
+      ...lesson,
+      title: 'Welcome Video',
+      contentUrl: 'https://example.com/welcome.mp4',
+      durationSeconds: 300,
+      sortOrder: 2,
+    };
+    sectionsApi.listCourseSections.mockResolvedValue([sectionB]);
+    lessonsApi.listSectionLessons.mockResolvedValue([videoLesson]);
+
+    renderCurriculum();
+    await screen.findByRole('heading', { name: 'Chương A' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sửa bài học' }));
+
+    expect(await screen.findByRole('heading', { name: 'Chỉnh sửa bài học' })).toBeTruthy();
+    expect((screen.getByLabelText(/^Tiêu đề bài học/) as HTMLInputElement).value).toBe(
+      'Welcome Video',
+    );
+    expect((screen.getByLabelText(/^URL video/) as HTMLInputElement).value).toBe(
+      'https://example.com/welcome.mp4',
+    );
+    expect((screen.getByLabelText(/^Thời lượng/) as HTMLInputElement).value).toBe('300');
+    expect(screen.queryByLabelText(/^Thứ tự/)).toBeNull();
+  });
+
+  it('loads the newly selected lesson when switching edit targets', async () => {
+    const lessonA: Lesson = {
+      ...lesson,
+      id: 'lesson-a',
+      title: 'Lesson A',
+      contentUrl: 'https://example.com/a.mp4',
+    };
+    const lessonB: Lesson = {
+      ...lesson,
+      id: 'lesson-b',
+      title: 'Lesson B',
+      contentUrl: 'https://example.com/b.mp4',
+      sortOrder: 2,
+    };
+    sectionsApi.listCourseSections.mockResolvedValue([sectionB]);
+    lessonsApi.listSectionLessons.mockResolvedValue([lessonA, lessonB]);
+
+    renderCurriculum();
+    await screen.findByRole('heading', { name: 'Chương A' });
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Sửa bài học' })[0]);
+    expect(
+      ((await screen.findByLabelText(/^Tiêu đề bài học/)) as HTMLInputElement).value,
+    ).toBe('Lesson A');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hủy' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Sửa bài học' })[1]);
+    expect(
+      ((await screen.findByLabelText(/^Tiêu đề bài học/)) as HTMLInputElement).value,
+    ).toBe('Lesson B');
+  });
+
+  it('preserves unchanged fields when only the title is edited', async () => {
+    const videoLesson: Lesson = {
+      ...lesson,
+      title: 'Original title',
+      contentUrl: 'https://example.com/keep.mp4',
+      durationSeconds: 120,
+      sortOrder: 1,
+    };
+    sectionsApi.listCourseSections.mockResolvedValue([sectionB]);
+    lessonsApi.listSectionLessons.mockResolvedValue([videoLesson]);
+    lessonsApi.updateLesson.mockResolvedValue({ ...videoLesson, title: 'Updated title' });
+
+    renderCurriculum();
+    await screen.findByRole('heading', { name: 'Chương A' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sửa bài học' }));
+    fireEvent.change(await screen.findByLabelText(/^Tiêu đề bài học/), {
+      target: { value: 'Updated title' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu bài học' }));
+
+    await waitFor(() => expect(lessonsApi.updateLesson).toHaveBeenCalled());
+    expect(lessonsApi.updateLesson).toHaveBeenCalledWith(
+      'admin-token',
+      'course-1',
+      'sec-1',
+      'lesson-1',
+      {
+        title: 'Updated title',
+        lessonType: 'VIDEO',
+        contentUrl: 'https://example.com/keep.mp4',
+        durationSeconds: 120,
+      },
+    );
+  });
+
+  it('does not modify a lesson when edit is canceled', async () => {
+    sectionsApi.listCourseSections.mockResolvedValue([sectionB]);
+    lessonsApi.listSectionLessons.mockResolvedValue([lesson]);
+
+    renderCurriculum();
+    await screen.findByRole('heading', { name: 'Chương A' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sửa bài học' }));
+    fireEvent.change(screen.getByLabelText(/^Tiêu đề bài học/), {
+      target: { value: 'Changed but canceled' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Hủy' }));
+
+    expect(screen.getByText('Bài mở đầu')).toBeTruthy();
+    expect(lessonsApi.updateLesson).not.toHaveBeenCalled();
+    expect(screen.queryByRole('heading', { name: 'Chỉnh sửa bài học' })).toBeNull();
+  });
+
+  it('prepopulates the section edit form with current section data', async () => {
+    sectionsApi.listCourseSections.mockResolvedValue([sectionB]);
+
+    renderCurriculum();
+    await screen.findByRole('heading', { name: 'Chương A' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sửa chương' }));
+
+    expect(await screen.findByRole('heading', { name: 'Chỉnh sửa chương' })).toBeTruthy();
+    expect((screen.getByLabelText(/^Tiêu đề chương/) as HTMLInputElement).value).toBe('Chương A');
+    expect(screen.queryByLabelText(/^Thứ tự/)).toBeNull();
+  });
+
+  it('does not modify a section when edit is canceled', async () => {
+    sectionsApi.listCourseSections.mockResolvedValue([sectionB]);
+
+    renderCurriculum();
+    await screen.findByRole('heading', { name: 'Chương A' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sửa chương' }));
+    fireEvent.change(await screen.findByLabelText(/^Tiêu đề chương/), {
+      target: { value: 'Đổi tên nhưng hủy' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Hủy' }));
+
+    expect(screen.getByRole('heading', { name: 'Chương A' })).toBeTruthy();
+    expect(sectionsApi.updateSection).not.toHaveBeenCalled();
+  });
+
+  it('shows section validation errors without calling the API', async () => {
+    sectionsApi.listCourseSections.mockResolvedValue([sectionB]);
+
+    renderCurriculum();
+    await screen.findByRole('heading', { name: 'Chương A' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sửa chương' }));
+    fireEvent.change(await screen.findByLabelText(/^Tiêu đề chương/), { target: { value: '   ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu chương' }));
+
+    expect(await screen.findByText('Vui lòng nhập tiêu đề chương.')).toBeTruthy();
+    expect(sectionsApi.updateSection).not.toHaveBeenCalled();
+  });
+
+  it('updates a section and refreshes the list', async () => {
+    const updated = { ...sectionB, title: 'Chương A (mới)' };
+    sectionsApi.listCourseSections
+      .mockResolvedValueOnce([sectionB])
+      .mockResolvedValueOnce([updated]);
+    sectionsApi.updateSection.mockResolvedValue(updated);
+
+    renderCurriculum();
+    await screen.findByRole('heading', { name: 'Chương A' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sửa chương' }));
+    fireEvent.change(await screen.findByLabelText(/^Tiêu đề chương/), {
+      target: { value: 'Chương A (mới)' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu chương' }));
+
+    await waitFor(() =>
+      expect(sectionsApi.updateSection).toHaveBeenCalledWith('admin-token', 'course-1', 'sec-1', {
+        title: 'Chương A (mới)',
+      }),
+    );
+    expect(await screen.findByRole('heading', { name: 'Chương A (mới)' })).toBeTruthy();
+  });
+
+  it('shows invalid video URL validation on lesson create', async () => {
+    sectionsApi.listCourseSections.mockResolvedValue([sectionB]);
+    lessonsApi.listSectionLessons.mockResolvedValue([]);
+
+    renderCurriculum();
+    await screen.findByRole('heading', { name: 'Chương A' });
+
+    fireEvent.click(screen.getByRole('button', { name: '+ Thêm bài học' }));
+    fireEvent.change(screen.getByLabelText(/^Tiêu đề bài học/), { target: { value: 'Video' } });
+    fireEvent.change(screen.getByLabelText(/^URL video/), { target: { value: 'ftp://bad' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Thêm bài học' }));
+
+    expect(
+      await screen.findByText('URL phải bắt đầu bằng http:// hoặc https://.'),
+    ).toBeTruthy();
+    expect(lessonsApi.createLesson).not.toHaveBeenCalled();
+  });
+
+  it('prevents duplicate lesson create submissions while in flight', async () => {
+    sectionsApi.listCourseSections.mockResolvedValue([sectionB]);
+    lessonsApi.listSectionLessons.mockResolvedValue([]);
+    let resolveCreate!: () => void;
+    lessonsApi.createLesson.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveCreate = () => resolve(lesson);
+        }),
+    );
+
+    renderCurriculum();
+    await screen.findByRole('heading', { name: 'Chương A' });
+
+    fireEvent.click(screen.getByRole('button', { name: '+ Thêm bài học' }));
+    fireEvent.change(screen.getByLabelText(/^Tiêu đề bài học/), { target: { value: 'Bài mới' } });
+    fireEvent.change(screen.getByLabelText(/^URL video/), {
+      target: { value: 'https://example.com/v.mp4' },
+    });
+    const submit = screen.getByRole('button', { name: 'Thêm bài học' });
+    fireEvent.click(submit);
+    fireEvent.click(submit);
+
+    await waitFor(() => expect(lessonsApi.createLesson).toHaveBeenCalledTimes(1));
+    resolveCreate();
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Thêm bài học' })).toBeNull(),
+    );
+  });
+
+  it('reorders a lesson when move down is activated', async () => {
+    const lessonA: Lesson = { ...lesson, id: 'lesson-a', title: 'A', sortOrder: 0 };
+    const lessonB: Lesson = { ...lesson, id: 'lesson-b', title: 'B', sortOrder: 1 };
+    sectionsApi.listCourseSections.mockResolvedValue([sectionB]);
+    lessonsApi.listSectionLessons.mockResolvedValue([lessonA, lessonB]);
+    lessonsApi.reorderLessons.mockResolvedValue(undefined);
+
+    renderCurriculum();
+    await screen.findByRole('heading', { name: 'Chương A' });
+
+    const moveButtons = screen.getAllByRole('button', { name: /Di chuyển bài học A xuống/ });
+    fireEvent.click(moveButtons[0]);
+
+    await waitFor(() =>
+      expect(lessonsApi.reorderLessons).toHaveBeenCalledWith(
+        'admin-token',
+        'course-1',
+        'sec-1',
+        ['lesson-b', 'lesson-a'],
+      ),
+    );
+  });
+
+  it('shows curriculum data integrity guidance', async () => {
+    sectionsApi.listCourseSections.mockResolvedValue([]);
+
+    renderCurriculum();
+    expect(
+      await screen.findByText(/Xóa chương hoặc bài học không được hỗ trợ trên API hiện tại/),
+    ).toBeTruthy();
   });
 
   it('preserves lesson form values when the API fails', async () => {

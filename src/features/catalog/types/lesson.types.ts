@@ -1,3 +1,5 @@
+import type { ArticleSnapshot } from './article.types';
+
 /** Mirrors backend LessonType enum. */
 export type LessonType = 'VIDEO' | 'ARTICLE' | 'QUIZ' | 'ASSIGNMENT';
 
@@ -11,4 +13,5 @@ export type Lesson = {
   contentUrl: string | null;
   durationSeconds: number | null;
   sortOrder: number;
+  article?: ArticleSnapshot | null;
 };

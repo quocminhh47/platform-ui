@@ -1,13 +1,19 @@
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
+import { useToast } from '../../../components/feedback/useToast';
 import { useAuth } from '../hooks/useAuth';
 import { mapAuthError } from '../validation/server-errors';
 import { validateLogin } from '../validation/auth.validation';
 import { FormField } from './FormField';
 import { fieldDescribedBy } from './fieldDescribedBy';
+import { UI_COPY } from '../../../ui/ui-copy';
 import { PasswordInput } from './PasswordInput';
+
+const LOGIN_SUCCESS_MESSAGE = 'Đăng nhập thành công';
 
 export function LoginForm() {
   const { login } = useAuth();
+  const toast = useToast();
+  const loginToastShownRef = useRef(false);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -31,7 +37,12 @@ export function LoginForm() {
     setSubmitting(true);
     try {
       await login(credentials);
+      if (!loginToastShownRef.current) {
+        loginToastShownRef.current = true;
+        toast.success(LOGIN_SUCCESS_MESSAGE, { dedupeKey: 'login-success' });
+      }
     } catch (error) {
+      loginToastShownRef.current = false;
       const mapped = mapAuthError(error, 'login');
       setFieldErrors(mapped.fields);
       setFormError(mapped.form);
@@ -55,7 +66,7 @@ export function LoginForm() {
     <form className="auth-form" onSubmit={handleSubmit} noValidate>
       <FormField
         id="login-identifier"
-        label="Email or phone number"
+        label="Email hoặc số điện thoại"
         required
         error={fieldErrors.identifier ?? fieldErrors.email}
       >
@@ -63,7 +74,7 @@ export function LoginForm() {
           id="login-identifier"
           type="text"
           autoComplete="username"
-          placeholder="Enter your email or phone number"
+          placeholder="Nhập email hoặc số điện thoại"
           value={identifier}
           onChange={(e) => {
             setIdentifier(e.target.value);
@@ -76,7 +87,7 @@ export function LoginForm() {
         />
       </FormField>
 
-      <FormField id="login-password" label="Password" required error={fieldErrors.password}>
+      <FormField id="login-password" label="Mật khẩu" required error={fieldErrors.password}>
         <PasswordInput
           id="login-password"
           autoComplete="current-password"
@@ -86,7 +97,7 @@ export function LoginForm() {
             clearError('password');
           }}
           disabled={submitting}
-          placeholder="Password"
+          placeholder="Mật khẩu"
           invalid={Boolean(fieldErrors.password)}
           describedBy={fieldDescribedBy('login-password', fieldErrors.password)}
         />
@@ -99,7 +110,7 @@ export function LoginForm() {
       ) : null}
 
       <button type="submit" disabled={submitting}>
-        {submitting ? 'Signing in…' : 'Sign in'}
+        {submitting ? UI_COPY.signingIn : UI_COPY.signIn}
       </button>
     </form>
   );

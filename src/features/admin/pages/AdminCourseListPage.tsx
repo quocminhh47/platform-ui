@@ -1,46 +1,54 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Breadcrumb } from '../../../components/common/Breadcrumb';
+import { PaginationControls } from '../../../components/common/PaginationControls';
 import { breadcrumbAdminCourses, breadcrumbHome } from '../../../navigation/breadcrumb-trail';
 import { useToast } from '../../../components/feedback/useToast';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { DashboardLayout } from '../../dashboard/components/DashboardLayout';
 import { DashboardSidebar } from '../../dashboard/components/DashboardSidebar';
+import { useAdminCourseMetrics } from '../hooks/useAdminCourseMetrics';
 import { useAdminCourses } from '../hooks/useAdminCourses';
 import { AdminCoursesToolbar } from '../components/AdminCoursesToolbar';
 import { AdminCourseTable } from '../components/AdminCourseTable';
 import { AdminWorkspaceMeta } from '../components/AdminWorkspaceMeta';
-import {
-  countCoursesByStatus,
-  filterAndSortAdminCourses,
-  type AdminCourseSort,
-  type AdminCourseStatusFilter,
-} from '../utils/adminCourseListFilters';
+import type { AdminCourseSort, AdminCourseStatusFilter } from '../utils/adminCourseListFilters';
 
 export function AdminCourseListPage() {
   const { user, accessToken } = useAuth();
-  const coursesState = useAdminCourses(Boolean(user?.role === 'ADMIN'));
+  const metricsState = useAdminCourseMetrics(Boolean(user?.role === 'ADMIN'));
   const toast = useToast();
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<AdminCourseStatusFilter>('all');
   const [sort, setSort] = useState<AdminCourseSort>('newest');
+  const [page, setPage] = useState(0);
 
-  const courses = coursesState.courses;
-  const allCourses = courses ?? [];
-  const statusCounts = useMemo(() => countCoursesByStatus(allCourses), [courses]);
-  const visibleCourses = useMemo(
-    () => filterAndSortAdminCourses(allCourses, query, statusFilter, sort),
-    [courses, query, statusFilter, sort],
-  );
+  useEffect(() => {
+    setPage(0);
+  }, [query, statusFilter, sort]);
+
+  const coursesState = useAdminCourses(Boolean(user?.role === 'ADMIN'), {
+    q: query,
+    status: statusFilter,
+    sort,
+    page,
+    size: 20,
+  });
+
+  const pageData = coursesState.page;
+  const visibleCourses = pageData?.content ?? [];
+  const totalCount = metricsState.metrics?.total ?? pageData?.totalElements ?? 0;
+  const publishedCount = metricsState.metrics?.published ?? 0;
+  const draftCount = metricsState.metrics?.draft ?? 0;
 
   if (!user) {
     return null;
   }
 
-  const hasCourses = allCourses.length > 0;
-  const filteredEmpty = hasCourses && visibleCourses.length === 0;
+  const hasAnyCourses = totalCount > 0;
+  const filteredEmpty = hasAnyCourses && !coursesState.loading && visibleCourses.length === 0;
 
   return (
-    <DashboardLayout sidebar={<DashboardSidebar courseCount={allCourses.length} />}>
+    <DashboardLayout sidebar={<DashboardSidebar courseCount={totalCount} />}>
       <section className="admin-courses admin-workspace-page" aria-labelledby="admin-courses-heading">
         <div className="admin-workspace-top">
           <Breadcrumb items={[breadcrumbHome(), breadcrumbAdminCourses()]} />
@@ -63,9 +71,10 @@ export function AdminCourseListPage() {
         {!coursesState.loading && !coursesState.error ? (
           <>
             <AdminCoursesToolbar
-              totalCount={allCourses.length}
-              publishedCount={statusCounts.published}
-              draftCount={statusCounts.draft}
+              totalCount={totalCount}
+              visibleCount={pageData?.totalElements ?? visibleCourses.length}
+              publishedCount={publishedCount}
+              draftCount={draftCount}
               query={query}
               statusFilter={statusFilter}
               sort={sort}
@@ -74,14 +83,14 @@ export function AdminCourseListPage() {
               onSortChange={setSort}
             />
 
-            {!hasCourses ? (
+            {!hasAnyCourses ? (
               <div className="admin-empty-panel">
                 <p className="empty-state-title">Chưa có khóa học nào</p>
                 <p className="muted">Tạo khóa học đầu tiên để bắt đầu.</p>
               </div>
             ) : null}
 
-            {hasCourses && filteredEmpty ? (
+            {hasAnyCourses && filteredEmpty ? (
               <div className="admin-empty-panel admin-empty-panel-compact">
                 <p className="empty-state-title">Không có khóa học phù hợp</p>
                 <p className="muted">Thử đổi từ khóa tìm kiếm hoặc bộ lọc trạng thái.</p>
@@ -98,14 +107,29 @@ export function AdminCourseListPage() {
               </div>
             ) : null}
 
-            {hasCourses && !filteredEmpty ? (
-              <AdminCourseTable
-                courses={visibleCourses}
-                accessToken={accessToken}
-                onPublishedChange={() => coursesState.refresh()}
-                onPublishError={(message) => toast.error(message)}
-                onPublishSuccess={(message) => toast.success(message)}
-              />
+            {hasAnyCourses && visibleCourses.length > 0 ? (
+              <>
+                <AdminCourseTable
+                  courses={visibleCourses}
+                  accessToken={accessToken}
+                  onPublishedChange={async () => {
+                    await coursesState.refresh();
+                    metricsState.reload();
+                  }}
+                  onPublishError={(message) => toast.error(message)}
+                  onPublishSuccess={(message) => toast.success(message)}
+                />
+                {pageData ? (
+                  <PaginationControls
+                    page={pageData.page}
+                    totalPages={pageData.totalPages}
+                    totalElements={pageData.totalElements}
+                    disabled={coursesState.loading}
+                    onPageChange={setPage}
+                    label="Trang khóa học"
+                  />
+                ) : null}
+              </>
             ) : null}
           </>
         ) : null}

@@ -13,6 +13,13 @@ import type { Enrollment } from '../api/enrollments.api';
 export type EnrollmentLearnTarget = {
   path: string;
   label: 'Bắt đầu học' | 'Tiếp tục học';
+  /**
+   * True when progress data confirms the student has started at least one lesson
+   * (any row with isCompleted, lastAccessedAt, or watchedDurationSeconds > 0).
+   * Remains false during loading and after errors — always derived from actual
+   * progress rows, never inferred from the translated `label`.
+   */
+  hasProgress: boolean;
   loading: boolean;
   error: string | null;
   noLessons: boolean;
@@ -30,6 +37,7 @@ export function useEnrollmentLearnTarget(
   const [state, setState] = useState<EnrollmentLearnTarget>(() => ({
     path: buildLearningPath(enrollment.courseId),
     label: 'Bắt đầu học',
+    hasProgress: false,
     loading: enabled,
     error: null,
     noLessons: false,
@@ -50,6 +58,7 @@ export function useEnrollmentLearnTarget(
       setState({
         path: buildLearningPath(enrollment.courseId),
         label: 'Bắt đầu học',
+        hasProgress: false,
         loading: false,
         error: null,
         noLessons: false,
@@ -58,6 +67,7 @@ export function useEnrollmentLearnTarget(
       setState({
         path: buildLearningPath(enrollment.courseId),
         label: 'Bắt đầu học',
+        hasProgress: false,
         loading: true,
         error: null,
         noLessons: false,
@@ -84,6 +94,12 @@ export function useEnrollmentLearnTarget(
       const progressRows = await listCourseProgress(enrollment.courseId, token);
       const lessons = flattenCurriculumLessons(withLessons);
       const lessonId = pickResumeLessonId(lessons, progressRows);
+      const studentHasProgress = progressRows.some(
+        (row) =>
+          row.isCompleted ||
+          row.lastAccessedAt !== null ||
+          row.watchedDurationSeconds > 0,
+      );
 
       if (!active) {
         return;
@@ -91,6 +107,7 @@ export function useEnrollmentLearnTarget(
       setState({
         path: buildLearningPath(enrollment.courseId, lessonId),
         label: learnCtaLabel(lessons, progressRows),
+        hasProgress: studentHasProgress,
         loading: false,
         error: null,
         noLessons: lessons.length === 0,
@@ -104,6 +121,7 @@ export function useEnrollmentLearnTarget(
       setState({
         path: buildLearningPath(enrollment.courseId),
         label: 'Tiếp tục học',
+        hasProgress: false,
         loading: false,
         error: 'Không thể xác định bài học. Mở không gian học tập.',
         noLessons: false,

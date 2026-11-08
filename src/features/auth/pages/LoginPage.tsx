@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import { UI_COPY } from '../../../ui/ui-copy';
 import { LoginForm } from '../components/LoginForm';
 import { LoginIllustration } from '../components/LoginIllustration';
 
@@ -18,14 +19,13 @@ export function LoginPage() {
       <div className="login-card">
         <span className="login-brand">LMS360</span>
         <p className="login-tagline">Hệ thống học tiếng Trung &amp; luyện thi HSK trực tuyến</p>
-        <h1>Sign in</h1>
-        <p className="auth-lead">Use your email or phone number to continue.</p>
-        {/* Redirect after success is handled by GuestRoute. */}
+        <h1>{UI_COPY.signIn}</h1>
+        <p className="auth-lead">Dùng email hoặc số điện thoại để tiếp tục.</p>
         <LoginForm />
         <p className="auth-switch">
-          No account yet?{' '}
+          Chưa có tài khoản?{' '}
           <Link to="/register" state={location.state}>
-            Register
+            {UI_COPY.register}
           </Link>
         </p>
       </div>

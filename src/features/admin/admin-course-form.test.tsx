@@ -13,6 +13,7 @@ import * as catalogCoursesApi from '../catalog/api/courses.api';
 import type { Course } from '../catalog/types/course.types';
 import { AdminRoute } from './components/AdminRoute';
 import { AdminCourseFormPage } from './pages/AdminCourseFormPage';
+import { mockPage } from '../../testing/mockPageResponse';
 
 vi.mock('../auth/api/auth.api', () => ({
   fetchCurrentUser: vi.fn(),
@@ -21,7 +22,7 @@ vi.mock('../auth/api/auth.api', () => ({
 }));
 
 vi.mock('./api/admin-courses.api', () => ({
-  listAllCourses: vi.fn(),
+  listAdminCoursesPage: vi.fn(),
   createCourse: vi.fn(),
   updateCourse: vi.fn(),
   publishCourse: vi.fn(),
@@ -29,12 +30,12 @@ vi.mock('./api/admin-courses.api', () => ({
 }));
 
 vi.mock('./api/admin-users.api', () => ({
-  listUsers: vi.fn(),
+  listUsersPage: vi.fn(),
 }));
 
 vi.mock('../catalog/api/courses.api', () => ({
   getCourseById: vi.fn(),
-  listPublishedCourses: vi.fn(),
+  listCoursesPage: vi.fn(),
   listCourseSections: vi.fn(),
   listSectionLessons: vi.fn(),
 }));
@@ -116,7 +117,7 @@ beforeEach(() => {
   auth.fetchCurrentUser.mockReset();
   adminCourses.createCourse.mockReset();
   adminCourses.updateCourse.mockReset();
-  adminUsers.listUsers.mockReset();
+  adminUsers.listUsersPage.mockReset();
   catalogCourses.getCourseById.mockReset();
   setAccessToken('admin-token');
   auth.fetchCurrentUser.mockResolvedValue(admin);
@@ -124,10 +125,12 @@ beforeEach(() => {
 
 describe('AdminCourseFormPage create', () => {
   it('filters instructors and creates a course', async () => {
-    adminUsers.listUsers.mockResolvedValue([
-      instructor,
-      { ...instructor, id: 'student-1', role: 'STUDENT', fullName: 'Student' },
-    ]);
+    adminUsers.listUsersPage.mockResolvedValue(
+      mockPage([
+        instructor,
+        { ...instructor, id: 'student-1', role: 'STUDENT', fullName: 'Student' },
+      ]),
+    );
     adminCourses.createCourse.mockResolvedValue(sampleCourse);
 
     const router = renderForm('/admin/courses/new');
@@ -154,7 +157,7 @@ describe('AdminCourseFormPage create', () => {
   });
 
   it('updates the live preview when form values change', async () => {
-    adminUsers.listUsers.mockResolvedValue([instructor]);
+    adminUsers.listUsersPage.mockResolvedValue(mockPage([instructor]));
 
     renderForm('/admin/courses/new');
     const preview = await screen.findByRole('article', { name: 'Xem trước thẻ khóa học' });
@@ -184,7 +187,7 @@ describe('AdminCourseFormPage create', () => {
   });
 
   it('keeps price input and Miễn phí checkbox on one row with free disabling the input', async () => {
-    adminUsers.listUsers.mockResolvedValue([instructor]);
+    adminUsers.listUsersPage.mockResolvedValue(mockPage([instructor]));
 
     renderForm('/admin/courses/new');
     const priceInput = (await screen.findByRole('spinbutton', {
@@ -209,7 +212,7 @@ describe('AdminCourseFormPage create', () => {
   });
 
   it('shows validation errors without calling the API', async () => {
-    adminUsers.listUsers.mockResolvedValue([instructor]);
+    adminUsers.listUsersPage.mockResolvedValue(mockPage([instructor]));
 
     renderForm('/admin/courses/new');
     await screen.findByRole('textbox', { name: /Tiêu đề/ });
@@ -222,7 +225,7 @@ describe('AdminCourseFormPage create', () => {
   });
 
   it('keeps form data when the API fails', async () => {
-    adminUsers.listUsers.mockResolvedValue([instructor]);
+    adminUsers.listUsersPage.mockResolvedValue(mockPage([instructor]));
     adminCourses.createCourse.mockRejectedValue(new ApiError(400, 'Only free courses'));
 
     renderForm('/admin/courses/new');
@@ -255,15 +258,16 @@ describe('AdminCourseFormPage edit', () => {
     expect(preview.textContent).toContain('Mô tả');
     expect(screen.queryByRole('combobox')).toBeNull();
     expect(screen.getByText(/Giảng viên không thể thay đổi/)).toBeTruthy();
-    expect(adminUsers.listUsers).not.toHaveBeenCalled();
+    expect(adminUsers.listUsersPage).not.toHaveBeenCalled();
   });
 
-  it('updates a course and navigates back to the list', async () => {
+  it('updates a course, reloads detail, and stays on the edit page', async () => {
     catalogCourses.getCourseById.mockResolvedValue(sampleCourse);
     adminCourses.updateCourse.mockResolvedValue({ ...sampleCourse, title: 'HSK 1 cập nhật' });
 
     const router = renderForm('/admin/courses/course-1');
     await screen.findByRole('textbox', { name: /Tiêu đề/ });
+    expect(screen.getByText('Chỉnh sửa thông tin khóa học')).toBeTruthy();
 
     fireEvent.change(screen.getByRole('textbox', { name: /Tiêu đề/ }), { target: { value: 'HSK 1 cập nhật' } });
     fireEvent.click(screen.getByRole('checkbox', { name: /Xuất bản khóa học/ }));
@@ -278,6 +282,65 @@ describe('AdminCourseFormPage edit', () => {
         published: true,
       }),
     );
-    await waitFor(() => expect(router.state.location.pathname).toBe('/admin/courses'));
+    await waitFor(() => expect(catalogCourses.getCourseById).toHaveBeenCalledTimes(2));
+    expect(router.state.location.pathname).toBe('/admin/courses/course-1');
+    expect(await screen.findByRole('status')).toBeTruthy();
+  });
+
+  it('navigates away on cancel without saving', async () => {
+    catalogCourses.getCourseById.mockResolvedValue(sampleCourse);
+
+    const router = renderForm('/admin/courses/course-1');
+    await screen.findByRole('textbox', { name: /Tiêu đề/ });
+
+    fireEvent.change(screen.getByRole('textbox', { name: /Tiêu đề/ }), {
+      target: { value: 'Thay đổi chưa lưu' },
+    });
+    fireEvent.click(screen.getByRole('link', { name: 'Hủy' }));
+
+    expect(router.state.location.pathname).toBe('/admin/courses');
+    expect(adminCourses.updateCourse).not.toHaveBeenCalled();
+  });
+
+  it('rejects invalid thumbnail URLs before calling the API', async () => {
+    adminUsers.listUsersPage.mockResolvedValue(mockPage([instructor]));
+
+    renderForm('/admin/courses/new');
+    await screen.findByRole('textbox', { name: /Tiêu đề/ });
+
+    fireEvent.change(screen.getByRole('textbox', { name: /Tiêu đề/ }), { target: { value: 'Khóa mới' } });
+    fireEvent.change(screen.getByLabelText(/^Giảng viên/), { target: { value: 'inst-1' } });
+    fireEvent.change(screen.getByLabelText(/^URL ảnh bìa/), {
+      target: { value: 'not-a-url' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo khóa học' }));
+
+    expect(await screen.findByText('URL không hợp lệ.')).toBeTruthy();
+    expect(adminCourses.createCourse).not.toHaveBeenCalled();
+  });
+
+  it('prevents duplicate create submissions while the request is in flight', async () => {
+    adminUsers.listUsersPage.mockResolvedValue(mockPage([instructor]));
+    let resolveCreate!: () => void;
+    adminCourses.createCourse.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveCreate = () => resolve(sampleCourse);
+        }),
+    );
+
+    renderForm('/admin/courses/new');
+    await screen.findByRole('textbox', { name: /Tiêu đề/ });
+
+    fireEvent.change(screen.getByRole('textbox', { name: /Tiêu đề/ }), { target: { value: 'Khóa mới' } });
+    fireEvent.change(screen.getByLabelText(/^Giảng viên/), { target: { value: 'inst-1' } });
+    const submit = screen.getByRole('button', { name: 'Tạo khóa học' });
+    fireEvent.click(submit);
+    fireEvent.click(submit);
+
+    await waitFor(() => expect(adminCourses.createCourse).toHaveBeenCalledTimes(1));
+    resolveCreate();
+    await waitFor(() => expect(screen.getByText('Course list')).toBeTruthy());
+    expect(adminCourses.createCourse).toHaveBeenCalledTimes(1);
   });
 });

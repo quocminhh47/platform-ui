@@ -180,26 +180,26 @@ export function useCourseProgress({
 
 function progressLoadMessage(cause: unknown): string {
   if (cause instanceof ApiError && cause.status === 403) {
-    return 'Progress is available after you enroll in this course.';
+    return 'Tiến độ khả dụng sau khi bạn ghi danh vào khóa học này.';
   }
   if (cause instanceof ApiError && cause.status === 401) {
-    return 'Your session has expired. Sign in again.';
+    return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
   }
   if (cause instanceof ApiError) {
-    return 'Course progress could not be loaded. Try again in a moment.';
+    return 'Không tải được tiến độ khóa học. Vui lòng thử lại sau.';
   }
-  return 'Unable to reach the server. Check your connection and try again.';
+  return 'Không kết nối được máy chủ. Kiểm tra mạng và thử lại.';
 }
 
 function completeProgressMessage(cause: unknown): string {
   if (cause instanceof ApiError && cause.status === 400) {
-    return 'This lesson cannot be marked complete yet.';
+    return 'Bài học này chưa thể đánh dấu hoàn thành.';
   }
   if (cause instanceof ApiError && cause.status === 403) {
-    return 'You need an active enrollment to update progress.';
+    return 'Bạn cần ghi danh hoạt động để cập nhật tiến độ.';
   }
   if (cause instanceof ApiError) {
-    return 'Could not mark this lesson complete. Try again.';
+    return 'Không đánh dấu hoàn thành được. Vui lòng thử lại.';
   }
-  return 'Unable to reach the server. Check your connection and try again.';
+  return 'Không kết nối được máy chủ. Kiểm tra mạng và thử lại.';
 }

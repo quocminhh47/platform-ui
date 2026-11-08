@@ -22,9 +22,19 @@ export const breadcrumbAccount = (): BreadcrumbItem => ({
   href: '/account',
 });
 
+export const breadcrumbAdminOverview = (): BreadcrumbItem => ({
+  label: 'Tổng quan quản trị',
+  href: '/admin',
+});
+
 export const breadcrumbAdminCourses = (): BreadcrumbItem => ({
   label: 'Quản trị khóa học',
   href: '/admin/courses',
+});
+
+export const breadcrumbAdminUsers = (): BreadcrumbItem => ({
+  label: 'Quản lý người dùng',
+  href: '/admin/users',
 });
 
 export function breadcrumbCourseTitle(

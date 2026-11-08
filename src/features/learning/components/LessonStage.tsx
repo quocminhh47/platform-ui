@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import type { Lesson } from '../../catalog/types/lesson.types';
 import { ArticleLesson } from './ArticleLesson';
 import { QuizPlayer } from './QuizPlayer';
+import { UI_COPY } from '../../../ui/ui-copy';
 import { UnsupportedLesson } from './UnsupportedLesson';
 import { VideoLesson } from './VideoLesson';
 
@@ -33,20 +34,20 @@ export function LessonStage({
   onQuizPassed,
 }: LessonStageProps) {
   return (
-    <main className="learning-stage" aria-label="Lesson">
-      {loading ? <p className="page-status">Loading lesson…</p> : null}
+    <main className="learning-stage" aria-label="Bài học">
+      {loading ? <p className="page-status">Đang tải bài học…</p> : null}
 
       {!loading && error ? (
         <div className="section-error" role="alert">
           <p>{error}</p>
           <button type="button" onClick={onRetry}>
-            Try again
+            Thử lại
           </button>
         </div>
       ) : null}
 
       {!loading && !error && missingSelection ? (
-        <p className="muted">This lesson is not in the course curriculum.</p>
+        <p className="muted">Bài học này không thuộc nội dung khóa học.</p>
       ) : null}
 
       {!loading && !error && lesson ? (
@@ -112,9 +113,9 @@ function LessonBody({
         <h1>{lesson.title}</h1>
         <p className="learning-lesson-status">
           {isCompleted ? (
-            <span className="learning-status-complete">Completed</span>
+            <span className="learning-status-complete">{UI_COPY.completed}</span>
           ) : (
-            <span className="learning-status-incomplete">Not completed</span>
+            <span className="learning-status-incomplete">{UI_COPY.notCompleted}</span>
           )}
         </p>
       </div>
@@ -136,6 +137,7 @@ function LessonBody({
         <ArticleLesson
           title={lesson.title}
           contentUrl={lesson.contentUrl}
+          article={lesson.article}
           onContentReady={handleContentReady}
         />
       ) : null}

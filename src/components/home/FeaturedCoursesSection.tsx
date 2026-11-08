@@ -1,14 +1,18 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import { HomeCourseCard } from '../../pages/home/HomeCourseCard';
 import { usePublishedCourses } from '../../features/catalog/hooks/usePublishedCourses';
-import { searchLoadedCourses } from '../../features/catalog/utils/courseSearch';
+import {
+  catalogPathWithSearchQuery,
+  searchLoadedCourses,
+} from '../../features/catalog/utils/courseSearch';
+import { UI_COPY } from '../../ui/ui-copy';
 import { SectionHeading } from '../common/SectionHeading';
 
 const FEATURED_HEADING = 'Kho học liệu tiếng Trung & luyện thi HSK';
 const FEATURED_LIMIT = 8;
 
 export function FeaturedCoursesSection() {
-  const { courses, loading, error, reload } = usePublishedCourses();
+  const { courses, loading, error, reload } = usePublishedCourses({ page: 0, size: 8 });
   const [params] = useSearchParams();
   const query = params.get('q') ?? '';
   const filtered = courses ? searchLoadedCourses(courses, query) : null;
@@ -23,7 +27,7 @@ export function FeaturedCoursesSection() {
           eyebrow="Kho tài nguyên học tập"
           title={FEATURED_HEADING}
           action={
-            <Link className="landing-text-link" to="/courses">
+            <Link className="landing-text-link" to={catalogPathWithSearchQuery(query)}>
               Xem tất cả khóa học
             </Link>
           }
@@ -31,16 +35,16 @@ export function FeaturedCoursesSection() {
         <p className="landing-search-note">
           {query.trim()
             ? `Đang lọc “${query.trim()}” trong ${loadedCount} khóa học đã tải. Không tìm trên toàn bộ cơ sở dữ liệu.`
-            : 'Ô tìm kiếm chỉ lọc các khóa học đã tải trên trang này, không tìm trên toàn bộ cơ sở dữ liệu.'}
+            : UI_COPY.catalogSearchScopeNote}
         </p>
 
         {loading ? <p className="page-status">Đang tải khóa học…</p> : null}
 
         {!loading && error ? (
           <div className="section-error" role="alert">
-            <p>Không tải được danh sách khóa học. Vui lòng thử lại.</p>
+            <p>{error}</p>
             <button type="button" onClick={reload}>
-              Thử lại
+              {UI_COPY.tryAgain}
             </button>
           </div>
         ) : null}
@@ -71,7 +75,7 @@ export function FeaturedCoursesSection() {
 
         {!loading && !error && courses && courses.length > FEATURED_LIMIT ? (
           <p className="landing-featured-more">
-            <Link className="landing-btn landing-btn-outline" to="/courses">
+            <Link className="landing-btn landing-btn-outline" to={catalogPathWithSearchQuery(query)}>
               Xem thêm khóa học
             </Link>
           </p>

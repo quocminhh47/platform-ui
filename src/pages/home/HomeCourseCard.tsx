@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { CourseImage } from '../../features/catalog/components/CourseImage';
 import type { Course } from '../../features/catalog/types/course.types';
 import { formatPrice } from '../../features/catalog/utils/formatPrice';
+import { UI_COPY } from '../../ui/ui-copy';
 
 type HomeCourseCardProps = {
   course: Course;
@@ -26,7 +27,11 @@ export function HomeCourseCard({ course, variant = 'default' }: HomeCourseCardPr
           <p className="home-course-price">{formatPrice(course.price)}</p>
           {instructor || lessonCount !== null ? (
             <p className="home-course-facts">
-              {instructor ? <span>{instructor}</span> : null}
+              {instructor ? (
+                <span>
+                  {UI_COPY.instructor}: {instructor}
+                </span>
+              ) : null}
               {lessonCount !== null ? <span>{lessonCount} bài học</span> : null}
             </p>
           ) : null}

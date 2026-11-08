@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { PaginationControls } from '../../../components/common/PaginationControls';
+import { UI_COPY } from '../../../ui/ui-copy';
 import { HomeCourseCard } from '../../../pages/home/HomeCourseCard';
 import { usePublishedCourses } from '../hooks/usePublishedCourses';
-import { searchLoadedCourses } from '../utils/courseSearch';
 
 type CourseBrowserProps = {
   heading: string;
@@ -9,12 +11,47 @@ type CourseBrowserProps = {
 };
 
 export function CourseBrowser({ heading, variant = 'default' }: CourseBrowserProps) {
-  const { courses, loading, error, reload } = usePublishedCourses();
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const query = params.get('q') ?? '';
-  const visible = courses ? searchLoadedCourses(courses, query) : null;
-  const loadedCount = courses?.length ?? 0;
+  const page = Number.parseInt(params.get('page') ?? '0', 10);
+  const safePage = Number.isNaN(page) || page < 0 ? 0 : page;
+  const [searchInput, setSearchInput] = useState(query);
+
+  useEffect(() => {
+    setSearchInput(query);
+  }, [query]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const trimmed = searchInput.trim();
+      const next = new URLSearchParams(params);
+      if (trimmed) {
+        next.set('q', trimmed);
+      } else {
+        next.delete('q');
+      }
+      next.set('page', '0');
+      if (next.toString() !== params.toString()) {
+        setParams(next, { replace: true });
+      }
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [searchInput, params, setParams]);
+
+  const { courses, page: pageData, loading, error, reload } = usePublishedCourses({
+    page: safePage,
+    size: 12,
+    q: query,
+  });
+
   const isLanding = variant === 'landing';
+  const totalElements = pageData?.totalElements ?? 0;
+
+  function goToPage(nextPage: number) {
+    const next = new URLSearchParams(params);
+    next.set('page', String(nextPage));
+    setParams(next);
+  }
 
   const content = (
     <>
@@ -30,45 +67,67 @@ export function CourseBrowser({ heading, variant = 'default' }: CourseBrowserPro
           <h2 className="home-kicker-label">{heading}</h2>
         </>
       )}
+
+      <label className="catalog-search-field">
+        <span className="visually-hidden">Tìm khóa học</span>
+        <input
+          type="search"
+          value={searchInput}
+          placeholder="Tìm theo tên khóa học, mô tả hoặc giảng viên…"
+          onChange={(event) => setSearchInput(event.target.value)}
+        />
+      </label>
+
       <p className={isLanding ? 'landing-search-note' : 'home-search-scope'}>
         {query.trim()
-          ? `Đang lọc “${query.trim()}” trong ${loadedCount} khóa học đã tải. Không tìm trên toàn bộ cơ sở dữ liệu.`
-          : 'Ô tìm kiếm chỉ lọc các khóa học đã tải trên trang này, không tìm trên toàn bộ cơ sở dữ liệu.'}
+          ? `Đang tìm “${query.trim()}” trên toàn bộ khóa học đã xuất bản (${totalElements} kết quả).`
+          : UI_COPY.catalogSearchScopeNote}
       </p>
 
       {loading ? <p className="page-status">Đang tải khóa học…</p> : null}
 
       {!loading && error ? (
         <div className="section-error" role="alert">
-          <p>Không tải được danh sách khóa học. Vui lòng thử lại.</p>
+          <p>{error}</p>
           <button type="button" onClick={reload}>
-            Thử lại
+            {UI_COPY.tryAgain}
           </button>
         </div>
       ) : null}
 
       {!loading && !error && courses && courses.length === 0 ? (
         <div className="empty-state">
-          <p className="empty-state-title">Chưa có khóa học đã xuất bản</p>
-          <p className="muted">Khi quản trị viên xuất bản khóa học, danh sách sẽ hiện ở đây.</p>
+          <p className="empty-state-title">
+            {query.trim() ? 'Không có khóa học khớp' : 'Chưa có khóa học đã xuất bản'}
+          </p>
+          <p className="muted">
+            {query.trim()
+              ? 'Thử từ khóa khác hoặc xóa bộ lọc tìm kiếm.'
+              : 'Khi quản trị viên xuất bản khóa học, danh sách sẽ hiện ở đây.'}
+          </p>
         </div>
       ) : null}
 
-      {!loading && !error && courses && courses.length > 0 && visible && visible.length === 0 ? (
-        <div className="empty-state">
-          <p className="empty-state-title">Không có khóa học khớp</p>
-          <p className="muted">Thử từ khóa khác. Kết quả chỉ đến từ danh sách đã tải.</p>
-        </div>
-      ) : null}
-
-      {!loading && !error && visible && visible.length > 0 ? (
-        <ul className={isLanding ? 'landing-course-grid' : 'home-course-grid'}>
-          {visible.map((course) => (
-            <li key={course.id}>
-              <HomeCourseCard course={course} variant={isLanding ? 'landing' : 'default'} />
-            </li>
-          ))}
-        </ul>
+      {!loading && !error && courses && courses.length > 0 ? (
+        <>
+          <ul className={isLanding ? 'landing-course-grid' : 'home-course-grid'}>
+            {courses.map((course) => (
+              <li key={course.id}>
+                <HomeCourseCard course={course} variant={isLanding ? 'landing' : 'default'} />
+              </li>
+            ))}
+          </ul>
+          {pageData ? (
+            <PaginationControls
+              page={pageData.page}
+              totalPages={pageData.totalPages}
+              totalElements={pageData.totalElements}
+              disabled={loading}
+              onPageChange={goToPage}
+              label="Trang danh mục"
+            />
+          ) : null}
+        </>
       ) : null}
     </>
   );
@@ -81,5 +140,5 @@ export function CourseBrowser({ heading, variant = 'default' }: CourseBrowserPro
     );
   }
 
-  return <div className="home-workspace">{content}</div>;
+  return <section className="home-catalog-browser">{content}</section>;
 }

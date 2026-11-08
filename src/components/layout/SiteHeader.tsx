@@ -86,7 +86,7 @@ export function SiteHeader() {
                   Cá nhân
                 </Link>
                 <Link className="site-header-link" to="/my-courses">
-                  My courses
+                  Khóa học của tôi
                 </Link>
                 <Link className="site-header-link" to="/account">
                   Hồ sơ

@@ -1,12 +1,15 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AdminQuizBuilderForm } from './components/AdminQuizBuilderForm';
 import {
   emptyQuizBuilderForm,
   type QuizBuilderFormValues,
 } from './validation/admin-quiz-form.validation';
 
-function renderForm(initialValues?: QuizBuilderFormValues) {
+function renderForm(
+  initialValues?: QuizBuilderFormValues,
+  options?: { submitting?: boolean },
+) {
   const onSubmit = vi.fn().mockResolvedValue(undefined);
   render(
     <AdminQuizBuilderForm
@@ -14,20 +17,23 @@ function renderForm(initialValues?: QuizBuilderFormValues) {
       questionsLocked={false}
       formError={null}
       attemptsLockedBanner={null}
-      submitting={false}
+      submitting={options?.submitting ?? false}
       onSubmit={onSubmit}
     />,
   );
   return { onSubmit };
 }
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe('AdminQuizBuilderForm', () => {
   it('uses radio correct-answer controls for SINGLE_CHOICE', () => {
     renderForm();
     const radios = screen.getAllByRole('radio', { name: /Đáp án đúng/ });
     expect(radios.length).toBeGreaterThanOrEqual(2);
-    expect(screen.queryByText(/^Đúng$/)).toBeNull();
-    expect(screen.getByText('Đáp án đúng')).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Danh sách lựa chọn' })).toBeTruthy();
   });
 
   it('configures TRUE_FALSE with Đúng and Sai and selectable correct answer', () => {
@@ -35,8 +41,9 @@ describe('AdminQuizBuilderForm', () => {
     fireEvent.change(screen.getByLabelText(/^Loại câu hỏi/), {
       target: { value: 'TRUE_FALSE' },
     });
-    expect(screen.getByText('Đúng')).toBeTruthy();
-    expect(screen.getByText('Sai')).toBeTruthy();
+    const card = screen.getByRole('article');
+    expect(within(card).getByText('Sai')).toBeTruthy();
+    expect(within(card).getAllByText('Đúng').length).toBeGreaterThan(0);
     const saiCorrect = screen.getByRole('radio', { name: 'Đáp án đúng B' });
     fireEvent.click(saiCorrect);
     expect((saiCorrect as HTMLInputElement).checked).toBe(true);
@@ -57,7 +64,8 @@ describe('AdminQuizBuilderForm', () => {
     expect(textareas[1].value).toBe('Câu một');
   });
 
-  it('removes a question with the delete control', () => {
+  it('removes a question after confirmation', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
     const initial = emptyQuizBuilderForm();
     initial.questions = [initial.questions[0], { ...initial.questions[0], key: 'q2' }];
     renderForm(initial);
@@ -65,6 +73,16 @@ describe('AdminQuizBuilderForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Xóa câu 1' }));
     expect(screen.queryByText(/Câu 2:/)).toBeNull();
     expect(screen.getByText(/Câu 1:/)).toBeTruthy();
+  });
+
+  it('keeps a question when delete confirmation is canceled', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const initial = emptyQuizBuilderForm();
+    initial.questions = [initial.questions[0], { ...initial.questions[0], key: 'q2' }];
+    renderForm(initial);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Xóa câu 1' }));
+    expect(screen.getByText(/Câu 2:/)).toBeTruthy();
   });
 
   it('collapses question body without clearing inputs', () => {
@@ -80,6 +98,69 @@ describe('AdminQuizBuilderForm', () => {
     expect((screen.getByLabelText(/^Nội dung câu hỏi/) as HTMLTextAreaElement).value).toBe(
       'Nội dung giữ lại',
     );
+  });
+
+  it('preserves question text when validation fails on submit', async () => {
+    const { onSubmit } = renderForm();
+    fireEvent.change(screen.getByLabelText(/^Nội dung câu hỏi/), {
+      target: { value: 'Câu chưa đủ đáp án' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu quiz' }));
+
+    expect(await screen.findByText(/Mỗi lựa chọn phải có nội dung/)).toBeTruthy();
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect((screen.getByLabelText(/^Nội dung câu hỏi/) as HTMLTextAreaElement).value).toBe(
+      'Câu chưa đủ đáp án',
+    );
+  });
+
+  it('prevents duplicate submit while save is in flight', async () => {
+    let resolveSubmit!: () => void;
+    const onSubmit = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveSubmit = resolve;
+        }),
+    );
+    const initial = emptyQuizBuilderForm();
+    initial.questions[0].questionText = 'OK?';
+    initial.questions[0].options[0].optionText = 'A';
+    initial.questions[0].options[0].isCorrect = true;
+    initial.questions[0].options[1].optionText = 'B';
+
+    render(
+      <AdminQuizBuilderForm
+        initialValues={initial}
+        questionsLocked={false}
+        formError={null}
+        attemptsLockedBanner={null}
+        submitting={false}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    const save = screen.getByRole('button', { name: 'Lưu quiz' });
+    fireEvent.click(save);
+    fireEvent.click(save);
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    resolveSubmit();
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+  });
+
+  it('adds and removes an answer option when confirmed', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    renderForm();
+    fireEvent.click(screen.getByRole('button', { name: '+ Thêm lựa chọn' }));
+    expect(screen.getByLabelText(/Nội dung lựa chọn C/)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Xóa lựa chọn C' }));
+    expect(screen.queryByLabelText(/Nội dung lựa chọn C/)).toBeNull();
+  });
+
+  it('shows quiz settings section and question list headings', () => {
+    renderForm();
+    expect(screen.getByRole('heading', { name: 'Cài đặt quiz' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Câu hỏi' })).toBeTruthy();
   });
 
   it('uses checkboxes for MULTIPLE_CHOICE correct answers', () => {

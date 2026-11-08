@@ -73,8 +73,8 @@ export function useCourseDetail(courseId: string | undefined): CourseDetailState
         setNotFound(false);
         setError(
           cause instanceof ApiError
-            ? 'This course could not be loaded. Try again in a moment.'
-            : 'Unable to reach the server. Check your connection and try again.',
+            ? 'Không tải được khóa học. Vui lòng thử lại sau.'
+            : 'Không kết nối được máy chủ. Kiểm tra mạng và thử lại.',
         );
       })
       .finally(() => {

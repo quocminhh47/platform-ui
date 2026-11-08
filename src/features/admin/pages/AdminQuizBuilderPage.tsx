@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Breadcrumb } from '../../../components/common/Breadcrumb';
 import {
@@ -41,6 +41,15 @@ export function AdminQuizBuilderPage() {
   const [submitting, setSubmitting] = useState(false);
   const inFlightRef = useRef(false);
   const [formKey, setFormKey] = useState(0);
+
+  useEffect(() => {
+    setQuestionsLocked(false);
+    setAttemptsBanner(null);
+    setFormError(null);
+    setFormKey(0);
+    setSubmitting(false);
+    inFlightRef.current = false;
+  }, [courseId, lessonId]);
 
   const lessonTitle =
     curriculum.sections

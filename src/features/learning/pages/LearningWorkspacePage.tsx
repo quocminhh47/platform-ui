@@ -11,6 +11,7 @@ import type { SectionWithLessons } from '../../catalog/hooks/useCourseCurriculum
 import { useCourseCurriculum } from '../../catalog/hooks/useCourseCurriculum';
 import { useCourseDetail } from '../../catalog/hooks/useCourseDetail';
 import { CurriculumSidebar } from '../components/CurriculumSidebar';
+import { CourseCompleteCallout } from '../components/CourseCompleteCallout';
 import { LessonNav } from '../components/LessonNav';
 import { LessonStage } from '../components/LessonStage';
 import { useCourseProgress } from '../hooks/useCourseProgress';
@@ -82,22 +83,22 @@ export function LearningWorkspacePage() {
   let workspace: ReactNode;
 
   if (detail.loading) {
-    workspace = <p className="page-status learning-page-status">Loading course…</p>;
+    workspace = <p className="page-status learning-page-status">Đang tải khóa học…</p>;
   } else if (detail.notFound || !courseId) {
     workspace = (
       <section className="course-detail-empty">
-        <h1>Course not available</h1>
-        <Link to="/courses">Back to courses</Link>
+        <h1>Khóa học không khả dụng</h1>
+        <Link to="/courses">Quay lại danh mục</Link>
       </section>
     );
   } else if (detail.error || !detail.course) {
     workspace = (
       <section className="course-detail-empty">
-        <h1>Could not load course</h1>
+        <h1>Không tải được khóa học</h1>
         <div className="section-error" role="alert">
           <p>{detail.error}</p>
           <button type="button" onClick={detail.reload}>
-            Try again
+            Thử lại
           </button>
         </div>
       </section>
@@ -138,6 +139,12 @@ export function LearningWorkspacePage() {
               onAutoComplete={handleAutoComplete}
               completeError={completeError}
               onQuizPassed={handleQuizPassed}
+            />
+            <CourseCompleteCallout
+              courseSummary={courseSummary}
+              progressLoading={progressLoading}
+              progressError={progressError}
+              courseTitle={detail.course?.title}
             />
             <LessonNav
               courseId={courseId}

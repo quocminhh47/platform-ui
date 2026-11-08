@@ -46,7 +46,7 @@ function parseValidationDetails(details: string[] | null | undefined): Record<st
 export function mapAuthError(error: unknown, kind: AuthFormKind): FormErrors {
   if (!(error instanceof ApiError)) {
     return {
-      form: 'Unable to reach the server. Check your connection and try again.',
+      form: 'Không kết nối được máy chủ. Kiểm tra mạng và thử lại.',
       fields: {},
     };
   }
@@ -57,33 +57,32 @@ export function mapAuthError(error: unknown, kind: AuthFormKind): FormErrors {
       form:
         Object.keys(fields).length > 0
           ? null
-          : 'The submitted information is not valid. Please check it and try again.',
+          : 'Thông tin không hợp lệ. Vui lòng kiểm tra và thử lại.',
       fields,
     };
   }
 
   if (error.status === 401 && kind === 'login') {
-    return { form: 'Invalid email/phone number or password.', fields: {} };
+    return { form: 'Email/số điện thoại hoặc mật khẩu không đúng.', fields: {} };
   }
 
   if (error.status === 409 && kind === 'register') {
     const fields = parseValidationDetails(error.body?.details);
     if (fields.email) {
-      fields.email = 'An account with this email already exists.';
+      fields.email = 'Email này đã được đăng ký.';
     }
     if (fields.phoneNumber) {
-      fields.phoneNumber = 'An account with this phone number already exists.';
+      fields.phoneNumber = 'Số điện thoại này đã được đăng ký.';
     }
     if (Object.keys(fields).length === 0) {
-      // Older/opaque 409: fall back to the message text.
       if (/phone/i.test(error.message)) {
-        fields.phoneNumber = 'An account with this phone number already exists.';
+        fields.phoneNumber = 'Số điện thoại này đã được đăng ký.';
       } else {
-        fields.email = 'An account with this email already exists.';
+        fields.email = 'Email này đã được đăng ký.';
       }
     }
     return { form: null, fields };
   }
 
-  return { form: 'Something went wrong. Please try again later.', fields: {} };
+  return { form: 'Đã xảy ra lỗi. Vui lòng thử lại sau.', fields: {} };
 }
