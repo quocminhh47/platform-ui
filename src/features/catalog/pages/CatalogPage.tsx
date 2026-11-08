@@ -1,9 +1,11 @@
+import { AdminMemberPageShell } from '../../../components/layout/AdminMemberPageShell';
 import { Breadcrumb } from '../../../components/common/Breadcrumb';
 import { breadcrumbCourses, breadcrumbHome } from '../../../navigation/breadcrumb-trail';
 import { CourseBrowser } from '../components/CourseBrowser';
 
 export function CatalogPage() {
   return (
+    <AdminMemberPageShell>
     <div className="landing-page landing-catalog-page">
       <header className="landing-catalog-hero">
         <div className="landing-container">
@@ -16,5 +18,6 @@ export function CatalogPage() {
       </header>
       <CourseBrowser heading="Kho học liệu tiếng Trung & luyện thi HSK" variant="landing" />
     </div>
+    </AdminMemberPageShell>
   );
 }

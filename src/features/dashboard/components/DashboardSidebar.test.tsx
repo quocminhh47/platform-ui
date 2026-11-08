@@ -48,5 +48,6 @@ describe('DashboardSidebar', () => {
     );
     expect(screen.getByRole('link', { name: 'Bảng điều khiển' }).textContent).toBe('Bảng điều khiển');
     expect(screen.getByRole('link', { name: 'Khóa học của tôi' }).textContent).toBe('Khóa học của tôi');
+    expect(screen.getByRole('link', { name: 'Bài viết' }).getAttribute('href')).toBe('/articles');
   });
 });

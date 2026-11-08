@@ -7,6 +7,7 @@ import { setAccessToken } from '../../services/api/token-storage';
 import * as authApi from '../auth/api/auth.api';
 import type { User } from '../auth/types/auth.types';
 import { HomePage } from '../../pages/HomePage';
+import * as articlesApi from '../articles/api/public-articles.api';
 import * as coursesApi from './api/courses.api';
 import { CatalogPage } from './pages/CatalogPage';
 import type { Course } from './types/course.types';
@@ -22,8 +23,13 @@ vi.mock('./api/courses.api', () => ({
   listCoursesPage: vi.fn(),
 }));
 
+vi.mock('../articles/api/public-articles.api', () => ({
+  listPublicArticlesPage: vi.fn(),
+}));
+
 const auth = vi.mocked(authApi);
 const courses = vi.mocked(coursesApi);
+const articles = vi.mocked(articlesApi);
 
 const student: User = {
   id: 'u1',
@@ -78,6 +84,8 @@ beforeEach(() => {
   auth.fetchCurrentUser.mockReset();
   courses.listCoursesPage.mockReset();
   courses.listCoursesPage.mockResolvedValue(mockPage([]));
+  articles.listPublicArticlesPage.mockReset();
+  articles.listPublicArticlesPage.mockResolvedValue(mockPage([]));
 });
 
 describe('public home', () => {
@@ -149,7 +157,8 @@ describe('public home', () => {
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).not.toMatch(/database/);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Thử lại' }));
+    const retryButtons = screen.getAllByRole('button', { name: 'Thử lại' });
+    fireEvent.click(retryButtons[0]);
 
     expect(await screen.findByRole('heading', { name: 'Intro to Algebra' })).toBeTruthy();
   });

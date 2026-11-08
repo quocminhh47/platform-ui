@@ -7,9 +7,23 @@ export const breadcrumbCourses = (): BreadcrumbItem => ({
   href: '/courses',
 });
 
+export const breadcrumbArticles = (): BreadcrumbItem => ({
+  label: 'Bài viết',
+  href: '/articles',
+});
+
+export function breadcrumbArticleTitle(title: string): BreadcrumbItem {
+  return { label: title.trim() || 'Bài viết' };
+}
+
 export const breadcrumbMyCourses = (): BreadcrumbItem => ({
   label: 'Khóa học của tôi',
   href: '/my-courses',
+});
+
+export const breadcrumbMyArticles = (): BreadcrumbItem => ({
+  label: 'Bài viết của tôi',
+  href: '/my-articles',
 });
 
 export const breadcrumbDashboard = (): BreadcrumbItem => ({

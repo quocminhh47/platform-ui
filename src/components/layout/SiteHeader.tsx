@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation, useSearchParams } from 'react-router-dom';
 import { SITE_BRAND } from '../../config/site-brand';
 import { useAuth } from '../../features/auth/hooks/useAuth';
 import { BrandMark } from './BrandMark';
+import { SiteHeaderUserMenu } from './SiteHeaderUserMenu';
 
 const SEARCH_PATHS = new Set(['/', '/courses']);
 
@@ -13,6 +14,7 @@ export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const query = params.get('q') ?? '';
   const searchEnabled = SEARCH_PATHS.has(location.pathname);
+  const isAdmin = user?.role === 'ADMIN';
 
   useEffect(() => {
     setMobileOpen(false);
@@ -49,9 +51,9 @@ export function SiteHeader() {
           <NavLink to="/courses" className={navClass}>
             Khóa học
           </NavLink>
-          <a className="site-header-nav-link" href="/#why-choose">
-            Vì sao chọn chúng tôi
-          </a>
+          <NavLink to="/articles" className={navClass}>
+            Bài viết
+          </NavLink>
           <a className="site-header-nav-link" href="/#faq">
             FAQ
           </a>
@@ -77,25 +79,17 @@ export function SiteHeader() {
             </form>
           ) : null}
 
-          <nav className="site-header-account" aria-label="Tài khoản">
+          {isAuthenticated && isAdmin ? (
+            <NavLink to="/admin" className={adminNavClass}>
+              Quản trị hệ thống
+            </NavLink>
+          ) : null}
+
+          <div className="site-header-account" aria-label="Tài khoản">
             {isInitializing ? (
               <span className="site-header-muted">…</span>
             ) : isAuthenticated && user ? (
-              <>
-                <Link className="site-header-link" to="/dashboard">
-                  Cá nhân
-                </Link>
-                <Link className="site-header-link" to="/my-courses">
-                  Khóa học của tôi
-                </Link>
-                <Link className="site-header-link" to="/account">
-                  Hồ sơ
-                </Link>
-                <span className="site-header-user">{user.fullName}</span>
-                <button type="button" className="site-header-sign-out" onClick={logout}>
-                  Đăng xuất
-                </button>
-              </>
+              <SiteHeaderUserMenu user={user} onLogout={logout} />
             ) : (
               <>
                 <Link className="site-header-register" to="/register">
@@ -106,7 +100,7 @@ export function SiteHeader() {
                 </Link>
               </>
             )}
-          </nav>
+          </div>
 
           <button
             type="button"
@@ -129,20 +123,44 @@ export function SiteHeader() {
           <NavLink to="/courses" className={navClass} onClick={() => setMobileOpen(false)}>
             Khóa học
           </NavLink>
-          <a className="site-header-nav-link" href="/#why-choose" onClick={() => setMobileOpen(false)}>
-            Vì sao chọn chúng tôi
-          </a>
+          <NavLink to="/articles" className={navClass} onClick={() => setMobileOpen(false)}>
+            Bài viết
+          </NavLink>
           <a className="site-header-nav-link" href="/#faq" onClick={() => setMobileOpen(false)}>
             FAQ
           </a>
+          {isAuthenticated && isAdmin ? (
+            <NavLink to="/admin" className={adminNavClass} onClick={() => setMobileOpen(false)}>
+              Quản trị hệ thống
+            </NavLink>
+          ) : null}
           {!isAuthenticated ? (
             <>
-              <Link to="/register" onClick={() => setMobileOpen(false)}>Đăng ký</Link>
-              <Link to="/login" onClick={() => setMobileOpen(false)}>Đăng nhập</Link>
+              <Link to="/register" onClick={() => setMobileOpen(false)}>
+                Đăng ký
+              </Link>
+              <Link to="/login" onClick={() => setMobileOpen(false)}>
+                Đăng nhập
+              </Link>
             </>
-          ) : (
-            <Link to="/dashboard" onClick={() => setMobileOpen(false)}>Cá nhân</Link>
-          )}
+          ) : user ? (
+            <div className="site-header-mobile-account">
+              <p className="site-header-mobile-account-label">Tài khoản — {user.fullName}</p>
+              <Link to="/account" onClick={() => setMobileOpen(false)}>
+                Quản trị cá nhân
+              </Link>
+              <button
+                type="button"
+                className="site-header-mobile-sign-out"
+                onClick={() => {
+                  setMobileOpen(false);
+                  logout();
+                }}
+              >
+                Đăng xuất
+              </button>
+            </div>
+          ) : null}
         </nav>
       ) : null}
     </header>
@@ -151,4 +169,8 @@ export function SiteHeader() {
 
 function navClass({ isActive }: { isActive: boolean }) {
   return isActive ? 'site-header-nav-link is-active' : 'site-header-nav-link';
+}
+
+function adminNavClass({ isActive }: { isActive: boolean }) {
+  return isActive ? 'site-header-admin-link is-active' : 'site-header-admin-link';
 }

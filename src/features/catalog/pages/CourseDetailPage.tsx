@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
+import { AdminMemberPageShell } from '../../../components/layout/AdminMemberPageShell';
 import { Breadcrumb } from '../../../components/common/Breadcrumb';
 import {
   breadcrumbCourseTitle,
@@ -31,17 +32,20 @@ export function CourseDetailPage() {
 
   if (detail.loading) {
     return (
+      <AdminMemberPageShell>
       <div className="course-detail-page">
         <div className="landing-container course-detail-state">
           <Breadcrumb items={breadcrumbTrail} />
           <p className="page-status course-detail-status">Đang tải khóa học…</p>
         </div>
       </div>
+      </AdminMemberPageShell>
     );
   }
 
   if (detail.notFound) {
     return (
+      <AdminMemberPageShell>
       <div className="course-detail-page">
         <div className="landing-container course-detail-state">
           <Breadcrumb items={breadcrumbTrail} />
@@ -54,11 +58,13 @@ export function CourseDetailPage() {
           </section>
         </div>
       </div>
+      </AdminMemberPageShell>
     );
   }
 
   if (detail.error || !detail.course) {
     return (
+      <AdminMemberPageShell>
       <div className="course-detail-page">
         <div className="landing-container course-detail-state">
           <Breadcrumb items={breadcrumbTrail} />
@@ -74,6 +80,7 @@ export function CourseDetailPage() {
           </section>
         </div>
       </div>
+      </AdminMemberPageShell>
     );
   }
 
@@ -81,6 +88,7 @@ export function CourseDetailPage() {
   const curriculumSummary = summarizeCurriculum(curriculum.sections);
 
   return (
+    <AdminMemberPageShell>
     <div className="course-detail-page">
       <CourseDetailHero course={course} breadcrumbItems={breadcrumbTrail} />
       <div className="course-detail-main landing-container">
@@ -99,5 +107,6 @@ export function CourseDetailPage() {
         </div>
       </div>
     </div>
+    </AdminMemberPageShell>
   );
 }

@@ -2,6 +2,7 @@ import { CallToActionSection } from '../components/home/CallToActionSection';
 import { CourseCategoriesSection } from '../components/home/CourseCategoriesSection';
 import { FaqSection } from '../components/home/FaqSection';
 import { FeaturedCoursesSection } from '../components/home/FeaturedCoursesSection';
+import { LatestArticlesSection } from '../components/home/LatestArticlesSection';
 import { HeroSection } from '../components/home/HeroSection';
 import { LearningProcessSection } from '../components/home/LearningProcessSection';
 import { TestimonialsSection } from '../components/home/TestimonialsSection';
@@ -15,6 +16,7 @@ export function HomePage() {
       <TrustIndicators />
       <CourseCategoriesSection />
       <FeaturedCoursesSection />
+      <LatestArticlesSection />
       <WhyChooseUsSection />
       <LearningProcessSection />
       <TestimonialsSection />
