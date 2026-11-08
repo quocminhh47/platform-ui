@@ -23,4 +23,11 @@ describe('navigation chrome CSS', () => {
     expect(ruleIncludes(indexStyles, '.sidebar-nav a', 'white-space', 'nowrap')).toBe(true);
     expect(ruleIncludes(adminStyles, '.admin-sidebar-courses-link', 'white-space', 'nowrap')).toBe(true);
   });
+
+  it('uses a flex column shell so the footer sits at the viewport bottom on short pages', () => {
+    expect(ruleIncludes(landingStyles, '.public-layout', 'min-height', '100vh')).toBe(true);
+    expect(ruleIncludes(landingStyles, '.public-layout', 'flex-direction', 'column')).toBe(true);
+    expect(ruleIncludes(landingStyles, '.public-main', 'flex', '1 1 auto')).toBe(true);
+    expect(ruleIncludes(indexStyles, '#root', 'min-height', '100vh')).toBe(true);
+  });
 });

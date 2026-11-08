@@ -18,6 +18,10 @@ export function DashboardSidebar({ courseCount }: DashboardSidebarProps) {
           {UI_COPY.navDashboard}
         </NavLink>
         <NavLink to="/my-courses">{UI_COPY.navMyCourses}</NavLink>
+        <NavLink to="/articles" end>
+          Bài viết
+        </NavLink>
+        <NavLink to="/my-articles">Bài viết của tôi</NavLink>
         <NavLink to="/courses">{UI_COPY.navExploreCourses}</NavLink>
       </nav>
       {isAdmin ? (

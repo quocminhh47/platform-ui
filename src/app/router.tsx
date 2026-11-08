@@ -18,6 +18,11 @@ import { AdminQuizBuilderPage } from '../features/admin/pages/AdminQuizBuilderPa
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { MyCoursesPage } from '../features/enrollment/pages/MyCoursesPage';
 import { LearningWorkspacePage } from '../features/learning/pages/LearningWorkspacePage';
+import { ArticleCreatePage } from '../features/articles/pages/ArticleCreatePage';
+import { ArticleDetailPage } from '../features/articles/pages/ArticleDetailPage';
+import { ArticleEditPage } from '../features/articles/pages/ArticleEditPage';
+import { ArticleListPage } from '../features/articles/pages/ArticleListPage';
+import { MyArticlesPage } from '../features/articles/pages/MyArticlesPage';
 import { HomePage } from '../pages/HomePage';
 
 export const router = createBrowserRouter([
@@ -28,6 +33,15 @@ export const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: 'courses', element: <CatalogPage /> },
       { path: 'courses/:courseId', element: <CourseDetailPage /> },
+      { path: 'articles', element: <ArticleListPage /> },
+      {
+        element: <ProtectedRoute />,
+        children: [
+          { path: 'articles/create', element: <ArticleCreatePage /> },
+          { path: 'articles/edit/:id', element: <ArticleEditPage /> },
+        ],
+      },
+      { path: 'articles/:slug', element: <ArticleDetailPage /> },
       {
         element: <GuestRoute />,
         children: [
@@ -38,7 +52,6 @@ export const router = createBrowserRouter([
       {
         element: <ProtectedRoute />,
         children: [
-          { path: 'account', element: <AccountPage /> },
           { path: 'courses/:courseId/learn/:lessonId?', element: <LearningWorkspacePage /> },
         ],
       },
@@ -51,7 +64,9 @@ export const router = createBrowserRouter([
         element: <MemberChromeLayout />,
         children: [
           { path: '/dashboard', element: <DashboardPage /> },
+          { path: '/account', element: <AccountPage /> },
           { path: '/my-courses', element: <MyCoursesPage /> },
+          { path: '/my-articles', element: <MyArticlesPage /> },
           {
             element: <AdminRoute />,
             children: [
