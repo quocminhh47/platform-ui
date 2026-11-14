@@ -74,7 +74,7 @@ describe('articles member layout', () => {
       .getAllByRole('link', { name: 'Bài viết', hidden: true })
       .filter((node) => node.getAttribute('href') === '/articles');
     expect(articleNavLinks.length).toBeGreaterThan(0);
-    expect(screen.getByRole('link', { name: 'Tạo bài viết' }).getAttribute('href')).toBe(
+    expect(screen.getAllByRole('link', { name: 'Tạo bài viết' })[0].getAttribute('href')).toBe(
       '/articles/create',
     );
   });

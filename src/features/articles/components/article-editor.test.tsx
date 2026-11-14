@@ -107,6 +107,7 @@ describe('ArticleEditor', () => {
   });
 
   it('creates then submits for approval', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
     manage.createArticle.mockResolvedValue({
       id: 'a1',
       slug: 'post',
@@ -132,4 +133,16 @@ describe('ArticleEditor', () => {
       expect(manage.submitArticle).toHaveBeenCalledWith(expect.any(String), 'a1');
     });
   });
+});
+
+it('applies a returned article even when its timestamp is unchanged and hides unpublished public links', async () => {
+  const article = { id: 'same', slug: 'draft', title: 'Before', status: 'DRAFT', contentHtml: '<p>Body</p>', updatedAt: '2026-01-01' } as import('../types/manage-article.types').ManageArticle;
+  const view = (value: typeof article) => <AuthProvider><ToastProvider><MemoryRouter>
+    <ArticleEditor mode="edit" article={value} />
+  </MemoryRouter></ToastProvider></AuthProvider>;
+  const { rerender } = render(view(article));
+  await screen.findByRole('button', { name: 'Lưu nháp' });
+  expect(screen.queryByRole('link', { name: 'Xem bài công khai' })).toBeNull();
+  rerender(view({ ...article, title: 'Returned normalized title' }));
+  await waitFor(() => expect((screen.getByRole('textbox', { name: /Tiêu đề/ }) as HTMLInputElement).value).toBe('Returned normalized title'));
 });

@@ -153,7 +153,7 @@ function MyArticleActions({
     case 'PENDING_REVIEW':
       return (
         <Link className="button-secondary my-articles-action" to={editHref}>
-          Xem chi tiết
+          Xem
         </Link>
       );
     case 'PUBLISHED':
@@ -181,7 +181,7 @@ function MyArticleActions({
             disabled={busy}
             onClick={onSubmit}
           >
-            {busy ? 'Đang gửi…' : 'Gửi lại duyệt'}
+            {busy ? 'Đang gửi…' : 'Gửi duyệt lại'}
           </button>
         </>
       );

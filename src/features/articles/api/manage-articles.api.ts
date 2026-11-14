@@ -54,6 +54,9 @@ export function getManageArticle(accessToken: string, id: string): Promise<Manag
   return apiRequest<ManageArticle>(`/api/articles/${id}/manage`, { accessToken });
 }
 
+const MY_ARTICLES_PAGE_SIZE = 100;
+const MY_ARTICLES_MAX_PAGES = 40;
+
 /** GET /api/articles/my — current author's articles (paginated). */
 export function listMyArticlesPage(
   accessToken: string,
@@ -65,6 +68,33 @@ export function listMyArticlesPage(
     sort: params.sort ?? 'updatedAt,desc',
   });
   return apiRequest<PageResponse<ManageArticle>>(path, { accessToken });
+}
+
+/**
+ * Walks GET /api/articles/my until the last page so status filters and counts
+ * are based on the author's full set, not a single page.
+ */
+export async function listAllMyArticles(
+  accessToken: string,
+  params: Omit<MyArticlesListParams, 'page'> = {},
+): Promise<ManageArticle[]> {
+  const size = params.size ?? MY_ARTICLES_PAGE_SIZE;
+  const sort = params.sort ?? 'updatedAt,desc';
+  const collected: ManageArticle[] = [];
+  let page = 0;
+
+  while (page < MY_ARTICLES_MAX_PAGES) {
+    const result = await listMyArticlesPage(accessToken, { page, size, sort });
+    collected.push(...result.content);
+    const reachedEnd =
+      result.last || result.content.length === 0 || page + 1 >= result.totalPages;
+    if (reachedEnd) {
+      break;
+    }
+    page += 1;
+  }
+
+  return collected;
 }
 
 export function adminPublishArticle(accessToken: string, id: string): Promise<ManageArticle> {

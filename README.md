@@ -17,3 +17,5 @@ Routes include `/`, `/courses`, `/courses/:courseId`, `/login`, `/register`, `/m
 ```bash
 npm run lint && npm test && npm run build
 ```
+
+Production configuration and audit notes: [docs/production-readiness.md](docs/production-readiness.md).

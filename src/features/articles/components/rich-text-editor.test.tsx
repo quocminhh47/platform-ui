@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { RichTextEditor } from './RichTextEditor';
 
+const { setContent } = vi.hoisted(() => ({ setContent: vi.fn() }));
+
 function mockChain() {
   const chain = {
     undo: () => chain,
@@ -28,6 +30,8 @@ function mockChain() {
 
 vi.mock('@tiptap/react', () => ({
   useEditor: () => ({
+    getHTML: () => '<p>Hi</p>',
+    commands: { setContent: setContent },
     isActive: () => false,
     can: () => ({
       chain: () => ({
@@ -61,4 +65,11 @@ describe('RichTextEditor', () => {
     expect(screen.getByRole('toolbar', { name: 'Định dạng văn bản' })).toBeTruthy();
     expect(screen.getByTestId('editor-content')).toBeTruthy();
   });
+});
+
+it('reloads saved content without emitting an author edit', () => {
+  setContent.mockClear();
+  const { rerender } = render(<RichTextEditor editorKey="same" initialHtml="<p>Hi</p>" onHtmlChange={vi.fn()} />);
+  rerender(<RichTextEditor editorKey="same" initialHtml="<p>Saved sanitized body</p>" onHtmlChange={vi.fn()} />);
+  expect(setContent).toHaveBeenCalledWith('<p>Saved sanitized body</p>', { emitUpdate: false });
 });

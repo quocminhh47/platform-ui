@@ -40,9 +40,11 @@ export function useManageArticle(accessToken: string | null, articleId: string |
         }
         setArticle(null);
         setError(
-          cause instanceof ApiError && cause.status === 404
-            ? 'Không tìm thấy bài viết hoặc bạn không có quyền xem.'
-            : 'Không tải được bài viết. Vui lòng thử lại sau.',
+          cause instanceof ApiError && cause.status === 403
+            ? 'Bạn không có quyền xem hoặc chỉnh sửa bài viết này.'
+            : cause instanceof ApiError && cause.status === 404
+              ? 'Không tìm thấy bài viết hoặc bạn không có quyền xem.'
+              : 'Không tải được bài viết. Vui lòng thử lại sau.',
         );
       })
       .finally(() => {
