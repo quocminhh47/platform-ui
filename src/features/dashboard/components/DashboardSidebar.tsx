@@ -12,7 +12,7 @@ export function DashboardSidebar({ courseCount }: DashboardSidebarProps) {
 
   return (
     <aside className="dashboard-sidebar admin-workspace-sidebar">
-      <p className="sidebar-label">{UI_COPY.sidebarLearn}</p>
+      <p className="sidebar-label">{isAdmin ? 'Quản trị cá nhân' : UI_COPY.sidebarLearn}</p>
       <nav className="sidebar-nav" aria-label={UI_COPY.navDashboard}>
         <NavLink to="/dashboard" end>
           {UI_COPY.navDashboard}
@@ -26,11 +26,12 @@ export function DashboardSidebar({ courseCount }: DashboardSidebarProps) {
       </nav>
       {isAdmin ? (
         <>
-          <p className="sidebar-label">Quản trị</p>
+          <p className="sidebar-label">Quản trị hệ thống</p>
           <nav className="sidebar-nav" aria-label="Quản trị">
             <NavLink to="/admin" end>
               Tổng quan quản trị
             </NavLink>
+            <NavLink to="/admin/articles">Quản lý bài viết</NavLink>
             <NavLink to="/admin/users">Quản lý người dùng</NavLink>
             <NavLink to="/admin/courses" className="admin-sidebar-courses-link">
               <span>Quản lý khóa học</span>

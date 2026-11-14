@@ -1,3 +1,6 @@
+import { lazy, Suspense, type ReactNode } from 'react';
+import { AdminArticlesPage } from '../features/articles/pages/AdminArticlesPage';
+import { AdminArticleReviewPage } from '../features/articles/pages/AdminArticleReviewPage';
 import { createBrowserRouter } from 'react-router-dom';
 import { AccountPage } from '../features/account/pages/AccountPage';
 import { AppShell } from '../components/layout/AppShell';
@@ -18,12 +21,20 @@ import { AdminQuizBuilderPage } from '../features/admin/pages/AdminQuizBuilderPa
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { MyCoursesPage } from '../features/enrollment/pages/MyCoursesPage';
 import { LearningWorkspacePage } from '../features/learning/pages/LearningWorkspacePage';
-import { ArticleCreatePage } from '../features/articles/pages/ArticleCreatePage';
 import { ArticleDetailPage } from '../features/articles/pages/ArticleDetailPage';
-import { ArticleEditPage } from '../features/articles/pages/ArticleEditPage';
 import { ArticleListPage } from '../features/articles/pages/ArticleListPage';
 import { MyArticlesPage } from '../features/articles/pages/MyArticlesPage';
 import { HomePage } from '../pages/HomePage';
+
+const ArticleCreatePage = lazy(() => import('../features/articles/pages/ArticleCreatePage').then(module => ({ default: module.ArticleCreatePage })));
+const ArticleEditPage = lazy(() => import('../features/articles/pages/ArticleEditPage').then(module => ({ default: module.ArticleEditPage })));
+const AdminArticleCreatePage = lazy(() => import('../features/articles/pages/AdminArticleCreatePage').then(module => ({ default: module.AdminArticleCreatePage })));
+
+function EditorRoute({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<p className="page-status" role="status">Đang tải trình soạn thảo…</p>}>
+    {children}
+  </Suspense>;
+}
 
 export const router = createBrowserRouter([
   {
@@ -37,8 +48,8 @@ export const router = createBrowserRouter([
       {
         element: <ProtectedRoute />,
         children: [
-          { path: 'articles/create', element: <ArticleCreatePage /> },
-          { path: 'articles/edit/:id', element: <ArticleEditPage /> },
+          { path: 'articles/create', element: <EditorRoute><ArticleCreatePage /></EditorRoute> },
+          { path: 'articles/edit/:id', element: <EditorRoute><ArticleEditPage /></EditorRoute> },
         ],
       },
       { path: 'articles/:slug', element: <ArticleDetailPage /> },
@@ -71,6 +82,9 @@ export const router = createBrowserRouter([
             element: <AdminRoute />,
             children: [
               { path: '/admin', element: <AdminDashboardPage /> },
+              { path: '/admin/articles', element: <AdminArticlesPage /> },
+              { path: '/admin/articles/new', element: <EditorRoute><AdminArticleCreatePage /></EditorRoute> },
+              { path: '/admin/articles/:id', element: <AdminArticleReviewPage /> },
               { path: '/admin/users', element: <AdminUserListPage /> },
               { path: '/admin/courses', element: <AdminCourseListPage /> },
               { path: '/admin/courses/new', element: <AdminCourseFormPage /> },

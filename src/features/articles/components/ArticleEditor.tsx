@@ -12,6 +12,10 @@ import {
 import type { ManageArticle } from '../types/manage-article.types';
 import { articleEditorSaveMessage } from '../utils/article-editor-messages';
 import {
+  confirmArticleSubmit,
+  confirmPublishedArticleUpdate,
+} from '../utils/confirm-article-submit';
+import {
   buildArticleWriteBody,
   validateArticleEditor,
   type ArticleEditorFieldErrors,
@@ -66,7 +70,7 @@ export function ArticleEditor({
     if (mode === 'edit' && article) {
       setValues(valuesFromArticle(article));
     }
-  }, [mode, article?.id, article?.updatedAt]);
+  }, [mode, article]);
 
   function patchValues(patch: Partial<ArticleEditorValues>) {
     setValues((current) => ({ ...current, ...patch }));
@@ -96,7 +100,7 @@ export function ArticleEditor({
     try {
       const saved = await handler();
       onArticleChange?.(saved);
-      toast.success(successMessage(action, status));
+      toast.success(successMessage(action, status, isAdmin));
       if (options?.redirectOnCreate) {
         navigate(options.redirectOnCreate);
       } else if (mode === 'create' && saved.id) {
@@ -134,12 +138,21 @@ export function ArticleEditor({
       return;
     }
     if (status === 'PUBLISHED') {
+      if (!isAdmin && !confirmPublishedArticleUpdate(values.title)) {
+        return;
+      }
       await runAction('draft', () => updateArticle(accessToken, articleId, body));
     }
   }
 
   async function handleSubmit() {
     if (!accessToken) {
+      return;
+    }
+    if (!validateForm()) {
+      return;
+    }
+    if (!confirmArticleSubmit(values.title)) {
       return;
     }
 
@@ -223,6 +236,12 @@ export function ArticleEditor({
       {status === 'REJECTED' && article?.rejectionReason ? (
         <p className="article-editor-rejection" role="alert">
           Lý do từ chối: {article.rejectionReason}
+        </p>
+      ) : null}
+      {status === 'PUBLISHED' && !isAdmin ? (
+        <p className="article-editor-status-callout article-editor-status-callout--review" role="status">
+          Bài viết đang xuất bản. Khi bạn lưu thay đổi, bản mới sẽ chờ duyệt. Bản công khai hiện tại
+          không đổi cho đến khi quản trị viên phê duyệt.
         </p>
       ) : null}
 
@@ -310,7 +329,7 @@ export function ArticleEditor({
             disabled={busy !== null}
             onClick={() => void handleSaveDraft()}
           >
-            {busy === 'draft' ? 'Đang lưu…' : saveDraftLabel(status, mode)}
+            {busy === 'draft' ? 'Đang lưu…' : saveDraftLabel(status, mode, isAdmin)}
           </button>
         ) : null}
         {showSubmit && !isAdmin ? (
@@ -343,7 +362,7 @@ export function ArticleEditor({
             {busy === 'publish' ? 'Đang xuất bản…' : 'Xuất bản'}
           </button>
         ) : null}
-        {article?.slug ? (
+        {article?.slug && article.publishedAt && status !== 'ARCHIVED' ? (
           <Link className="button-secondary article-editor-action-btn" to={`/articles/${article.slug}`}>
             Xem bài công khai
           </Link>
@@ -387,12 +406,16 @@ function valuesFromArticle(article: ManageArticle | null | undefined): ArticleEd
   };
 }
 
-function saveDraftLabel(status: ManageArticle['status'] | undefined, mode: 'create' | 'edit') {
+function saveDraftLabel(
+  status: ManageArticle['status'] | undefined,
+  mode: 'create' | 'edit',
+  isAdmin: boolean,
+) {
   if (mode === 'create' || status === 'DRAFT' || status === 'REJECTED') {
     return 'Lưu nháp';
   }
   if (status === 'PUBLISHED') {
-    return 'Lưu & gửi duyệt';
+    return isAdmin ? 'Lưu' : 'Lưu & gửi duyệt';
   }
   return 'Lưu';
 }
@@ -410,9 +433,10 @@ function submitLabel(status: ManageArticle['status'] | undefined, mode: 'create'
 function successMessage(
   action: 'draft' | 'submit' | 'publish',
   status: ManageArticle['status'] | undefined,
+  isAdmin: boolean,
 ) {
   if (action === 'draft' && status === 'PUBLISHED') {
-    return 'Đã lưu và gửi bản cập nhật để duyệt.';
+    return isAdmin ? 'Đã lưu bài viết.' : 'Đã lưu và gửi bản cập nhật để duyệt.';
   }
   switch (action) {
     case 'draft':

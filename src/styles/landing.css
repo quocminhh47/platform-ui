@@ -1214,6 +1214,15 @@ html {
   margin: 0;
 }
 
+.article-editor-status-callout--review {
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+
+.article-editor-status-line {
+  margin: 0.35rem 0 0.5rem;
+}
+
 .article-editor-rejection {
   border-color: #fecaca;
   background: #fef2f2;
@@ -1352,6 +1361,54 @@ html {
 
 .my-articles-page-header h1 {
   margin: 0;
+}
+
+.my-articles-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+}
+
+.my-articles-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #fff;
+  color: #334155;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.my-articles-filter:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.my-articles-filter.is-active {
+  border-color: #1e40af;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.my-articles-filter-count {
+  display: inline-flex;
+  min-width: 1.25rem;
+  justify-content: center;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: #e2e8f0;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.my-articles-filter.is-active .my-articles-filter-count {
+  background: #dbeafe;
 }
 
 .article-list-page-header {

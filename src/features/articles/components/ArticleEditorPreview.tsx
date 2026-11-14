@@ -6,6 +6,8 @@ type ArticleEditorPreviewProps = {
   featuredImageUrl: string;
   contentHtml: string;
   authorName?: string | null;
+  previewLabel?: string;
+  dateLabel?: string;
 };
 
 export function ArticleEditorPreview({
@@ -14,6 +16,8 @@ export function ArticleEditorPreview({
   featuredImageUrl,
   contentHtml,
   authorName,
+  previewLabel = 'Xem trước (chưa lưu)',
+  dateLabel = 'Xuất bản: (xem trước)',
 }: ArticleEditorPreviewProps) {
   const displayTitle = title.trim() || 'Tiêu đề bài viết';
   const excerptText = excerpt.trim() || null;
@@ -21,14 +25,14 @@ export function ArticleEditorPreview({
 
   return (
     <div className="article-editor-preview" data-testid="article-editor-preview">
-      <p className="muted article-editor-preview-label">Xem trước (chưa lưu)</p>
+      <p className="muted article-editor-preview-label">{previewLabel}</p>
       <article className="article-reader public-article-detail">
         <header className="article-reader-header">
           <h2 className="article-reader-title">{displayTitle}</h2>
           {authorName ? (
             <p className="article-reader-byline muted">Tác giả: {authorName}</p>
           ) : null}
-          <p className="article-reader-date muted">Xuất bản: (xem trước)</p>
+          <p className="article-reader-date muted">{dateLabel}</p>
           {excerptText ? <p className="article-detail-excerpt">{excerptText}</p> : null}
           {imageUrl ? (
             <img className="article-reader-featured-image" src={imageUrl} alt="" loading="lazy" />

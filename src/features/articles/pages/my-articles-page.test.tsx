@@ -7,7 +7,6 @@ import { setAccessToken } from '../../../services/api/token-storage';
 import type { User } from '../../auth/types/auth.types';
 import * as manageApi from '../api/manage-articles.api';
 import { MyArticlesPage } from './MyArticlesPage';
-import { mockPage } from '../../../testing/mockPageResponse';
 import type { ManageArticle } from '../types/manage-article.types';
 
 vi.mock('../../auth/api/auth.api', () => ({
@@ -76,45 +75,45 @@ function renderPage() {
 beforeEach(() => {
   setAccessToken('token');
   auth.fetchCurrentUser.mockResolvedValue(student);
-  manage.listMyArticlesPage.mockReset();
+  manage.listAllMyArticles.mockReset();
   manage.submitArticle.mockReset();
 });
 
 describe('MyArticlesPage', () => {
   it('lists articles with status badge', async () => {
-    manage.listMyArticlesPage.mockResolvedValue(
-      mockPage([article({ id: 'a1', title: 'Draft post', status: 'DRAFT' })]),
+    manage.listAllMyArticles.mockResolvedValue(
+      [article({ id: 'a1', title: 'Draft post', status: 'DRAFT' })],
     );
 
     renderPage();
 
     expect(await screen.findByRole('heading', { name: 'Bài viết của tôi' })).toBeTruthy();
-    expect(screen.getByText('Draft post')).toBeTruthy();
-    expect(screen.getByText('Bản nháp')).toBeTruthy();
+    expect(await screen.findByText('Draft post')).toBeTruthy();
+    expect(screen.getAllByText('Bản nháp').length).toBeGreaterThan(0);
   });
 
   it('shows rejection reason for rejected articles', async () => {
-    manage.listMyArticlesPage.mockResolvedValue(
-      mockPage([
+    manage.listAllMyArticles.mockResolvedValue(
+      [
         article({
           id: 'a2',
           title: 'Needs work',
           status: 'REJECTED',
           rejectionReason: 'Thiếu nguồn',
         }),
-      ]),
+      ],
     );
 
     renderPage();
 
     expect(await screen.findByText(/Lý do từ chối: Thiếu nguồn/)).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Gửi lại duyệt' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Gửi duyệt lại' })).toBeTruthy();
   });
 
   it('submits draft after confirmation', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
-    manage.listMyArticlesPage.mockResolvedValue(
-      mockPage([article({ id: 'a3', title: 'Ready', status: 'DRAFT' })]),
+    manage.listAllMyArticles.mockResolvedValue(
+      [article({ id: 'a3', title: 'Ready', status: 'DRAFT' })],
     );
     manage.submitArticle.mockResolvedValue(
       article({ id: 'a3', title: 'Ready', status: 'PENDING_REVIEW' }),
@@ -130,7 +129,7 @@ describe('MyArticlesPage', () => {
   });
 
   it('shows error state', async () => {
-    manage.listMyArticlesPage.mockRejectedValue(new Error('fail'));
+    manage.listAllMyArticles.mockRejectedValue(new Error('fail'));
 
     renderPage();
 

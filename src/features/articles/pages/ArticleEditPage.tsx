@@ -1,12 +1,21 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Breadcrumb } from '../../../components/common/Breadcrumb';
-import { breadcrumbArticles, breadcrumbHome } from '../../../navigation/breadcrumb-trail';
+import { MemberPageShell } from '../../../components/layout/MemberPageShell';
+import {
+  breadcrumbArticles,
+  breadcrumbHome,
+  breadcrumbMyArticles,
+} from '../../../navigation/breadcrumb-trail';
 import { UI_COPY } from '../../../ui/ui-copy';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { ArticleEditor } from '../components/ArticleEditor';
 import { ArticleEditorModeToggle } from '../components/ArticleEditorModeToggle';
 import { useManageArticle } from '../hooks/useManageArticle';
+import {
+  articleStatusBadgeClass,
+  articleStatusLabel,
+} from '../utils/article-status-labels';
 
 export function ArticleEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -18,20 +27,29 @@ export function ArticleEditPage() {
     article?.status === 'PENDING_REVIEW' || article?.status === 'ARCHIVED';
 
   return (
+    <MemberPageShell>
     <div className="landing-container article-editor-page">
       <Breadcrumb
         items={[
           breadcrumbHome(),
           breadcrumbArticles(),
+          breadcrumbMyArticles(),
           { label: loading ? 'Đang tải…' : article?.title?.trim() || 'Chỉnh sửa' },
         ]}
       />
       <header className="article-editor-page-header article-editor-page-header--split">
         <div className="article-editor-page-header-main">
           <h1>Chỉnh sửa bài viết</h1>
+          {article ? (
+            <p className="article-editor-status-line">
+              <span className={articleStatusBadgeClass(article.status)}>
+                {articleStatusLabel(article.status)}
+              </span>
+            </p>
+          ) : null}
           <p className="muted">
-            <Link className="landing-text-link" to="/articles">
-              Quay lại danh sách
+            <Link className="landing-text-link" to="/my-articles">
+              Quay lại bài viết của tôi
             </Link>
           </p>
         </div>
@@ -65,5 +83,6 @@ export function ArticleEditPage() {
         />
       ) : null}
     </div>
+    </MemberPageShell>
   );
 }

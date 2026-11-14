@@ -24,6 +24,8 @@ export function RichTextEditor({
     {
       extensions: [
         StarterKit.configure({
+          link: false,
+          underline: false,
           heading: { levels: [1, 2, 3] },
         }),
         Underline,
@@ -49,6 +51,12 @@ export function RichTextEditor({
     }
     editor.setEditable(!disabled);
   }, [disabled, editor]);
+
+  useEffect(() => {
+    if (editor && editor.getHTML() !== initialHtml) {
+      editor.commands.setContent(initialHtml || '<p></p>', { emitUpdate: false });
+    }
+  }, [editor, initialHtml]);
 
   if (!editor) {
     return <p className="page-status">Đang khởi tạo trình soạn thảo…</p>;

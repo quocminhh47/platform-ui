@@ -1,0 +1,15 @@
+.admin-articles { min-width: 0; overflow-wrap: anywhere; }
+.admin-article-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-block: .75rem; }
+.admin-articles select { max-width: 100%; padding: .5rem; margin-block: 1rem; }
+.admin-article-dialog { width: min(34rem, calc(100% - 2rem)); max-height: 85dvh; overflow: auto; border: 1px solid #ddd; border-radius: .75rem; padding: 1.5rem; }
+.admin-article-dialog::backdrop { background: rgb(0 0 0 / 45%); }
+.admin-article-dialog textarea { display: block; width: 100%; box-sizing: border-box; min-height: 8rem; margin-block: .5rem; }
+.admin-articles .admin-table { overflow-wrap: anywhere; }
+@media (max-width: 900px) {
+  .admin-articles .admin-table { min-width: 0; width: 100%; }
+  .admin-articles .admin-table thead { display: none; }
+  .admin-articles .admin-table tbody, .admin-articles .admin-table tr, .admin-articles .admin-table td { display: block; }
+  .admin-articles .admin-table tr { padding-block: .75rem; border-bottom: 1px solid #ddd; }
+  .admin-articles .admin-table td { white-space: normal; }
+  .admin-articles .admin-table td::before { content: attr(data-label); display: block; font-weight: 600; }
+}
